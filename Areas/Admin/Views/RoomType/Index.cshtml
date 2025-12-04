@@ -1,0 +1,259 @@
+@model List<HotelManagementSystem.Models.ViewModels.RoomType.RoomTypeViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý loại phòng";
+    var selectedHotelId = ViewBag.SelectedHotelId as long?;
+}
+
+<div class="container-fluid mt-4">
+    <!-- PAGE HEADER -->
+    <div class="page-header mb-4">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-bed me-2 text-primary"></i>
+                Quản lý loại phòng
+            </h1>
+            <p class="text-muted mb-0">Quản lý các loại phòng trong hệ thống khách sạn</p>
+        </div>
+        <a asp-action="Create" asp-route-hotelId="@selectedHotelId" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus me-2"></i>
+            Thêm loại phòng mới
+        </a>
+    </div>
+
+    <!-- SUCCESS MESSAGE -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- FILTER PANEL -->
+    <div class="card filter-panel mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>
+                Bộ lọc
+            </h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get" class="row g-3">
+                <div class="col-md-9">
+                    <label class="form-label fw-600">
+                        <i class="fas fa-hotel me-1"></i>Lọc theo khách sạn:
+                    </label>
+                    <select name="hotelId" class="form-select filter-auto-submit" onchange="this.form.submit()">
+                        <option value="">-- Tất cả khách sạn --</option>
+                        @foreach (var item in (SelectList)ViewBag.Hotels)
+                        {
+                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <a asp-action="Index" class="btn btn-secondary w-100">
+                        <i class="fas fa-redo me-2"></i>Đặt lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- STATISTICS -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <div class="stat-value">@Model.Count</div>
+                    <div class="stat-label">Tổng loại phòng</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <div class="stat-value">@Model.Sum(rt => rt.RoomCount)</div>
+                    <div class="stat-label">Tổng số phòng</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card info">
+                    <div class="stat-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-value">@Model.Sum(rt => rt.RatePlanCount)</div>
+                    <div class="stat-label">Tổng Rate Plans</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-money-bill"></i>
+                    </div>
+                    <div class="stat-value">@Model.Min(rt => rt.BasePrice).ToString("N0")</div>
+                    <div class="stat-label">Giá tối thiểu/đêm</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- CONTENT -->
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3" style="opacity: 0.3;"></i>
+                <p class="text-muted fs-5 mb-3">Chưa có loại phòng nào trong hệ thống</p>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Thêm loại phòng mới
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var roomType in Model)
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm transition">
+                        <!-- CARD IMAGE -->
+                        <div class="card-img-wrapper position-relative" style="height: 220px; overflow: hidden;">
+                            @if (!string.IsNullOrEmpty(roomType.DefaultImageUrl))
+                            {
+                                <img src="@roomType.DefaultImageUrl" class="card-img-top" alt="@roomType.Name" style="height: 100%; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-gradient-primary text-white d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center">
+                                        <i class="fas fa-image fa-3x mb-2"></i>
+                                        <p class="mb-0">Không có hình ảnh</p>
+                                    </div>
+                                </div>
+                            }
+                            <div class="position-absolute top-0 end-0 p-2">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-hotel me-1"></i>@roomType.HotelName
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- CARD BODY -->
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold text-primary mb-3">
+                                @roomType.Name
+                            </h5>
+
+                            <!-- PRICE -->
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted">Giá/đêm:</span>
+                                    <span class="fs-5 fw-bold text-success">@roomType.BasePrice.ToString("N0") VNĐ</span>
+                                </div>
+                            </div>
+
+                            <!-- DETAILS -->
+                            <div class="details-grid mb-3">
+                                <div class="detail-item mb-2">
+                                    <i class="fas fa-users text-info me-2"></i>
+                                    <span class="text-muted">Sức chứa:</span>
+                                    <span class="fw-600">@roomType.Capacity người</span>
+                                </div>
+                                <div class="detail-item mb-2">
+                                    <i class="fas fa-door-open text-success me-2"></i>
+                                    <span class="text-muted">Số phòng:</span>
+                                    <span class="fw-600">@roomType.RoomCount phòng</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-calendar-alt text-warning me-2"></i>
+                                    <span class="text-muted">Rate Plans:</span>
+                                    <span class="fw-600">@roomType.RatePlanCount</span>
+                                </div>
+                            </div>
+
+                            <!-- STATISTICS -->
+                            <div class="row text-center my-3 py-3 bg-light rounded">
+                                <div class="col-6 border-end">
+                                    <div class="text-success">
+                                        <h5 class="mb-0">@roomType.RoomCount</h5>
+                                        <small class="text-muted">Phòng</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-info">
+                                        <h5 class="mb-0">@roomType.RatePlanCount</h5>
+                                        <small class="text-muted">Rate Plan</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CARD FOOTER -->
+                        <div class="card-footer bg-light border-top">
+                            <div class="btn-group w-100" role="group">
+                                <a asp-action="Details" asp-route-id="@roomType.Id" 
+                                   class="btn btn-sm btn-info text-white" 
+                                   title="Chi tiết">
+                                    <i class="fas fa-eye me-1"></i>Chi tiết
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@roomType.Id" 
+                                   class="btn btn-sm btn-warning text-white" 
+                                   title="Sửa">
+                                    <i class="fas fa-edit me-1"></i>Sửa
+                                </a>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a asp-action="Delete" asp-route-id="@roomType.Id" 
+                                       class="btn btn-sm btn-danger" 
+                                       title="Xóa">
+                                        <i class="fas fa-trash me-1"></i>Xóa
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .card-img-wrapper {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .fw-600 {
+        font-weight: 600;
+    }
+
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .card-img-wrapper:hover {
+        transform: scale(1.05);
+    }
+</style>

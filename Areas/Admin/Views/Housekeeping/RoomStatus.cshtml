@@ -1,0 +1,236 @@
+@{
+    ViewData["Title"] = "Bảng Trạng Thái Phòng";
+    var roomStatus = ViewBag.RoomStatus as List<(ulong RoomId, string RoomNumber, string Status, bool HasPendingTask)> ?? new List<(ulong, string, string, bool)>();
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-th text-primary"></i> Bảng Trạng Thái Phòng
+        </h2>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-primary">
+                <i class="fas fa-list"></i> Danh Sách Công Việc
+            </a>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Legend -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">
+                <i class="fas fa-info-circle"></i> Chú Thích
+            </h5>
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <span class="badge bg-success me-2">Vacant</span> Phòng trống - Sẵn sàng
+                </div>
+                <div class="col-md-3 mb-2">
+                    <span class="badge bg-primary me-2">Occupied</span> Phòng đang có khách
+                </div>
+                <div class="col-md-3 mb-2">
+                    <span class="badge bg-warning text-dark me-2">Maintenance</span> Đang bảo trì
+                </div>
+                <div class="col-md-3 mb-2">
+                    <span class="badge bg-danger me-2">OutOfOrder</span> Hỏng - Không sử dụng
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <i class="fas fa-exclamation-triangle text-danger me-1"></i> 
+                    <strong>Có task chưa hoàn thành</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@roomStatus.Count(r => r.Status == "Vacant")</h3>
+                    <p class="mb-0">Phòng Trống</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@roomStatus.Count(r => r.Status == "Occupied")</h3>
+                    <p class="mb-0">Đang Có Khách</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@roomStatus.Count(r => r.Status == "Maintenance")</h3>
+                    <p class="mb-0">Bảo Trì</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>@roomStatus.Count(r => r.HasPendingTask)</h3>
+                    <p class="mb-0">Task Pending</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Status Grid -->
+    @if (!roomStatus.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Không có dữ liệu phòng.
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-border-all"></i> Trạng Thái Tất Cả Phòng (@roomStatus.Count phòng)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach (var room in roomStatus.OrderBy(r => r.RoomNumber))
+                    {
+                        var statusClass = room.Status switch
+                        {
+                            "Vacant" => "success",
+                            "Occupied" => "primary",
+                            "Maintenance" => "warning",
+                            "OutOfOrder" => "danger",
+                            _ => "secondary"
+                        };
+
+                        var statusText = room.Status switch
+                        {
+                            "Vacant" => "Trống",
+                            "Occupied" => "Có Khách",
+                            "Maintenance" => "Bảo Trì",
+                            "OutOfOrder" => "Hỏng",
+                            _ => room.Status
+                        };
+
+                        <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                            <div class="card border-@statusClass @(room.HasPendingTask ? "shadow" : "")">
+                                <div class="card-body text-center p-2">
+                                    <h5 class="mb-1">
+                                        <strong>@room.RoomNumber</strong>
+                                    </h5>
+                                    <span class="badge bg-@statusClass d-block mb-2">
+                                        @statusText
+                                    </span>
+                                    @if (room.HasPendingTask)
+                                    {
+                                        <small class="text-danger">
+                                            <i class="fas fa-exclamation-triangle"></i> Task Pending
+                                        </small>
+                                    }
+                                    <div class="mt-2">
+                                        <a href="@Url.Action("Create", new { roomId = room.RoomId })" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="Tạo task">
+                                            <i class="fas fa-plus"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="mb-3">
+                    <i class="fas fa-filter"></i> Bộ Lọc
+                </h6>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" onclick="filterRooms('all')">
+                        Tất Cả (@roomStatus.Count)
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="filterRooms('Vacant')">
+                        Trống (@roomStatus.Count(r => r.Status == "Vacant"))
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterRooms('Occupied')">
+                        Có Khách (@roomStatus.Count(r => r.Status == "Occupied"))
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" onclick="filterRooms('Maintenance')">
+                        Bảo Trì (@roomStatus.Count(r => r.Status == "Maintenance"))
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="filterRooms('pending')">
+                        Task Pending (@roomStatus.Count(r => r.HasPendingTask))
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function filterRooms(status) {
+            // Simple client-side filter
+            const cards = document.querySelectorAll('.row.g-3 > div');
+            
+            cards.forEach(card => {
+                if (status === 'all') {
+                    card.style.display = '';
+                } else if (status === 'pending') {
+                    // Show only rooms with pending tasks
+                    const hasPending = card.querySelector('.text-danger');
+                    card.style.display = hasPending ? '' : 'none';
+                } else {
+                    // Filter by status badge
+                    const badge = card.querySelector('.badge');
+                    if (badge && badge.classList.contains(`bg-${getStatusClass(status)}`)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+
+            // Update active button
+            document.querySelectorAll('.btn-group button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Vacant': return 'success';
+                case 'Occupied': return 'primary';
+                case 'Maintenance': return 'warning';
+                case 'OutOfOrder': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        // Auto-refresh every 60 seconds
+        setInterval(() => {
+            location.reload();
+        }, 60000);
+    </script>
+}

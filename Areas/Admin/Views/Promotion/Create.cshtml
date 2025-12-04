@@ -1,0 +1,239 @@
+@model HotelManagementSystem.Models.ViewModels.Promotion.PromotionViewModel
+
+@{
+    ViewData["Title"] = "Thêm khuyến mãi mới";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-plus-circle me-2"></i>
+            Thêm khuyến mãi mới
+        </h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <!-- Basic Info Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label asp-for="Code" class="form-label required">
+                                    <i class="fas fa-barcode me-2"></i>@Html.DisplayNameFor(m => m.Code)
+                                </label>
+                                <input asp-for="Code" class="form-control text-uppercase" 
+                                       placeholder="VD: SUMMER2024" style="text-transform: uppercase;" />
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                                <small class="text-muted">Chỉ được chứa chữ in hoa, số, gạch ngang và gạch dưới</small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Type" class="form-label required">
+                                            <i class="fas fa-tag me-2"></i>@Html.DisplayNameFor(m => m.Type)
+                                        </label>
+                                        <select asp-for="Type" class="form-select" id="typeSelect">
+                                            <option value="Percent">Phần trăm (%)</option>
+                                            <option value="Amount">Số tiền cố định (VNĐ)</option>
+                                        </select>
+                                        <span asp-validation-for="Type" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Value" class="form-label required">
+                                            <i class="fas fa-percentage me-2"></i>@Html.DisplayNameFor(m => m.Value)
+                                        </label>
+                                        <input asp-for="Value" type="number" class="form-control" 
+                                               placeholder="VD: 20" step="0.01" min="0" id="valueInput" />
+                                        <span asp-validation-for="Value" class="text-danger"></span>
+                                        <small class="text-muted" id="valueHint">Nhập giá trị phần trăm (0-100)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date Range Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Thời gian áp dụng
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="StartDate" class="form-label required">
+                                            <i class="fas fa-calendar-check me-2"></i>@Html.DisplayNameFor(m => m.StartDate)
+                                        </label>
+                                        <input asp-for="StartDate" type="date" class="form-control" />
+                                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="EndDate" class="form-label required">
+                                            <i class="fas fa-calendar-times me-2"></i>@Html.DisplayNameFor(m => m.EndDate)
+                                        </label>
+                                        <input asp-for="EndDate" type="date" class="form-control" />
+                                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conditions Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-cogs me-2"></i>Điều kiện áp dụng
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="MinOrderValue" class="form-label">
+                                            <i class="fas fa-shopping-cart me-2"></i>@Html.DisplayNameFor(m => m.MinOrderValue)
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="MinOrderValue" type="number" class="form-control" 
+                                                   placeholder="VD: 500000" step="1000" min="0" />
+                                            <span class="input-group-text">VNĐ</span>
+                                        </div>
+                                        <span asp-validation-for="MinOrderValue" class="text-danger"></span>
+                                        <small class="text-muted">Để trống nếu không giới hạn</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6" id="maxDiscountDiv">
+                                    <div class="mb-3">
+                                        <label asp-for="MaxDiscountAmount" class="form-label">
+                                            <i class="fas fa-hand-holding-usd me-2"></i>@Html.DisplayNameFor(m => m.MaxDiscountAmount)
+                                        </label>
+                                        <div class="input-group">
+                                            <input asp-for="MaxDiscountAmount" type="number" class="form-control" 
+                                                   placeholder="VD: 100000" step="1000" min="0" />
+                                            <span class="input-group-text">VNĐ</span>
+                                        </div>
+                                        <span asp-validation-for="MaxDiscountAmount" class="text-danger"></span>
+                                        <small class="text-muted">Chỉ áp dụng cho loại phần trăm</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="MaxUsageCount" class="form-label">
+                                            <i class="fas fa-hashtag me-2"></i>@Html.DisplayNameFor(m => m.MaxUsageCount)
+                                        </label>
+                                        <input asp-for="MaxUsageCount" type="number" class="form-control" 
+                                               placeholder="VD: 100" min="1" />
+                                        <span asp-validation-for="MaxUsageCount" class="text-danger"></span>
+                                        <small class="text-muted">Để trống nếu không giới hạn</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">&nbsp;</label>
+                                        <div class="form-check">
+                                            <input asp-for="IsNewCustomerOnly" class="form-check-input" type="checkbox" />
+                                            <label class="form-check-label" asp-for="IsNewCustomerOnly">
+                                                <i class="fas fa-user-plus me-2"></i>@Html.DisplayNameFor(m => m.IsNewCustomerOnly)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Lưu
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Panel -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-info-circle me-2"></i>Hướng dẫn
+                </div>
+                <div class="card-body">
+                    <h6>Loại khuyến mãi:</h6>
+                    <ul class="small">
+                        <li><strong>Phần trăm:</strong> Giảm theo % giá trị đơn hàng (0-100%)</li>
+                        <li><strong>Số tiền:</strong> Giảm số tiền cố định (VNĐ)</li>
+                    </ul>
+                    <h6>Điều kiện:</h6>
+                    <ul class="small">
+                        <li><strong>Min order:</strong> Giá trị đơn hàng tối thiểu để áp dụng</li>
+                        <li><strong>Max discount:</strong> Giới hạn số tiền giảm tối đa (cho % type)</li>
+                        <li><strong>Usage limit:</strong> Giới hạn số lần sử dụng mã</li>
+                        <li><strong>New customer:</strong> Chỉ áp dụng cho khách hàng mới</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-lightbulb me-2"></i>Ví dụ
+                </div>
+                <div class="card-body small">
+                    <p><strong>Mã SUMMER20:</strong></p>
+                    <ul>
+                        <li>Loại: Phần trăm</li>
+                        <li>Giá trị: 20%</li>
+                        <li>Min order: 1,000,000 VNĐ</li>
+                        <li>Max discount: 200,000 VNĐ</li>
+                    </ul>
+                    <p class="mb-0">→ Giảm 20% đơn hàng, tối đa 200k, yêu cầu đơn tối thiểu 1 triệu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            function updateValueInput() {
+                var type = $('#typeSelect').val();
+                if (type === 'Percent') {
+                    $('#valueInput').attr('max', '100').attr('placeholder', 'VD: 20');
+                    $('#valueHint').text('Nhập giá trị phần trăm (0-100)');
+                    $('#maxDiscountDiv').show();
+                } else {
+                    $('#valueInput').removeAttr('max').attr('placeholder', 'VD: 100000');
+                    $('#valueHint').text('Nhập số tiền cố định (VNĐ)');
+                    $('#maxDiscountDiv').hide();
+                    $('#MaxDiscountAmount').val('');
+                }
+            }
+
+            $('#typeSelect').change(updateValueInput);
+            updateValueInput();
+
+            // Auto uppercase code
+            $('#Code').on('input', function() {
+                $(this).val($(this).val().toUpperCase());
+            });
+        });
+    </script>
+}

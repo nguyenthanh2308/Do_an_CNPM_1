@@ -1,0 +1,275 @@
+@model HotelManagementSystem.Models.ViewModels.Guest.GuestViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết khách hàng";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-user me-2"></i>
+            Chi tiết khách hàng
+        </h2>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>Chỉnh sửa
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card me-2"></i>
+                        @Model.FullName
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">
+                            <i class="fas fa-hashtag me-2"></i>ID
+                        </dt>
+                        <dd class="col-sm-8">
+                            <strong>@Model.Id</strong>
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-user me-2"></i>Họ và tên
+                        </dt>
+                        <dd class="col-sm-8">
+                            <strong>@Model.FullName</strong>
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-id-badge me-2"></i>Số CMND/CCCD
+                        </dt>
+                        <dd class="col-sm-8">
+                            @if (Model.HasIdNumber)
+                            {
+                                <span>@Model.IdNumber</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa cập nhật</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-envelope me-2"></i>Email
+                        </dt>
+                        <dd class="col-sm-8">
+                            @if (Model.HasEmail)
+                            {
+                                <a href="mailto:@Model.Email">@Model.Email</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa cập nhật</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-phone me-2"></i>Số điện thoại
+                        </dt>
+                        <dd class="col-sm-8">
+                            @if (Model.HasPhone)
+                            {
+                                <a href="tel:@Model.Phone">@Model.Phone</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa cập nhật</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-calendar-plus me-2"></i>Ngày tạo
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                            <small class="text-muted">(@Model.DaysSinceCreated ngày trước)</small>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Thống kê booking
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h3 class="text-primary mb-0">@Model.TotalBookings</h3>
+                                <small class="text-muted">Tổng booking</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h3 class="text-success mb-0">@Model.CompletedBookings</h3>
+                                <small class="text-muted">Hoàn thành</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h3 class="text-danger mb-0">@Model.CancelledBookings</h3>
+                                <small class="text-muted">Đã hủy</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h3 class="text-info mb-0">@((Model.TotalBookings - Model.CompletedBookings - Model.CancelledBookings))</h3>
+                                <small class="text-muted">Đang xử lý</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 text-center">
+                                <h6 class="text-muted mb-2">Tổng chi tiêu</h6>
+                                <h4 class="text-success mb-0">@Model.TotalSpent.ToString("N0") VNĐ</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 text-center">
+                                <h6 class="text-muted mb-2">Booking gần nhất</h6>
+                                @if (Model.LastBookingDate.HasValue)
+                                {
+                                    <h5 class="mb-0">@Model.LastBookingDate.Value.ToString("dd/MM/yyyy")</h5>
+                                    <small class="text-muted">
+                                        @((DateTime.Now - Model.LastBookingDate.Value).Days) ngày trước
+                                    </small>
+                                }
+                                else
+                                {
+                                    <p class="text-muted mb-0">Chưa có booking</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.TotalBookings > 0)
+                    {
+                        <div class="mt-3">
+                            @{
+                                var completionRate = Model.TotalBookings > 0 
+                                    ? (double)Model.CompletedBookings / Model.TotalBookings * 100 
+                                    : 0;
+                            }
+                            <h6 class="mb-2">Tỷ lệ hoàn thành: <strong>@completionRate.ToString("F1")%</strong></h6>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: @completionRate%" 
+                                     aria-valuenow="@completionRate" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    @completionRate.ToString("F0")%
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Info -->
+        <div class="col-lg-4">
+            <!-- Customer Type Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header @Model.CustomerTypeBadgeClass text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-crown me-2"></i>Phân loại khách hàng
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.IsNewCustomer)
+                    {
+                        <i class="fas fa-user-plus fa-4x text-info mb-3"></i>
+                        <h5 class="text-info">Khách mới</h5>
+                        <p class="text-muted mb-0">Chưa có booking nào</p>
+                    }
+                    else if (Model.TotalBookings >= 10)
+                    {
+                        <i class="fas fa-crown fa-4x text-warning mb-3"></i>
+                        <h5 class="text-warning">Khách VIP</h5>
+                        <p class="text-muted mb-0">Đã có @Model.TotalBookings booking</p>
+                    }
+                    else if (Model.TotalBookings >= 5)
+                    {
+                        <i class="fas fa-star fa-4x text-success mb-3"></i>
+                        <h5 class="text-success">Khách thân thiết</h5>
+                        <p class="text-muted mb-0">Đã có @Model.TotalBookings booking</p>
+                    }
+                    else
+                    {
+                        <i class="fas fa-user fa-4x text-secondary mb-3"></i>
+                        <h5 class="text-secondary">Khách thường</h5>
+                        <p class="text-muted mb-0">Đã có @Model.TotalBookings booking</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Activity Status -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Trạng thái hoạt động
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.HasRecentActivity)
+                    {
+                        <div class="text-center">
+                            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+                            <p class="mb-0"><strong class="text-success">Hoạt động gần đây</strong></p>
+                            <small class="text-muted">Có booking trong 90 ngày qua</small>
+                        </div>
+                    }
+                    else if (Model.TotalBookings > 0)
+                    {
+                        <div class="text-center">
+                            <i class="fas fa-clock fa-3x text-warning mb-2"></i>
+                            <p class="mb-0"><strong class="text-warning">Không hoạt động gần đây</strong></p>
+                            <small class="text-muted">Không có booking trong 90 ngày qua</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center">
+                            <i class="fas fa-user-plus fa-3x text-info mb-2"></i>
+                            <p class="mb-0"><strong class="text-info">Khách hàng mới</strong></p>
+                            <small class="text-muted">Chưa có booking nào</small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow">
+                <div class="card-body">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger w-100 mb-2">
+                        <i class="fas fa-trash me-2"></i>Xóa
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary w-100">
+                        <i class="fas fa-list me-2"></i>Danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

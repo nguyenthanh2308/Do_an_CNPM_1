@@ -1,0 +1,94 @@
+@model HotelManagementSystem.Models.ViewModels.Hotel.HotelViewModel
+
+@{
+    ViewData["Title"] = "Xóa khách sạn";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Xác nhận xóa khách sạn
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Cảnh báo!
+                        </h5>
+                        <p class="mb-0">
+                            Bạn có chắc chắn muốn xóa khách sạn này không? 
+                            Hành động này không thể hoàn tác!
+                        </p>
+                    </div>
+
+                    <h5 class="mb-3">Thông tin khách sạn sẽ bị xóa:</h5>
+                    
+                    <dl class="row">
+                        <dt class="col-sm-4">Tên khách sạn:</dt>
+                        <dd class="col-sm-8"><strong class="text-danger">@Model.Name</strong></dd>
+
+                        <dt class="col-sm-4">Địa chỉ:</dt>
+                        <dd class="col-sm-8">@(Model.Address ?? "Chưa cập nhật")</dd>
+
+                        <dt class="col-sm-4">Múi giờ:</dt>
+                        <dd class="col-sm-8">@Model.Timezone</dd>
+
+                        <dt class="col-sm-4">Số loại phòng:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-primary">@Model.RoomTypeCount</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Tổng số phòng:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-success">@Model.TotalRooms</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Số booking:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-info">@Model.TotalBookings</span>
+                        </dd>
+                    </dl>
+
+                    @if (Model.TotalRooms > 0 || Model.RoomTypeCount > 0 || Model.TotalBookings > 0)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-ban me-2"></i>
+                            <strong>Không thể xóa!</strong> 
+                            Khách sạn này đang có dữ liệu liên quan (phòng, loại phòng hoặc booking). 
+                            Vui lòng xóa tất cả dữ liệu liên quan trước.
+                        </div>
+                    }
+
+                    <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
+                        <div class="d-grid gap-2">
+                            @if (Model.TotalRooms == 0 && Model.RoomTypeCount == 0 && Model.TotalBookings == 0)
+                            {
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Xác nhận xóa
+                                </button>
+                            }
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

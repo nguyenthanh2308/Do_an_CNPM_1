@@ -1,0 +1,276 @@
+@model HotelManagementSystem.Models.ViewModels.RatePlan.RatePlanViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết Rate Plan";
+    var weekdayPrice = Model.Price;
+    var weekendPrice = Model.IsWeekendRateActive ? Model.CalculateFinalPrice(true) : Model.Price;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-info-circle me-2"></i>
+            Chi tiết Rate Plan
+        </h2>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>Chỉnh sửa
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tag me-2"></i>
+                        @Model.Name
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-door-open me-2"></i>Loại phòng
+                            </h6>
+                            <p class="mb-0 fs-5">@Model.RoomTypeName</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-hotel me-2"></i>Khách sạn
+                            </h6>
+                            <p class="mb-0 fs-5">@Model.HotelName</p>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-shield-alt me-2"></i>Loại chính sách
+                            </h6>
+                            <span class="badge bg-@(Model.Type == "Flexible" ? "success" : "warning") fs-6">
+                                @Model.TypeDisplay
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            @if (Model.Type == "Flexible" && Model.FreeCancelUntilHours.HasValue)
+                            {
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-clock me-2"></i>Hủy miễn phí trước
+                                </h6>
+                                <p class="mb-0 fs-5">@Model.FreeCancelUntilHours giờ</p>
+                            }
+                            else if (Model.Type == "NonRefundable")
+                            {
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-ban me-2"></i>Chính sách hủy
+                                </h6>
+                                <span class="badge bg-danger fs-6">Không hoàn tiền</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Info -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        Thông tin giá
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-calendar-day me-2"></i>Giá ngày thường
+                                </h6>
+                                <h3 class="text-primary mb-0">@weekdayPrice.ToString("N0") VNĐ</h3>
+                                <small class="text-muted">/ đêm</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 @(Model.IsWeekendRateActive ? "bg-info bg-opacity-10" : "bg-light")">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-calendar-week me-2"></i>Giá cuối tuần
+                                </h6>
+                                @if (Model.IsWeekendRateActive)
+                                {
+                                    <h3 class="text-info mb-0">@weekendPrice.ToString("N0") VNĐ</h3>
+                                    <small class="text-muted">
+                                        / đêm 
+                                        @if (Model.WeekendAdjustmentPercent.HasValue)
+                                        {
+                                            <span class="badge bg-info ms-1">
+                                                @(Model.WeekendAdjustmentPercent > 0 ? "+" : "")@Model.WeekendAdjustmentPercent%
+                                            </span>
+                                        }
+                                    </small>
+                                }
+                                else
+                                {
+                                    <h3 class="text-muted mb-0">Không áp dụng</h3>
+                                    <small class="text-muted">Giống ngày thường</small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.IsWeekendRateActive && Model.WeekendAdjustmentPercent.HasValue)
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Giá cuối tuần được tính bằng giá gốc 
+                            @if (Model.WeekendAdjustmentPercent > 0)
+                            {
+                                <span>cộng thêm @Model.WeekendAdjustmentPercent%</span>
+                            }
+                            else
+                            {
+                                <span>trừ đi @Math.Abs(Model.WeekendAdjustmentPercent.Value)%</span>
+                            }
+                            và áp dụng cho thứ 7 & Chủ nhật.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Time Range -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Thời gian áp dụng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-calendar-check me-2"></i>Ngày bắt đầu
+                            </h6>
+                            <p class="mb-0 fs-5">@Model.StartDate.ToString("dd/MM/yyyy")</p>
+                            <small class="text-muted">@Model.StartDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-calendar-times me-2"></i>Ngày kết thúc
+                            </h6>
+                            <p class="mb-0 fs-5">@Model.EndDate.ToString("dd/MM/yyyy")</p>
+                            <small class="text-muted">@Model.EndDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</small>
+                        </div>
+                    </div>
+
+                    @if (Model.DaysActive > 0)
+                    {
+                        <div class="alert alert-secondary mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Thời hạn:</strong> @Model.DaysActive ngày
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Info -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header @(Model.IsCurrentlyEffective ? "bg-success" : "bg-secondary") text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Trạng thái
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.IsCurrentlyEffective)
+                    {
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h5 class="text-success">Đang có hiệu lực</h5>
+                        <p class="text-muted mb-0">
+                            Rate plan này đang được áp dụng
+                        </p>
+                    }
+                    else
+                    {
+                        <i class="fas fa-clock fa-4x text-secondary mb-3"></i>
+                        <h5 class="text-secondary">Không có hiệu lực</h5>
+                        <p class="text-muted mb-0">
+                            @if (DateTime.Now < Model.StartDate)
+                            {
+                                <span>Chưa đến thời gian áp dụng</span>
+                            }
+                            else
+                            {
+                                <span>Đã hết hạn</span>
+                            }
+                        </p>
+                    }
+                </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>Tóm tắt
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-tag text-primary me-2"></i>
+                            <strong>ID:</strong> @Model.Id
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-building text-primary me-2"></i>
+                            <strong>Khách sạn:</strong> @Model.HotelName
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-door-open text-primary me-2"></i>
+                            <strong>Loại phòng:</strong> @Model.RoomTypeName
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <strong>Loại:</strong> @Model.TypeDisplay
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-money-bill-wave text-primary me-2"></i>
+                            <strong>Giá gốc:</strong> @Model.Price.ToString("N0") VNĐ
+                        </li>
+                        @if (Model.IsWeekendRateActive)
+                        {
+                            <li class="mb-2">
+                                <i class="fas fa-calendar-week text-primary me-2"></i>
+                                <strong>Giá cuối tuần:</strong> Có (@Model.WeekendAdjustmentPercent%)
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow">
+                <div class="card-body">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger w-100 mb-2">
+                        <i class="fas fa-trash me-2"></i>Xóa
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary w-100">
+                        <i class="fas fa-list me-2"></i>Danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,116 @@
+@model HotelManagementSystem.Models.ViewModels.Payment.PaymentViewModel
+@{
+    ViewData["Title"] = $"Hoàn tiền Payment {Model.PaymentCode}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-undo"></i> Hoàn tiền Payment</h2>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Warning Alert -->
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle"></i> Xác nhận hoàn tiền</h5>
+                <p class="mb-0">Bạn đang thực hiện hoàn tiền cho payment <strong>@Model.PaymentCode</strong>. Hành động này không thể hoàn tác.</p>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin Payment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Mã payment:</strong></div>
+                        <div class="col-md-8">@Model.PaymentCode</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Mã booking:</strong></div>
+                        <div class="col-md-8">
+                            <a asp-controller="Booking" asp-action="Details" asp-route-id="@Model.BookingId">
+                                @Model.BookingCode
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Khách hàng:</strong></div>
+                        <div class="col-md-8">@Model.GuestName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Phương thức:</strong></div>
+                        <div class="col-md-8">
+                            <span class="badge @Model.MethodBadgeClass">@Model.MethodDisplay</span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Trạng thái:</strong></div>
+                        <div class="col-md-8">
+                            <span class="badge @Model.StatusBadgeClass">@Model.StatusDisplay</span>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Ngày thanh toán:</strong></div>
+                        <div class="col-md-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.TxnCode))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Mã giao dịch:</strong></div>
+                            <div class="col-md-8"><code>@Model.TxnCode</code></div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Refund Amount -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Số tiền hoàn lại</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-success mb-0">@Model.Amount.ToString("N0") đ</h2>
+                    <p class="text-muted mb-0">Toàn bộ số tiền sẽ được hoàn lại cho khách hàng</p>
+                </div>
+            </div>
+
+            <!-- Refund Form -->
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="RefundConfirmed" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Lý do hoàn tiền:</strong></label>
+                            <textarea name="reason" class="form-control" rows="4" placeholder="Nhập lý do hoàn tiền (không bắt buộc)"></textarea>
+                            <small class="text-muted">Ghi chú về lý do hoàn tiền để theo dõi</small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Tiền sẽ được hoàn về tài khoản khách hàng trong 3-5 ngày làm việc</li>
+                                <li>Trạng thái payment sẽ được chuyển sang "Đã hoàn tiền"</li>
+                                <li>Trạng thái thanh toán của booking sẽ được cập nhật tương ứng</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg" onclick="return confirm('Bạn có chắc chắn muốn hoàn tiền?');">
+                                <i class="fas fa-undo"></i> Xác nhận Hoàn tiền
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,148 @@
+@model List<HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel>
+@{
+    ViewData["Title"] = $"Lịch sử Booking - {ViewBag.GuestName}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-history"></i> Lịch sử Booking</h2>
+        <a asp-controller="Guest" asp-action="Details" asp-route-id="@Model.FirstOrDefault()?.GuestId" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Về trang khách hàng
+        </a>
+    </div>
+
+    <!-- Guest Summary -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-user"></i> Thông tin Khách hàng</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Họ tên:</strong> @ViewBag.GuestName
+                </div>
+                <div class="col-md-3">
+                    <strong>Email:</strong> @ViewBag.GuestEmail
+                </div>
+                <div class="col-md-3">
+                    <strong>Số điện thoại:</strong> @ViewBag.GuestPhone
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">@ViewBag.TotalBookings</h3>
+                    <p class="mb-0">Tổng số booking</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h3 class="text-success">@ViewBag.CompletedBookings</h3>
+                    <p class="mb-0">Đã hoàn thành</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h3 class="text-danger">@ViewBag.CancelledBookings</h3>
+                    <p class="mb-0">Đã hủy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h3 class="text-info">@(((decimal)ViewBag.TotalSpent).ToString("N0")) đ</h3>
+                    <p class="mb-0">Tổng chi tiêu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings List -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list"></i> Danh sách Booking (@Model.Count)
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã booking</th>
+                                <th>Khách sạn</th>
+                                <th>Phòng</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Trạng thái</th>
+                                <th>Số tiền</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@booking.BookingCode</strong><br />
+                                        <small class="text-muted">@booking.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                    </td>
+                                    <td>@booking.HotelName</td>
+                                    <td>
+                                        <strong>@booking.RoomNumber</strong><br />
+                                        <small class="text-muted">@booking.RoomTypeName</small>
+                                    </td>
+                                    <td>@booking.CheckInDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@booking.CheckOutDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <span class="badge @booking.StatusBadgeClass">
+                                            @booking.StatusDisplay
+                                        </span><br />
+                                        <small>
+                                            <span class="badge @booking.PaymentStatusBadgeClass">
+                                                @booking.PaymentStatusDisplay
+                                            </span>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        @if (booking.DiscountAmount > 0)
+                                        {
+                                            <del class="text-muted small">@booking.TotalAmount.ToString("N0") đ</del><br />
+                                            <strong class="text-success">@booking.FinalAmount.ToString("N0") đ</strong>
+                                        }
+                                        else
+                                        {
+                                            <strong>@booking.FinalAmount.ToString("N0") đ</strong>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@booking.Id" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> Chi tiết
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Khách hàng chưa có booking nào</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

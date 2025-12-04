@@ -1,0 +1,242 @@
+﻿@model HotelManagementSystem.Models.ViewModels.Booking.BookingSearchViewModel
+
+@{
+    ViewData["Title"] = "Search Rooms";
+}
+
+<style>
+    .search-container {
+        max-width: 800px;
+        margin: 1.5rem auto;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        background-color: #ffffff;
+    }
+
+    .search-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+    }
+
+    .form-group {
+        flex: 1 1 200px;
+    }
+
+    label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    input[type="date"],
+    input[type="number"] {
+        width: 100%;
+        padding: 0.4rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        padding: 0.45rem 1.1rem;
+        border-radius: 4px;
+        border: none;
+        background-color: #0d6efd;
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+
+    .validation-summary-errors {
+        color: #dc3545;
+        margin-bottom: 0.5rem;
+    }
+
+    .results-container {
+        max-width: 1000px;
+        margin: 1.5rem auto;
+    }
+
+    table.rooms-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .rooms-table th,
+    .rooms-table td {
+        border: 1px solid #dee2e6;
+        padding: 0.5rem;
+        text-align: left;
+    }
+
+    .rooms-table thead {
+        background-color: #f8f9fa;
+    }
+
+    .btn-book {
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        border: none;
+        background-color: #198754;
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+
+        .btn-book:hover {
+            background-color: #157347;
+        }
+
+    .badge-status {
+        display: inline-block;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #fff;
+    }
+
+    .badge-vacant {
+        background-color: #198754;
+    }
+
+    .badge-occupied {
+        background-color: #dc3545;
+    }
+
+    .badge-cleaning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-maintenance {
+        background-color: #6c757d;
+    }
+</style>
+
+<div class="search-container">
+    <div class="search-title">Search available rooms</div>
+
+    @Html.ValidationSummary(excludePropertyErrors: true, message: "", htmlAttributes: new { @class = "validation-summary-errors" })
+
+    <form asp-action="Search" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-row">
+            <div class="form-group">
+                <label asp-for="CheckInDate"></label>
+                <input asp-for="CheckInDate" type="date" />
+                <span asp-validation-for="CheckInDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CheckOutDate"></label>
+                <input asp-for="CheckOutDate" type="date" />
+                <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NumberOfGuests"></label>
+                <input asp-for="NumberOfGuests" type="number" min="1" />
+                <span asp-validation-for="NumberOfGuests" class="text-danger"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary">
+            Search
+        </button>
+    </form>
+</div>
+
+@if (Model?.AvailableRooms != null)
+{
+    <div class="results-container">
+        @if (Model.AvailableRooms.Any())
+        {
+            <h4>Available rooms</h4>
+            <table class="rooms-table">
+                <thead>
+                    <tr>
+                        <th>Room Number</th>
+                        <th>Hotel</th>
+                        <th>Room Type</th>
+                        <th>Floor</th>
+                        <th>Status</th>
+                        <th style="width: 120px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var room in Model.AvailableRooms)
+                    {
+                        var status = room.Status ?? "Vacant";
+                        var statusLower = status.ToLowerInvariant();
+                        var badgeClass = statusLower switch
+                        {
+                            "vacant" => "badge-vacant",
+                            "occupied" => "badge-occupied",
+                            "cleaning" => "badge-cleaning",
+                            "maintenance" => "badge-maintenance",
+                            _ => "badge-vacant"
+                        };
+
+                        <tr>
+                            <td>@room.Number</td>
+                            <td>@room.Hotel?.Name</td>
+                            <td>@room.RoomType?.Name</td>
+                            <td>@room.Floor</td>
+                            <td>
+                                <span class="badge-status @badgeClass">@status</span>
+                            </td>
+                            <td>
+                                <form asp-action="Book" method="post" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="roomId" value="@room.Id" />
+                                    <input type="hidden" name="checkInDate" value="@Model.CheckInDate?.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="checkOutDate" value="@Model.CheckOutDate?.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="numberOfGuests" value="@Model.NumberOfGuests" />
+                                    <button type="submit" class="btn-book">
+                                        Book
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No rooms available for the selected dates.</p>
+        }
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // JS optional: set min date cho input
+        (function () {
+            const today = new Date().toISOString().split("T")[0];
+            const checkIn = document.querySelector('input[name="CheckInDate"]');
+            const checkOut = document.querySelector('input[name="CheckOutDate"]');
+
+            if (checkIn) checkIn.min = today;
+            if (checkOut) checkOut.min = today;
+        })();
+    </script>
+}

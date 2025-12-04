@@ -1,0 +1,217 @@
+@model HotelManagementSystem.Models.ViewModels.RatePlan.RatePlanViewModel
+
+@{
+    ViewData["Title"] = "Thêm Rate Plan mới";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-plus-circle me-2"></i>
+            Thêm Rate Plan mới
+        </h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <!-- Basic Info Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label asp-for="RoomTypeId" class="form-label required">
+                                    <i class="fas fa-door-open me-2"></i>@Html.DisplayNameFor(m => m.RoomTypeId)
+                                </label>
+                                <select asp-for="RoomTypeId" class="form-select" asp-items="@ViewBag.RoomTypes">
+                                    <option value="">-- Chọn loại phòng --</option>
+                                </select>
+                                <span asp-validation-for="RoomTypeId" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label required">
+                                    <i class="fas fa-tag me-2"></i>@Html.DisplayNameFor(m => m.Name)
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="VD: Giá khuyến mãi tháng 12" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                                <small class="text-muted">Tên định dạng cho rate plan này</small>
+                            </div>
+                        </div>
+
+                        <!-- Policy Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-shield-alt me-2"></i>Chính sách hủy phòng
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label asp-for="Type" class="form-label required">
+                                    <i class="fas fa-undo me-2"></i>@Html.DisplayNameFor(m => m.Type)
+                                </label>
+                                <select asp-for="Type" class="form-select" id="typeSelect">
+                                    <option value="Flexible">Linh hoạt (Flexible) - Cho phép hủy miễn phí</option>
+                                    <option value="NonRefundable">Không hoàn tiền (Non-Refundable)</option>
+                                </select>
+                                <span asp-validation-for="Type" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3" id="cancelHoursDiv">
+                                <label asp-for="FreeCancelUntilHours" class="form-label">
+                                    <i class="fas fa-clock me-2"></i>@Html.DisplayNameFor(m => m.FreeCancelUntilHours)
+                                </label>
+                                <input asp-for="FreeCancelUntilHours" type="number" class="form-control" 
+                                       placeholder="VD: 24" min="0" max="168" />
+                                <span asp-validation-for="FreeCancelUntilHours" class="text-danger"></span>
+                                <small class="text-muted">Số giờ trước ngày nhận phòng khách có thể hủy miễn phí (chỉ áp dụng cho Flexible)</small>
+                            </div>
+                        </div>
+
+                        <!-- Pricing Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-dollar-sign me-2"></i>Giá và chính sách giá
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label asp-for="Price" class="form-label required">
+                                    <i class="fas fa-money-bill-wave me-2"></i>@Html.DisplayNameFor(m => m.Price)
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="Price" type="number" class="form-control" 
+                                           placeholder="VD: 1500000" step="1000" min="0" />
+                                    <span class="input-group-text">VNĐ</span>
+                                </div>
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input asp-for="IsWeekendRateActive" class="form-check-input" 
+                                           type="checkbox" id="weekendCheck" />
+                                    <label class="form-check-label" for="weekendCheck">
+                                        <i class="fas fa-calendar-week me-2"></i>@Html.DisplayNameFor(m => m.IsWeekendRateActive)
+                                    </label>
+                                </div>
+                                <small class="text-muted">Áp dụng giá khác cho thứ 7 và Chủ nhật</small>
+                            </div>
+
+                            <div class="mb-3" id="weekendAdjustmentDiv" style="display: none;">
+                                <label asp-for="WeekendAdjustmentPercent" class="form-label">
+                                    <i class="fas fa-percent me-2"></i>@Html.DisplayNameFor(m => m.WeekendAdjustmentPercent)
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="WeekendAdjustmentPercent" type="number" class="form-control" 
+                                           placeholder="VD: 20" step="1" min="-100" max="1000" />
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <span asp-validation-for="WeekendAdjustmentPercent" class="text-danger"></span>
+                                <small class="text-muted">Tăng giá cuối tuần (nhập số âm để giảm giá)</small>
+                            </div>
+                        </div>
+
+                        <!-- Date Range Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Thời gian áp dụng
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="StartDate" class="form-label required">
+                                            <i class="fas fa-calendar-check me-2"></i>@Html.DisplayNameFor(m => m.StartDate)
+                                        </label>
+                                        <input asp-for="StartDate" type="date" class="form-control" />
+                                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="EndDate" class="form-label required">
+                                            <i class="fas fa-calendar-times me-2"></i>@Html.DisplayNameFor(m => m.EndDate)
+                                        </label>
+                                        <input asp-for="EndDate" type="date" class="form-control" />
+                                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <small class="text-muted">Rate plan sẽ chỉ có hiệu lực trong khoảng thời gian này</small>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Lưu
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Panel -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-info-circle me-2"></i>Hướng dẫn
+                </div>
+                <div class="card-body">
+                    <h6>Loại chính sách:</h6>
+                    <ul class="small">
+                        <li><strong>Flexible:</strong> Khách có thể hủy miễn phí trước X giờ</li>
+                        <li><strong>Non-Refundable:</strong> Không cho phép hủy, giá thấp hơn</li>
+                    </ul>
+                    <h6>Giá cuối tuần:</h6>
+                    <ul class="small">
+                        <li>Áp dụng cho thứ 7 và Chủ nhật</li>
+                        <li>Nhập % điều chỉnh (dương = tăng giá, âm = giảm giá)</li>
+                        <li>VD: +20% = tăng 20% giá gốc</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // Toggle cancel hours field based on Type
+            $('#typeSelect').change(function() {
+                if ($(this).val() === 'Flexible') {
+                    $('#cancelHoursDiv').show();
+                } else {
+                    $('#cancelHoursDiv').hide();
+                    $('#FreeCancelUntilHours').val('');
+                }
+            }).trigger('change');
+
+            // Toggle weekend adjustment field
+            $('#weekendCheck').change(function() {
+                if ($(this).is(':checked')) {
+                    $('#weekendAdjustmentDiv').show();
+                } else {
+                    $('#weekendAdjustmentDiv').hide();
+                    $('#WeekendAdjustmentPercent').val('');
+                }
+            }).trigger('change');
+
+            // Set default dates
+            if (!$('#StartDate').val()) {
+                $('#StartDate').val(new Date().toISOString().split('T')[0]);
+            }
+        });
+    </script>
+}

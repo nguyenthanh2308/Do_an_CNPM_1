@@ -1,0 +1,126 @@
+@model HotelManagementSystem.Models.ViewModels.Housekeeping.HousekeepingTaskViewModel
+
+@{
+    ViewData["Title"] = "Tạo Công Việc Housekeeping";
+    var selectedRoom = ViewBag.SelectedRoom as HotelManagementSystem.Models.Entities.Room;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle"></i> Tạo Công Việc Housekeeping
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <!-- Room Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-door-open"></i> Phòng <span class="text-danger">*</span>
+                            </label>
+                            @if (selectedRoom != null)
+                            {
+                                <input type="hidden" name="roomId" value="@selectedRoom.Id" />
+                                <div class="alert alert-info">
+                                    <strong>Phòng @selectedRoom.Number</strong> - @selectedRoom.RoomType?.Name
+                                    <br />
+                                    <small>Trạng thái: @selectedRoom.Status</small>
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="number" name="roomId" class="form-control" placeholder="Nhập Room ID" required />
+                                <small class="form-text text-muted">Nhập ID của phòng cần tạo task</small>
+                            }
+                        </div>
+
+                        <!-- Task Type -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tasks"></i> Loại Công Việc <span class="text-danger">*</span>
+                            </label>
+                            <select name="taskType" class="form-select" required>
+                                <option value="">-- Chọn loại công việc --</option>
+                                <option value="Cleaning">Dọn phòng thường</option>
+                                <option value="CheckOut">Dọn sau checkout</option>
+                                <option value="Maintenance">Bảo trì/Sửa chữa</option>
+                                <option value="Inspection">Kiểm tra</option>
+                            </select>
+                        </div>
+
+                        <!-- Priority -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-exclamation-circle"></i> Mức Độ Ưu Tiên <span class="text-danger">*</span>
+                            </label>
+                            <select name="priority" class="form-select" required>
+                                <option value="">-- Chọn mức độ ưu tiên --</option>
+                                <option value="Low">Thấp</option>
+                                <option value="Normal" selected>Bình thường</option>
+                                <option value="High">Cao</option>
+                                <option value="Urgent">Khẩn cấp</option>
+                            </select>
+                        </div>
+
+                        <!-- Scheduled Time -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="far fa-clock"></i> Thời Gian Thực Hiện <span class="text-danger">*</span>
+                            </label>
+                            <input type="datetime-local" 
+                                   name="scheduledAt" 
+                                   class="form-control" 
+                                   value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" 
+                                   required />
+                        </div>
+
+                        <!-- Assigned User (Optional) -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-user"></i> Phân Công Cho (Không bắt buộc)
+                            </label>
+                            <input type="number" name="assignedUserId" class="form-control" placeholder="Nhập User ID của nhân viên" />
+                            <small class="form-text text-muted">Để trống nếu muốn phân công sau. User phải có role "Housekeeping"</small>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-sticky-note"></i> Ghi Chú
+                            </label>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="Ghi chú bổ sung (nếu có)"></textarea>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Cleaning:</strong> Dọn phòng thường ngày</li>
+                                <li><strong>CheckOut:</strong> Dọn phòng sau khi khách trả phòng</li>
+                                <li><strong>Maintenance:</strong> Sửa chữa, bảo trì thiết bị</li>
+                                <li><strong>Inspection:</strong> Kiểm tra chất lượng phòng</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Tạo Công Việc
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

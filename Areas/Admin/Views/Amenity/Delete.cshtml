@@ -1,0 +1,107 @@
+@model HotelManagementSystem.Models.ViewModels.Amenity.AmenityViewModel
+
+@{
+    ViewData["Title"] = "Xóa tiện nghi";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Xác nhận xóa tiện nghi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Cảnh báo!
+                        </h5>
+                        <p class="mb-0">
+                            Bạn có chắc chắn muốn xóa tiện nghi này không? 
+                            Hành động này không thể hoàn tác!
+                        </p>
+                    </div>
+
+                    <h5 class="mb-3">Thông tin tiện nghi sẽ bị xóa:</h5>
+                    
+                    <dl class="row">
+                        <dt class="col-sm-4">Tên tiện nghi:</dt>
+                        <dd class="col-sm-8">
+                            <strong class="text-danger fs-5">@Model.Name</strong>
+                        </dd>
+
+                        <dt class="col-sm-4">Số loại phòng sử dụng:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.UsageCount > 0)
+                            {
+                                <span class="badge bg-danger">@Model.UsageCount loại phòng</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">0 loại phòng</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    @if (Model.UsageCount > 0)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-ban me-2"></i>
+                            <strong>Không thể xóa!</strong> 
+                            Tiện nghi này đang được sử dụng bởi <strong>@Model.UsageCount</strong> loại phòng. 
+                            Vui lòng gỡ bỏ tiện nghi khỏi tất cả các loại phòng trước khi xóa.
+                        </div>
+                        
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Hướng dẫn:</strong> Vào <a asp-area="Admin" asp-controller="RoomType" asp-action="Index" class="alert-link">Quản lý loại phòng</a>, 
+                            chỉnh sửa từng loại phòng và bỏ chọn tiện nghi "@Model.Name".
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Tiện nghi này chưa được sử dụng bởi loại phòng nào. Bạn có thể xóa an toàn.
+                        </div>
+                    }
+
+                    <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
+                        <div class="d-grid gap-2">
+                            @if (Model.UsageCount == 0)
+                            {
+                                <button type="submit" class="btn btn-danger btn-lg">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Xác nhận xóa
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-danger btn-lg" disabled>
+                                    <i class="fas fa-ban me-2"></i>
+                                    Không thể xóa
+                                </button>
+                            }
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

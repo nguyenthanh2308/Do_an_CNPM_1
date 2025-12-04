@@ -1,0 +1,261 @@
+﻿@model IEnumerable<HotelManagementSystem.Models.Entities.Room>
+
+@{
+    ViewData["Title"] = "Quản lý phòng";
+}
+
+<div class="container-fluid mt-4">
+    <!-- PAGE HEADER -->
+    <div class="page-header mb-4">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-door-open me-2 text-primary"></i>
+                Quản lý phòng
+            </h1>
+            <p class="text-muted mb-0">Quản lý thông tin các phòng trong khách sạn</p>
+        </div>
+        <a asp-area="Admin" asp-controller="Room" asp-action="Create" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus me-2"></i>
+            Thêm phòng mới
+        </a>
+    </div>
+
+    <!-- SUCCESS MESSAGE -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- STATISTICS -->
+    @if (Model != null && Model.Any())
+    {
+        var rooms = Model.ToList();
+        var vacant = rooms.Count(r => r.Status == "Vacant");
+        var occupied = rooms.Count(r => r.Status == "Occupied");
+        var cleaning = rooms.Count(r => r.Status == "Cleaning");
+        var maintenance = rooms.Count(r => r.Status == "Maintenance");
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <div class="stat-value">@rooms.Count</div>
+                    <div class="stat-label">Tổng phòng</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-value">@vacant</div>
+                    <div class="stat-label">Phòng trống</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="stat-value">@occupied</div>
+                    <div class="stat-label">Đang sử dụng</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <div class="stat-value">@(cleaning + maintenance)</div>
+                    <div class="stat-label">Dọn/Sửa chữa</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- TABLE SECTION -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Danh sách phòng
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-3" style="opacity: 0.3;"></i>
+                    <p class="text-muted fs-5 mb-3">Chưa có phòng nào trong hệ thống</p>
+                    <a asp-area="Admin" asp-controller="Room" asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Thêm phòng
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-admin mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 5%">#</th>
+                                <th style="width: 12%">
+                                    <i class="fas fa-door-open me-1"></i>Số phòng
+                                </th>
+                                <th style="width: 18%">
+                                    <i class="fas fa-hotel me-1"></i>Khách sạn
+                                </th>
+                                <th style="width: 18%">
+                                    <i class="fas fa-bed me-1"></i>Loại phòng
+                                </th>
+                                <th style="width: 8%">
+                                    <i class="fas fa-layer-group me-1"></i>Tầng
+                                </th>
+                                <th style="width: 15%">
+                                    <i class="fas fa-circle-info me-1"></i>Trạng thái
+                                </th>
+                                <th style="width: 24%" class="text-center">
+                                    <i class="fas fa-cogs me-1"></i>Thao tác
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var index = 1;
+                                foreach (var room in Model)
+                                {
+                                    var status = room.Status ?? "Vacant";
+                                    var statusLower = status.ToLowerInvariant();
+                                    var badgeClass = statusLower switch
+                                    {
+                                        "vacant" => "badge-success",
+                                        "occupied" => "badge-danger",
+                                        "cleaning" => "badge-warning",
+                                        "maintenance" => "badge-secondary",
+                                        _ => "badge-success"
+                                    };
+                                    var statusDisplay = statusLower switch
+                                    {
+                                        "vacant" => "Trống",
+                                        "occupied" => "Đang sử dụng",
+                                        "cleaning" => "Đang dọn",
+                                        "maintenance" => "Bảo trì",
+                                        _ => status
+                                    };
+
+                                    <tr>
+                                        <td class="fw-600 text-muted">@index</td>
+                                        <td>
+                                            <strong class="text-primary">@room.Number</strong>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-hotel text-info me-1"></i>
+                                            @(room.Hotel?.Name ?? "N/A")
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-bed text-primary me-1"></i>
+                                            @(room.RoomType?.Name ?? "N/A")
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary">Tầng @room.Floor</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge @badgeClass">
+                                                <i class="fas fa-circle me-1"></i>@statusDisplay
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="action-buttons">
+                                                <a asp-area="Admin"
+                                                   asp-controller="Room"
+                                                   asp-action="Edit"
+                                                   asp-route-id="@room.Id"
+                                                   class="btn btn-sm btn-warning text-white"
+                                                   title="Sửa">
+                                                    <i class="fas fa-edit me-1"></i>Sửa
+                                                </a>
+
+                                                <form asp-area="Admin"
+                                                      asp-controller="Room"
+                                                      asp-action="Delete"
+                                                      asp-route-id="@room.Id"
+                                                      method="post"
+                                                      style="display:inline;"
+                                                      onsubmit="return confirmDelete('@room.Number');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
+                                                        <i class="fas fa-trash me-1"></i>Xóa
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(roomNumber) {
+        const msg = roomNumber
+            ? `Bạn có chắc chắn muốn xóa phòng "${roomNumber}"?\n\nHành động này không thể hoàn tác!`
+            : "Bạn có chắc chắn muốn xóa phòng này?\n\nHành động này không thể hoàn tác!";
+        return confirm(msg);
+    }
+</script>
+
+<style>
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .badge {
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .badge-success {
+        background-color: #84fab0;
+        color: #333;
+    }
+
+    .badge-danger {
+        background-color: #ff6b6b;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .table-admin tbody tr:hover {
+        background-color: #f8f9ff;
+        box-shadow: inset 0 0 10px rgba(102, 126, 234, 0.05);
+    }
+
+    .fw-600 {
+        font-weight: 600;
+    }
+</style>

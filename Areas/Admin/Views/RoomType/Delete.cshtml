@@ -1,0 +1,136 @@
+@model HotelManagementSystem.Models.ViewModels.RoomType.RoomTypeViewModel
+
+@{
+    ViewData["Title"] = "Xóa loại phòng";
+}
+
+<div class="container mt-4">
+    <div class="card shadow border-danger">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Xác nhận xóa loại phòng
+            </h4>
+        </div>
+        <div class="card-body">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <div class="alert alert-warning" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Cảnh báo!
+                </h5>
+                <p class="mb-0">
+                    Bạn có chắc chắn muốn xóa loại phòng này không? 
+                    Hành động này không thể hoàn tác!
+                </p>
+            </div>
+
+            <h5 class="mb-3">Thông tin loại phòng sẽ bị xóa:</h5>
+
+            <div class="row">
+                <div class="col-md-4">
+                    @if (!string.IsNullOrEmpty(Model.DefaultImageUrl))
+                    {
+                        <img src="@Model.DefaultImageUrl" alt="@Model.Name" 
+                             class="img-fluid rounded shadow-sm" />
+                    }
+                    else
+                    {
+                        <div class="text-center p-4 bg-light rounded">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    }
+                </div>
+
+                <div class="col-md-8">
+                    <dl class="row">
+                        <dt class="col-sm-5">Tên loại phòng:</dt>
+                        <dd class="col-sm-7">
+                            <strong class="text-danger fs-5">@Model.Name</strong>
+                        </dd>
+
+                        <dt class="col-sm-5">Khách sạn:</dt>
+                        <dd class="col-sm-7">@Model.HotelName</dd>
+
+                        <dt class="col-sm-5">Giá cơ bản:</dt>
+                        <dd class="col-sm-7">@Model.BasePrice.ToString("N0") VND/đêm</dd>
+
+                        <dt class="col-sm-5">Sức chứa:</dt>
+                        <dd class="col-sm-7">@Model.Capacity người</dd>
+
+                        <dt class="col-sm-5">Số phòng:</dt>
+                        <dd class="col-sm-7">
+                            @if (Model.RoomCount > 0)
+                            {
+                                <span class="badge bg-danger">@Model.RoomCount phòng</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">0 phòng</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Tiện nghi:</dt>
+                        <dd class="col-sm-7">
+                            @if (Model.AmenityNames != null && Model.AmenityNames.Any())
+                            {
+                                <span>@Model.AmenityNames.Count tiện nghi</span>
+                            }
+                            else
+                            {
+                                <span>Không có</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            @if (Model.RoomCount > 0)
+            {
+                <div class="alert alert-danger mt-3" role="alert">
+                    <i class="fas fa-ban me-2"></i>
+                    <strong>Không thể xóa!</strong> 
+                    Loại phòng này có <strong>@Model.RoomCount</strong> phòng đang tồn tại. 
+                    Vui lòng xóa tất cả các phòng thuộc loại này trước khi xóa loại phòng.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-success mt-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Loại phòng này chưa có phòng nào. Bạn có thể xóa an toàn.
+                </div>
+            }
+
+            <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post" class="mt-4">
+                <div class="d-grid gap-2">
+                    @if (Model.RoomCount == 0)
+                    {
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-trash me-2"></i>
+                            Xác nhận xóa
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-danger btn-lg" disabled>
+                            <i class="fas fa-ban me-2"></i>
+                            Không thể xóa
+                        </button>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times me-2"></i>
+                        Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

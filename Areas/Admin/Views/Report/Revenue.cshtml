@@ -1,0 +1,242 @@
+@model HotelManagementSystem.Models.ViewModels.Report.RevenueReportViewModel
+@{
+    ViewData["Title"] = "Báo cáo Doanh thu";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-dollar-sign"></i> Báo cáo Doanh thu</h2>
+        <a asp-action="Dashboard" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Về Dashboard
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Từ ngày</label>
+                    <input type="date" name="fromDate" class="form-control" 
+                           value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Đến ngày</label>
+                    <input type="date" name="toDate" class="form-control" 
+                           value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Nhóm theo</label>
+                    <select name="groupBy" class="form-select">
+                        <option value="Day" selected="@(Model.GroupBy == "Day")">Ngày</option>
+                        <option value="Month" selected="@(Model.GroupBy == "Month")">Tháng</option>
+                        <option value="Year" selected="@(Model.GroupBy == "Year")">Năm</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Tìm kiếm
+                    </button>
+                    <a asp-action="ExportRevenue" 
+                       asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")"
+                       asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")"
+                       asp-route-groupBy="@Model.GroupBy"
+                       asp-route-format="csv"
+                       class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Export CSV
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-money-bill-wave"></i> Tổng doanh thu</h6>
+                    <h3>@Model.TotalRevenue.ToString("N0") VNĐ</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-clipboard-list"></i> Tổng booking</h6>
+                    <h3>@Model.TotalBookings</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-calculator"></i> Trung bình/booking</h6>
+                    <h3>@Model.AverageBookingValue.ToString("N0") VNĐ</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-chart-line"></i> Biểu đồ doanh thu</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="revenueChart" style="height: 400px;"></canvas>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-table"></i> Chi tiết doanh thu</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>@(Model.GroupBy == "Day" ? "Ngày" : Model.GroupBy == "Month" ? "Tháng" : "Năm")</th>
+                            <th class="text-end">Doanh thu (VNĐ)</th>
+                            <th class="text-center">Số booking</th>
+                            <th class="text-end">Trung bình (VNĐ)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Data)
+                        {
+                            <tr>
+                                <td>@item.Label</td>
+                                <td class="text-end">@item.Revenue.ToString("N0")</td>
+                                <td class="text-center">@item.BookingCount</td>
+                                <td class="text-end">@((item.BookingCount > 0 ? item.Revenue / item.BookingCount : 0).ToString("N0"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold">
+                            <td>Tổng cộng</td>
+                            <td class="text-end">@Model.TotalRevenue.ToString("N0")</td>
+                            <td class="text-center">@Model.TotalBookings</td>
+                            <td class="text-end">@Model.AverageBookingValue.ToString("N0")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Room Types -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-crown"></i> Top loại phòng theo doanh thu</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Loại phòng</th>
+                            <th class="text-end">Doanh thu (VNĐ)</th>
+                            <th class="text-end">% Tổng doanh thu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.TopRoomTypes.Count; i++)
+                        {
+                            var item = Model.TopRoomTypes[i];
+                            var percentage = Model.TotalRevenue > 0 ? (double)(item.Revenue / Model.TotalRevenue) * 100 : 0;
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>@item.RoomType</td>
+                                <td class="text-end">@item.Revenue.ToString("N0")</td>
+                                <td class="text-end">@percentage.ToString("N1")%</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const chartLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data.Select(d => d.Label)));
+        const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data.Select(d => d.Revenue)));
+        const bookingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data.Select(d => d.BookingCount)));
+
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueData,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.3,
+                    fill: true
+                }, {
+                    label: 'Số booking',
+                    data: bookingData,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.3,
+                    fill: true,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.datasetIndex === 0) {
+                                    label += context.parsed.y.toLocaleString() + ' VNĐ';
+                                } else {
+                                    label += context.parsed.y + ' booking';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' VNĐ';
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+    </script>
+}

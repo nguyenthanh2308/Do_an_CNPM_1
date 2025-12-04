@@ -1,0 +1,186 @@
+@model IEnumerable<HotelManagementSystem.Models.ViewModels.Housekeeping.HousekeepingTaskViewModel>
+
+@{
+    ViewData["Title"] = "Công Việc Của Tôi";
+    var currentStatus = ViewBag.CurrentStatus as string;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-clipboard-list text-primary"></i> Công Việc Của Tôi
+        </h2>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Filter Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="MyTasks">
+                <div class="row align-items-end">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="form-label">Trạng Thái</label>
+                        <select name="status" class="form-select">
+                            <option value="">Tất cả</option>
+                            <option value="Pending" selected="@(currentStatus == "Pending")">Chờ xử lý</option>
+                            <option value="InProgress" selected="@(currentStatus == "InProgress")">Đang làm</option>
+                            <option value="Completed" selected="@(currentStatus == "Completed")">Hoàn thành</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Lọc
+                        </button>
+                        <a asp-action="MyTasks" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h3>@Model.Count(t => t.IsPending)</h3>
+                    <p class="mb-0">Chờ xử lý</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h3>@Model.Count(t => t.IsInProgress)</h3>
+                    <p class="mb-0">Đang làm</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h3>@Model.Count(t => t.IsCompleted)</h3>
+                    <p class="mb-0">Hoàn thành</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h3>@Model.Count(t => t.IsOverdue)</h3>
+                    <p class="mb-0">Quá hạn</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks List -->
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Không có công việc nào.
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Phòng</th>
+                                <th>Loại Công Việc</th>
+                                <th>Ưu Tiên</th>
+                                <th>Trạng Thái</th>
+                                <th>Thời Gian</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var task in Model.OrderBy(t => t.ScheduledAt))
+                            {
+                                <tr class="@(task.IsOverdue ? "table-danger" : "")">
+                                    <td>
+                                        <strong>@task.RoomNumber</strong>
+                                        <br />
+                                        <small class="text-muted">@task.RoomTypeName - @task.HotelName</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge @task.TaskTypeBadgeClass">
+                                            @task.TaskTypeDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @task.PriorityBadgeClass">
+                                            @task.PriorityDisplay
+                                        </span>
+                                        @if (task.IsOverdue)
+                                        {
+                                            <br /><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Quá hạn</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @task.StatusBadgeClass">
+                                            @task.StatusDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            <i class="far fa-clock"></i> @task.ScheduledTimeDisplay
+                                            @if (task.IsCompleted)
+                                            {
+                                                <br /><i class="fas fa-check"></i> @task.CompletedTimeDisplay
+                                            }
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@task.Id" class="btn btn-sm btn-info" title="Chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        
+                                        @if (task.CanStart)
+                                        {
+                                            <form asp-action="Start" asp-route-id="@task.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-success" title="Bắt đầu">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        
+                                        @if (task.CanComplete)
+                                        {
+                                            <form asp-action="Complete" asp-route-id="@task.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-primary" title="Hoàn thành">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

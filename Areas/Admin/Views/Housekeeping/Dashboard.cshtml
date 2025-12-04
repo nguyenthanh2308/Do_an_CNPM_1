@@ -1,0 +1,141 @@
+@{
+    ViewData["Title"] = "Housekeeping Dashboard";
+    var selectedDate = (DateTime)ViewBag.SelectedDate;
+    var roomStatus = ViewBag.RoomStatus as List<(ulong, string, string, bool)> ?? new List<(ulong, string, string, bool)>();
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-broom"></i> Housekeeping Dashboard</h2>
+        <div>
+            <form asp-action="Dashboard" method="get" class="d-inline">
+                <input type="date" name="date" class="form-control d-inline" style="width: auto;" 
+                       value="@selectedDate.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+            </form>
+            <a asp-action="Index" class="btn btn-primary ms-2">
+                <i class="fas fa-list"></i> Tất cả Tasks
+            </a>
+            <a asp-action="Create" class="btn btn-success">
+                <i class="fas fa-plus"></i> Tạo Task
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-list"></i>
+                </div>
+                <div class="stat-value">@ViewBag.TotalTasks</div>
+                <div class="stat-label">Tổng task</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value">@ViewBag.PendingTasks</div>
+                <div class="stat-label">Chờ xử lý</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="stat-value">@ViewBag.InProgressTasks</div>
+                <div class="stat-label">Đang làm</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-value">@ViewBag.CompletedTasks</div>
+                <div class="stat-label">Hoàn thành</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-card danger">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-value">@ViewBag.OverdueTasks</div>
+                <div class="stat-label">Quá hạn</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                @{
+                    var completionRate = ViewBag.TotalTasks > 0 
+                        ? Math.Round((double)ViewBag.CompletedTasks / ViewBag.TotalTasks * 100, 1) 
+                        : 0;
+                }
+                <div class="stat-value">@completionRate%</div>
+                <div class="stat-label">Tỷ lệ HT</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Status Board -->
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-door-open"></i> Trạng thái Phòng</h5>
+        </div>
+        <div class="card-body">
+            @if (roomStatus.Any())
+            {
+                <div class="row g-2">
+                    @foreach (var room in roomStatus)
+                    {
+                        var (roomId, roomNumber, status, hasPendingTask) = room;
+                        var badgeClass = status switch
+                        {
+                            "Available" => hasPendingTask ? "bg-warning" : "bg-success",
+                            "Occupied" => "bg-primary",
+                            "Maintenance" => "bg-secondary",
+                            _ => "bg-dark"
+                        };
+                        var icon = status switch
+                        {
+                            "Available" => hasPendingTask ? "fa-broom" : "fa-check",
+                            "Occupied" => "fa-user",
+                            "Maintenance" => "fa-tools",
+                            _ => "fa-door-closed"
+                        };
+
+                        <div class="col-md-2 col-sm-3 col-4">
+                            <div class="card @badgeClass text-white">
+                                <div class="card-body p-2 text-center">
+                                    <i class="fas @icon fa-2x mb-2"></i>
+                                    <h6 class="mb-0">@roomNumber</h6>
+                                    @if (hasPendingTask)
+                                    {
+                                        <small><i class="fas fa-exclamation-circle"></i> Cần dọn</small>
+                                    }
+                                </div>
+                                <div class="card-footer p-1 bg-dark bg-opacity-25">
+                                    <a asp-action="Create" asp-route-roomId="@roomId" 
+                                       class="btn btn-sm btn-light btn-block w-100">
+                                        <i class="fas fa-plus"></i> Task
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted text-center">Không có phòng nào</p>
+            }
+        </div>
+    </div>
+</div>

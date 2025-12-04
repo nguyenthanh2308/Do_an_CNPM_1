@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="display-4">
+            <i class="fas fa-hotel text-primary"></i>
+            Chào mừng đến với Hotel Management System
+        </h1>
+        <p class="lead mt-4">Hệ thống quản lý khách sạn chuyên nghiệp</p>
+    </div>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="row mt-5">
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-door-open fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Quản lý phòng</h5>
+                            <p class="card-text">Quản lý thông tin phòng, loại phòng và tình trạng</p>
+                            <a asp-area="Admin" asp-controller="Room" asp-action="Index" class="btn btn-primary">
+                                <i class="fas fa-arrow-right me-2"></i>Truy cập
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager") || User.IsInRole("Receptionist"))
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-calendar-check fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">Đặt phòng</h5>
+                            <p class="card-text">Tìm kiếm và đặt phòng cho khách hàng</p>
+                            <a asp-controller="Booking" asp-action="Search" class="btn btn-success">
+                                <i class="fas fa-arrow-right me-2"></i>Truy cập
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user-plus fa-3x text-info mb-3"></i>
+                            <h5 class="card-title">Tạo tài khoản</h5>
+                            <p class="card-text">Tạo tài khoản mới cho nhân viên</p>
+                            <a asp-controller="Auth" asp-action="Register" class="btn btn-info">
+                                <i class="fas fa-arrow-right me-2"></i>Truy cập
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="alert alert-info mt-4" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Xin chào, @User.Identity.Name!</strong> 
+            Bạn đang đăng nhập với vai trò: <strong>@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</strong>
+        </div>
+    }
+    else
+    {
+        <div class="row mt-5 justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <i class="fas fa-sign-in-alt fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Bạn chưa đăng nhập</h5>
+                        <p class="card-text">Vui lòng đăng nhập để sử dụng hệ thống</p>
+                        <a asp-controller="Auth" asp-action="Login" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

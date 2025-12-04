@@ -1,0 +1,146 @@
+@model HotelManagementSystem.Models.ViewModels.Guest.GuestViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa thông tin khách hàng";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-user-edit me-2"></i>
+            Chỉnh sửa thông tin khách hàng
+        </h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CreatedAt" />
+                        
+                        <!-- Basic Info Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-user me-2"></i>Thông tin cơ bản
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label asp-for="FullName" class="form-label required">
+                                    <i class="fas fa-id-card me-2"></i>@Html.DisplayNameFor(m => m.FullName)
+                                </label>
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="IdNumber" class="form-label">
+                                    <i class="fas fa-id-badge me-2"></i>@Html.DisplayNameFor(m => m.IdNumber)
+                                </label>
+                                <input asp-for="IdNumber" class="form-control" maxlength="32" />
+                                <span asp-validation-for="IdNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Contact Info Section -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-address-book me-2"></i>Thông tin liên hệ
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>@Html.DisplayNameFor(m => m.Email)
+                                </label>
+                                <input asp-for="Email" type="email" class="form-control" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Phone" class="form-label">
+                                    <i class="fas fa-phone me-2"></i>@Html.DisplayNameFor(m => m.Phone)
+                                </label>
+                                <input asp-for="Phone" type="tel" class="form-control" maxlength="32" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-chart-bar me-2"></i>Thống kê
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-6">ID:</dt>
+                        <dd class="col-6">@Model.Id</dd>
+
+                        <dt class="col-6">Phân loại:</dt>
+                        <dd class="col-6">
+                            <span class="badge @Model.CustomerTypeBadgeClass">
+                                @Model.CustomerTypeDisplay
+                            </span>
+                        </dd>
+
+                        <dt class="col-6">Booking:</dt>
+                        <dd class="col-6"><strong>@Model.TotalBookings</strong></dd>
+
+                        <dt class="col-6">Hoàn thành:</dt>
+                        <dd class="col-6 text-success">@Model.CompletedBookings</dd>
+
+                        <dt class="col-6">Đã hủy:</dt>
+                        <dd class="col-6 text-danger">@Model.CancelledBookings</dd>
+
+                        <dt class="col-6">Tổng chi tiêu:</dt>
+                        <dd class="col-6"><strong class="text-success">@Model.TotalSpent.ToString("N0") VNĐ</strong></dd>
+
+                        <dt class="col-6">Ngày tạo:</dt>
+                        <dd class="col-6"><small>@Model.CreatedAt.ToString("dd/MM/yyyy")</small></dd>
+
+                        @if (Model.LastBookingDate.HasValue)
+                        {
+                            <dt class="col-6">Booking gần nhất:</dt>
+                            <dd class="col-6"><small>@Model.LastBookingDate.Value.ToString("dd/MM/yyyy")</small></dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Lưu ý
+                </div>
+                <div class="card-body small">
+                    <ul>
+                        <li>Email phải là duy nhất trong hệ thống</li>
+                        <li>Thay đổi thông tin sẽ không ảnh hưởng đến các booking đã tạo</li>
+                        <li>Nên cập nhật đầy đủ thông tin để quản lý tốt hơn</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

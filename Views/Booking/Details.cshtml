@@ -1,0 +1,149 @@
+@model HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel
+
+@{
+    ViewData["Title"] = "Xác Nhận Đặt Phòng";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-check-circle"></i> Đặt Phòng Thành Công!
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success" role="alert">
+                        <strong>Cảm ơn bạn!</strong> Đơn đặt phòng của bạn đã được xác nhận.
+                    </div>
+
+                    <h5 class="border-bottom pb-2 mb-3">Thông Tin Đặt Phòng</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Mã Đặt Phòng:</div>
+                        <div class="col-sm-8">
+                            <span class="badge bg-primary fs-6">#@Model.Id</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Khách Sạn:</div>
+                        <div class="col-sm-8">@Model.HotelName</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Phòng:</div>
+                        <div class="col-sm-8">
+                            <span class="badge bg-info">@Model.RoomNumber - @Model.RoomTypeName</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Ngày Nhận Phòng:</div>
+                        <div class="col-sm-8">
+                            <i class="far fa-calendar-check text-success"></i>
+                            @Model.CheckInDate.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Ngày Trả Phòng:</div>
+                        <div class="col-sm-8">
+                            <i class="far fa-calendar-times text-danger"></i>
+                            @Model.CheckOutDate.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Số Đêm:</div>
+                        <div class="col-sm-8">
+                            @Model.Nights đêm
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Khách Hàng:</div>
+                        <div class="col-sm-8">
+                            <i class="fas fa-user"></i> @Model.GuestName
+                            @if (!string.IsNullOrEmpty(Model.GuestEmail))
+                            {
+                                <br /><small class="text-muted">@Model.GuestEmail</small>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Trạng Thái:</div>
+                        <div class="col-sm-8">
+                            <span class="badge @Model.StatusBadgeClass">@Model.StatusDisplay</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Thanh Toán:</div>
+                        <div class="col-sm-8">
+                            <span class="badge @Model.PaymentStatusBadgeClass">@Model.PaymentStatusDisplay</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Tổng Tiền:</div>
+                        <div class="col-sm-8">
+                            <h4 class="text-success mb-0">
+                                @Model.TotalAmount.ToString("N0") VNĐ
+                            </h4>
+                            @if (Model.DiscountAmount > 0)
+                            {
+                                <small class="text-muted">
+                                    Giảm giá: @Model.DiscountAmount.ToString("N0") VNĐ<br />
+                                    Thành tiền: <strong>@Model.FinalAmount.ToString("N0") VNĐ</strong>
+                                </small>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.RatePlanName))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-sm-4 fw-bold">Gói Giá:</div>
+                            <div class="col-sm-8">
+                                <span class="badge bg-secondary">@Model.RatePlanName</span>
+                            </div>
+                        </div>
+                    }
+
+                    <hr class="my-4">
+
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle"></i> Lưu Ý Quan Trọng
+                        </h6>
+                        <ul class="mb-0">
+                            <li>Vui lòng đến trước giờ check-in để hoàn tất thủ tục</li>
+                            <li>Mang theo giấy tờ tùy thân hợp lệ</li>
+                            <li>Mã đặt phòng: <strong>#@Model.Id</strong></li>
+                            <li>Liên hệ khách sạn nếu cần thay đổi hoặc hủy đặt phòng</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a asp-action="Search" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search"></i> Đặt Phòng Mới
+                        </a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-home"></i> Về Trang Chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-scroll to top on page load
+        window.scrollTo(0, 0);
+    </script>
+}

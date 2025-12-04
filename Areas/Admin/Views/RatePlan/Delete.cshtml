@@ -1,0 +1,209 @@
+@model HotelManagementSystem.Models.ViewModels.RatePlan.RatePlanViewModel
+
+@{
+    ViewData["Title"] = "Xóa Rate Plan";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-danger">
+            <i class="fas fa-trash-alt me-2"></i>
+            Xóa Rate Plan
+        </h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Warning Alert -->
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Cảnh báo!
+                </h5>
+                <p class="mb-0">
+                    Bạn có chắc chắn muốn xóa rate plan <strong>@Model.Name</strong> không?
+                    Hành động này không thể hoàn tác!
+                </p>
+            </div>
+
+            <!-- Rate Plan Details -->
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Thông tin Rate Plan sẽ bị xóa
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">
+                            <i class="fas fa-tag me-2"></i>Tên Rate Plan
+                        </dt>
+                        <dd class="col-sm-8">
+                            <strong>@Model.Name</strong>
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-hotel me-2"></i>Khách sạn
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.HotelName
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-door-open me-2"></i>Loại phòng
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.RoomTypeName
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-shield-alt me-2"></i>Loại chính sách
+                        </dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-@(Model.Type == "Flexible" ? "success" : "warning")">
+                                @Model.TypeDisplay
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-money-bill-wave me-2"></i>Giá
+                        </dt>
+                        <dd class="col-sm-8">
+                            <strong class="text-primary">@Model.Price.ToString("N0") VNĐ</strong> / đêm
+                        </dd>
+
+                        @if (Model.IsWeekendRateActive)
+                        {
+                            <dt class="col-sm-4">
+                                <i class="fas fa-calendar-week me-2"></i>Giá cuối tuần
+                            </dt>
+                            <dd class="col-sm-8">
+                                @if (Model.WeekendAdjustmentPercent.HasValue)
+                                {
+                                    var weekendPrice = Model.CalculateFinalPrice(true);
+                                    <strong class="text-info">@weekendPrice.ToString("N0") VNĐ</strong>
+                                    <span class="badge bg-info">
+                                        @(Model.WeekendAdjustmentPercent > 0 ? "+" : "")@Model.WeekendAdjustmentPercent%
+                                    </span>
+                                }
+                            </dd>
+                        }
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-calendar-alt me-2"></i>Thời gian áp dụng
+                        </dt>
+                        <dd class="col-sm-8">
+                            Từ <strong>@Model.StartDate.ToString("dd/MM/yyyy")</strong> 
+                            đến <strong>@Model.EndDate.ToString("dd/MM/yyyy")</strong>
+                            @if (Model.DaysActive > 0)
+                            {
+                                <br /><small class="text-muted">(@Model.DaysActive ngày)</small>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-chart-line me-2"></i>Trạng thái
+                        </dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsCurrentlyEffective)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Đang có hiệu lực
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-clock me-1"></i>Không có hiệu lực
+                                </span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Confirm Delete Form -->
+            <div class="card shadow mt-4">
+                <div class="card-body">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>
+                                Xác nhận xóa
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                Hủy bỏ
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="col-lg-4">
+            <!-- Impact Warning -->
+            <div class="card shadow mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Tác động khi xóa
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            Rate plan sẽ bị xóa vĩnh viễn
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            Không thể khôi phục sau khi xóa
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            Các booking đã sử dụng rate plan này sẽ không bị ảnh hưởng
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            Khách sạn và loại phòng không bị xóa
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Quick Info -->
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Gợi ý
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2">
+                        <strong>Thay vì xóa:</strong>
+                    </p>
+                    <ul class="small mb-0">
+                        <li class="mb-2">
+                            Bạn có thể chỉnh sửa thời gian áp dụng để vô hiệu hóa rate plan
+                        </li>
+                        <li class="mb-0">
+                            Hoặc đặt ngày kết thúc sớm hơn để ngừng sử dụng
+                        </li>
+                    </ul>
+                    <hr />
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning w-100">
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa thay vì xóa
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

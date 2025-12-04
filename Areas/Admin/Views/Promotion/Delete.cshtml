@@ -1,0 +1,260 @@
+@model HotelManagementSystem.Models.ViewModels.Promotion.PromotionViewModel
+
+@{
+    ViewData["Title"] = "Xóa khuyến mãi";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-danger">
+            <i class="fas fa-trash-alt me-2"></i>
+            Xóa khuyến mãi
+        </h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Warning Alert -->
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Cảnh báo!
+                </h5>
+                <p class="mb-0">
+                    Bạn có chắc chắn muốn xóa mã khuyến mãi <strong>@Model.Code</strong> không?
+                    Hành động này không thể hoàn tác!
+                </p>
+            </div>
+
+            <!-- Promotion Details -->
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Thông tin khuyến mãi sẽ bị xóa
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">
+                            <i class="fas fa-barcode me-2"></i>Mã khuyến mãi
+                        </dt>
+                        <dd class="col-sm-8">
+                            <strong class="text-primary">@Model.Code</strong>
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-tag me-2"></i>Loại
+                        </dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-@(Model.Type == "Percent" ? "info" : "success")">
+                                @Model.TypeDisplay
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-percentage me-2"></i>Giá trị
+                        </dt>
+                        <dd class="col-sm-8">
+                            <strong>@Model.ValueDisplay</strong>
+                            @if (Model.Type == "Percent" && Model.MaxDiscountAmount.HasValue)
+                            {
+                                <br />
+                                <small class="text-muted">Tối đa: @Model.MaxDiscountAmount.Value.ToString("N0") VNĐ</small>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-calendar-alt me-2"></i>Thời gian áp dụng
+                        </dt>
+                        <dd class="col-sm-8">
+                            Từ <strong>@Model.StartDate.ToString("dd/MM/yyyy")</strong> 
+                            đến <strong>@Model.EndDate.ToString("dd/MM/yyyy")</strong>
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-shopping-cart me-2"></i>Đơn hàng tối thiểu
+                        </dt>
+                        <dd class="col-sm-8">
+                            @if (Model.MinOrderValue.HasValue)
+                            {
+                                <span>@Model.MinOrderValue.Value.ToString("N0") VNĐ</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không giới hạn</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-hashtag me-2"></i>Lượt sử dụng
+                        </dt>
+                        <dd class="col-sm-8">
+                            @if (Model.MaxUsageCount.HasValue)
+                            {
+                                <span class="badge bg-@(Model.IsUsageLimitReached ? "danger" : "primary")">
+                                    @Model.CurrentUsageCount / @Model.MaxUsageCount
+                                </span>
+                                @if (Model.IsUsageLimitReached)
+                                {
+                                    <br />
+                                    <small class="text-danger">Đã hết lượt sử dụng</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Không giới hạn</span>
+                            }
+                        </dd>
+
+                        @if (Model.IsNewCustomerOnly)
+                        {
+                            <dt class="col-sm-4">
+                                <i class="fas fa-user-plus me-2"></i>Đối tượng áp dụng
+                            </dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-info">Chỉ khách hàng mới</span>
+                            </dd>
+                        }
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-chart-line me-2"></i>Trạng thái
+                        </dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @Model.StatusBadgeClass">
+                                @Model.StatusDisplay
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            <i class="fas fa-calendar-plus me-2"></i>Ngày tạo
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Confirm Delete Form -->
+            <div class="card shadow mt-4">
+                <div class="card-body">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>
+                                Xác nhận xóa
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                Hủy bỏ
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="col-lg-4">
+            <!-- Impact Warning -->
+            <div class="card shadow mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Tác động khi xóa
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            Mã khuyến mãi sẽ bị xóa vĩnh viễn
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            Không thể khôi phục sau khi xóa
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-users text-warning me-2"></i>
+                            Khách hàng không thể sử dụng mã này nữa
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            Lịch sử sử dụng sẽ bị mất
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Usage Stats -->
+            @if (Model.CurrentUsageCount > 0)
+            {
+                <div class="card shadow mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Thống kê sử dụng
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Đã được sử dụng:</strong> @Model.CurrentUsageCount lần
+                        </p>
+                        @if (Model.MaxUsageCount.HasValue)
+                        {
+                            var usagePercent = (double)Model.CurrentUsageCount / Model.MaxUsageCount.Value * 100;
+                            <div class="progress mb-2">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: @usagePercent%" 
+                                     aria-valuenow="@Model.CurrentUsageCount" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="@Model.MaxUsageCount">
+                                    @usagePercent.ToString("F0")%
+                                </div>
+                            </div>
+                        }
+                        <p class="text-warning small mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Xóa mã này có thể ảnh hưởng đến trải nghiệm khách hàng
+                        </p>
+                    </div>
+                </div>
+            }
+
+            <!-- Alternative Actions -->
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Gợi ý
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2">
+                        <strong>Thay vì xóa:</strong>
+                    </p>
+                    <ul class="small mb-0">
+                        <li class="mb-2">
+                            Chỉnh sửa ngày kết thúc để vô hiệu hóa
+                        </li>
+                        <li class="mb-2">
+                            Giảm số lần sử dụng tối đa về 0
+                        </li>
+                        <li class="mb-0">
+                            Tăng giá trị đơn hàng tối thiểu để hạn chế sử dụng
+                        </li>
+                    </ul>
+                    <hr />
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning w-100">
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa thay vì xóa
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

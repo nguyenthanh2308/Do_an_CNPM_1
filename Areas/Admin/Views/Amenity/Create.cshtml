@@ -1,0 +1,61 @@
+@model HotelManagementSystem.Models.ViewModels.Amenity.AmenityViewModel
+
+@{
+    ViewData["Title"] = "Thêm tiện nghi mới";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Thêm tiện nghi mới
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">
+                                <i class="fas fa-tag me-2"></i>@Html.DisplayNameFor(m => m.Name)
+                            </label>
+                            <input asp-for="Name" class="form-control form-control-lg" 
+                                   placeholder="Ví dụ: WiFi miễn phí, Điều hòa, TV..." 
+                                   autofocus />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Nhập tên tiện nghi rõ ràng, dễ hiểu
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Gợi ý:</strong> Free WiFi, Air Conditioning, TV, Mini Bar, Safe Box, 
+                            Coffee Maker, Hair Dryer, Bathtub, Shower, Balcony, City View, Ocean View, 
+                            King Size Bed, Queen Size Bed, Work Desk...
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                Tạo tiện nghi
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

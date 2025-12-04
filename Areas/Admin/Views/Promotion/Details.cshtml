@@ -1,0 +1,312 @@
+@model HotelManagementSystem.Models.ViewModels.Promotion.PromotionViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết khuyến mãi";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-gift me-2"></i>
+            Chi tiết khuyến mãi
+        </h2>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>Chỉnh sửa
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-barcode me-2"></i>
+                        @Model.Code
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-tag me-2"></i>Loại khuyến mãi
+                            </h6>
+                            <span class="badge bg-@(Model.Type == "Percent" ? "info" : "success") fs-6">
+                                @Model.TypeDisplay
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-percentage me-2"></i>Giá trị
+                            </h6>
+                            <p class="mb-0 fs-5">
+                                <strong class="text-primary">@Model.ValueDisplay</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    @if (Model.Type == "Percent" && Model.MaxDiscountAmount.HasValue)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Giảm giá tối đa:</strong> @Model.MaxDiscountAmount.Value.ToString("N0") VNĐ
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Time Range -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Thời gian áp dụng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-calendar-check me-2"></i>Ngày bắt đầu
+                            </h6>
+                            <p class="mb-0 fs-5">@Model.StartDate.ToString("dd/MM/yyyy")</p>
+                            <small class="text-muted">@Model.StartDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-calendar-times me-2"></i>Ngày kết thúc
+                            </h6>
+                            <p class="mb-0 fs-5">@Model.EndDate.ToString("dd/MM/yyyy")</p>
+                            <small class="text-muted">@Model.EndDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))</small>
+                        </div>
+                    </div>
+
+                    @if (Model.IsCurrentlyActive)
+                    {
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Còn lại:</strong> @Model.DaysRemaining ngày
+                        </div>
+                    }
+                    else if (Model.IsExpired)
+                    {
+                        <div class="alert alert-secondary mb-0">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <strong>Đã hết hạn</strong>
+                        </div>
+                    }
+                    else if (Model.IsUpcoming)
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Sắp áp dụng</strong>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Conditions -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Điều kiện áp dụng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-6">
+                            <i class="fas fa-shopping-cart me-2"></i>Giá trị đơn hàng tối thiểu
+                        </dt>
+                        <dd class="col-sm-6">
+                            @if (Model.MinOrderValue.HasValue)
+                            {
+                                <strong class="text-primary">@Model.MinOrderValue.Value.ToString("N0") VNĐ</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không giới hạn</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">
+                            <i class="fas fa-hashtag me-2"></i>Số lần sử dụng tối đa
+                        </dt>
+                        <dd class="col-sm-6">
+                            @if (Model.MaxUsageCount.HasValue)
+                            {
+                                <span class="badge bg-@(Model.IsUsageLimitReached ? "danger" : "primary") fs-6">
+                                    @Model.CurrentUsageCount / @Model.MaxUsageCount
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary fs-6">Không giới hạn</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">
+                            <i class="fas fa-user-plus me-2"></i>Khách hàng mới
+                        </dt>
+                        <dd class="col-sm-6">
+                            @if (Model.IsNewCustomerOnly)
+                            {
+                                <span class="badge bg-info fs-6">Chỉ khách mới</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Tất cả khách hàng</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Example Calculation -->
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>
+                        Ví dụ tính giảm giá
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var exampleAmounts = new[] { 500000m, 1000000m, 2000000m, 5000000m };
+                    }
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Giá trị đơn hàng</th>
+                                    <th>Giảm giá</th>
+                                    <th>Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var amount in exampleAmounts)
+                                {
+                                    var discount = Model.CalculateDiscount(amount);
+                                    var canApply = !Model.MinOrderValue.HasValue || amount >= Model.MinOrderValue.Value;
+                                    
+                                    <tr class="@(!canApply ? "text-muted" : "")">
+                                        <td>@amount.ToString("N0") VNĐ</td>
+                                        <td>
+                                            @if (canApply)
+                                            {
+                                                <span class="text-success">-@discount.ToString("N0") VNĐ</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Không đủ điều kiện</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (canApply)
+                                            {
+                                                <strong>@((amount - discount).ToString("N0")) VNĐ</strong>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Info -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header @Model.StatusBadgeClass text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Trạng thái
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.IsCurrentlyActive)
+                    {
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h5 class="text-success">Đang hoạt động</h5>
+                        <p class="text-muted mb-0">Khuyến mãi đang có hiệu lực</p>
+                    }
+                    else if (Model.IsExpired)
+                    {
+                        <i class="fas fa-times-circle fa-4x text-secondary mb-3"></i>
+                        <h5 class="text-secondary">Đã hết hạn</h5>
+                        <p class="text-muted mb-0">Khuyến mãi đã kết thúc</p>
+                    }
+                    else if (Model.IsUpcoming)
+                    {
+                        <i class="fas fa-clock fa-4x text-info mb-3"></i>
+                        <h5 class="text-info">Sắp áp dụng</h5>
+                        <p class="text-muted mb-0">Chưa đến thời gian áp dụng</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>Tóm tắt
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-hashtag text-primary me-2"></i>
+                            <strong>ID:</strong> @Model.Id
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-barcode text-primary me-2"></i>
+                            <strong>Mã:</strong> @Model.Code
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-tag text-primary me-2"></i>
+                            <strong>Loại:</strong> @Model.TypeDisplay
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-percentage text-primary me-2"></i>
+                            <strong>Giá trị:</strong> @Model.ValueDisplay
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar-plus text-primary me-2"></i>
+                            <strong>Tạo lúc:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow">
+                <div class="card-body">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger w-100 mb-2">
+                        <i class="fas fa-trash me-2"></i>Xóa
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary w-100">
+                        <i class="fas fa-list me-2"></i>Danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

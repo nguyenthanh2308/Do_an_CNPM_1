@@ -1,0 +1,152 @@
+@{
+    ViewData["Title"] = "Tạo Payment";
+    var booking = ViewBag.Booking as HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel;
+    var totalPaid = (decimal)ViewBag.TotalPaid;
+    var remainingAmount = (decimal)ViewBag.RemainingAmount;
+    
+    if (booking == null)
+    {
+        return;
+    }
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-plus-circle"></i> Tạo Payment mới</h2>
+        <a asp-controller="Booking" asp-action="Details" asp-route-id="@booking.Id" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại Booking
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Booking Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Thông tin Booking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Mã booking:</strong></div>
+                        <div class="col-md-8">@booking.BookingCode</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Khách hàng:</strong></div>
+                        <div class="col-md-8">@booking.GuestName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Phòng:</strong></div>
+                        <div class="col-md-8">@booking.RoomNumber - @booking.RoomTypeName</div>
+                    </div>
+                    <hr />
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Tổng tiền booking:</strong></div>
+                        <div class="col-md-8"><strong class="text-primary">@booking.FinalAmount.ToString("N0") đ</strong></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Đã thanh toán:</strong></div>
+                        <div class="col-md-8"><strong class="text-success">@totalPaid.ToString("N0") đ</strong></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><strong>Còn lại:</strong></div>
+                        <div class="col-md-8">
+                            <h4 class="@(remainingAmount > 0 ? "text-danger" : "text-success") mb-0">
+                                @remainingAmount.ToString("N0") đ
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Tạo Payment</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="bookingId" value="@booking.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Phương thức thanh toán:</strong></label>
+                            <select name="method" class="form-select" required id="methodSelect">
+                                <option value="">-- Chọn phương thức --</option>
+                                <option value="Mock">Thanh toán giả lập (Mock)</option>
+                                <option value="PayAtProperty">Thanh toán tại khách sạn</option>
+                            </select>
+                            <small class="text-muted">Chọn phương thức thanh toán phù hợp</small>
+                        </div>
+
+                        <div id="mockInfo" class="alert alert-info d-none">
+                            <i class="fas fa-info-circle"></i> <strong>Thanh toán giả lập:</strong>
+                            Sẽ được xử lý tự động và luôn thành công. Phù hợp cho môi trường test.
+                        </div>
+
+                        <div id="propertyInfo" class="alert alert-warning d-none">
+                            <i class="fas fa-exclamation-triangle"></i> <strong>Thanh toán tại khách sạn:</strong>
+                            Khách hàng sẽ thanh toán trực tiếp tại quầy lễ tân. Cần xác nhận thủ công sau khi nhận tiền.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Số tiền:</strong></label>
+                            <div class="input-group">
+                                <input type="number" 
+                                       name="amount" 
+                                       class="form-control" 
+                                       step="1000" 
+                                       min="1000" 
+                                       max="@booking.FinalAmount"
+                                       value="@remainingAmount"
+                                       required 
+                                       id="amountInput" />
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                            <small class="text-muted">Số tiền phải từ 1,000 đến @booking.FinalAmount.ToString("N0") đ</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAmount(@remainingAmount)">
+                                Thanh toán toàn bộ còn lại
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAmount(@(remainingAmount / 2))">
+                                Thanh toán 50%
+                            </button>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus-circle"></i> Tạo Payment
+                            </button>
+                            <a asp-controller="Booking" asp-action="Details" asp-route-id="@booking.Id" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('methodSelect').addEventListener('change', function() {
+            const mockInfo = document.getElementById('mockInfo');
+            const propertyInfo = document.getElementById('propertyInfo');
+            
+            mockInfo.classList.add('d-none');
+            propertyInfo.classList.add('d-none');
+            
+            if (this.value === 'Mock') {
+                mockInfo.classList.remove('d-none');
+            } else if (this.value === 'PayAtProperty') {
+                propertyInfo.classList.remove('d-none');
+            }
+        });
+
+        function setAmount(amount) {
+            document.getElementById('amountInput').value = Math.round(amount);
+        }
+    </script>
+}

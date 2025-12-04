@@ -1,0 +1,243 @@
+@model HotelManagementSystem.Models.ViewModels.Housekeeping.HousekeepingTaskViewModel
+@{
+    ViewData["Title"] = $"Task #{Model.Id}";
+    var isHousekeeping = User.IsInRole("Housekeeping") && !User.IsInRole("Admin") && !User.IsInRole("Manager");
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tasks"></i> Chi tiết Task</h2>
+        <a asp-action="@(isHousekeeping ? "MyTasks" : "Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Task Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin Task</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Loại công việc:</strong>
+                            <span class="badge @Model.TaskTypeBadgeClass">@Model.TaskTypeDisplay</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Độ ưu tiên:</strong>
+                            <span class="badge @Model.PriorityBadgeClass">@Model.PriorityDisplay</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Trạng thái:</strong>
+                            <span class="badge @Model.StatusBadgeClass">@Model.StatusDisplay</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Lịch hẹn:</strong> @Model.ScheduledTimeDisplay
+                            @if (Model.IsOverdue)
+                            {
+                                <br /><span class="badge bg-danger">Quá hạn!</span>
+                            }
+                        </div>
+                    </div>
+                    @if (Model.CompletedAt.HasValue)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Hoàn thành lúc:</strong> @Model.CompletedTimeDisplay
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Thời gian:</strong> @Model.DurationDisplay
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Room Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-door-open"></i> Thông tin Phòng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Số phòng:</strong><br />
+                            <h4 class="text-primary">@Model.RoomNumber</h4>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Loại phòng:</strong><br />
+                            @Model.RoomTypeName
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Khách sạn:</strong><br />
+                            @Model.HotelName
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            @if (!string.IsNullOrEmpty(Model.Notes))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-sticky-note"></i> Ghi chú</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre class="mb-0" style="white-space: pre-wrap;">@Model.Notes</pre>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Action Panel -->
+        <div class="col-lg-4">
+            <!-- Assigned User -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-user"></i> Phân công</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.IsAssigned)
+                    {
+                        <p><strong>Nhân viên:</strong> @Model.AssignedUserName</p>
+                        <p class="mb-0"><strong>Role:</strong> @Model.AssignedUserRole</p>
+                    }
+                    else
+                    {
+                        <p class="text-warning mb-0">
+                            <i class="fas fa-exclamation-triangle"></i> Chưa phân công
+                        </p>
+                    }
+                </div>
+                @if (Model.CanReassign && !isHousekeeping)
+                {
+                    <div class="card-footer">
+                        <a asp-action="Assign" asp-route-id="@Model.Id" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus"></i> Phân công
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Thao tác</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.CanStart)
+                    {
+                        <form asp-action="Start" method="post" onsubmit="return confirm('Bắt đầu task này?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-info w-100 mb-2">
+                                <i class="fas fa-play"></i> Bắt đầu
+                            </button>
+                        </form>
+                    }
+
+                    @if (Model.CanComplete)
+                    {
+                        <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#completeModal">
+                            <i class="fas fa-check"></i> Hoàn thành
+                        </button>
+                    }
+
+                    @if (Model.CanCancel && !isHousekeeping)
+                    {
+                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                            <i class="fas fa-times"></i> Hủy Task
+                        </button>
+                    }
+
+                    @if (Model.IsCompleted)
+                    {
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle"></i> Task đã hoàn thành
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Complete Modal -->
+<div class="modal fade" id="completeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Complete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Hoàn thành Task</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Xác nhận hoàn thành task cho phòng <strong>@Model.RoomNumber</strong>?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú (tùy chọn):</label>
+                        <textarea name="completionNotes" class="form-control" rows="3" 
+                                  placeholder="Ghi chú về việc hoàn thành..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Xác nhận
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Cancel" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Hủy Task</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn hủy task này?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Lý do hủy:</label>
+                        <textarea name="reason" class="form-control" rows="3" 
+                                  placeholder="Nhập lý do hủy task..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Xác nhận hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

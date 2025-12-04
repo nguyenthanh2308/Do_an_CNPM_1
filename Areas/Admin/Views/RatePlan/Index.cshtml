@@ -1,0 +1,230 @@
+@model List<HotelManagementSystem.Models.ViewModels.RatePlan.RatePlanViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý Rate Plans";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-tags me-2"></i>
+            Quản lý Rate Plans
+        </h2>
+        <a asp-action="Create" asp-route-roomTypeId="@ViewBag.RoomTypeId" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            Thêm Rate Plan mới
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label">
+                        <i class="fas fa-hotel me-2"></i>Khách sạn
+                    </label>
+                    <select name="hotelId" class="form-select" id="hotelFilter">
+                        <option value="">-- Tất cả khách sạn --</option>
+                        @if (ViewBag.Hotels != null)
+                        {
+                            foreach (var item in (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Hotels)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">
+                        <i class="fas fa-door-open me-2"></i>Loại phòng
+                    </label>
+                    <select name="roomTypeId" class="form-select">
+                        <option value="">-- Tất cả loại phòng --</option>
+                        @if (ViewBag.RoomTypes != null)
+                        {
+                            foreach (var item in (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.RoomTypes)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Lọc
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <div class="stat-value">@Model.Count</div>
+                <div class="stat-label">Tổng Rate Plans</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-value">@Model.Count(r => r.IsCurrentlyEffective)</div>
+                <div class="stat-label">Đang có hiệu lực</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-week"></i>
+                </div>
+                <div class="stat-value">@Model.Count(r => r.IsWeekendRateActive)</div>
+                <div class="stat-label">Có áp dụng cuối tuần</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rate Plans Table -->
+    <div class="card shadow">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>
+                Danh sách Rate Plans
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Chưa có rate plan nào. Vui lòng thêm mới.</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Thêm Rate Plan
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tên</th>
+                                <th>Loại phòng</th>
+                                <th>Khách sạn</th>
+                                <th>Loại chính sách</th>
+                                <th>Giá gốc</th>
+                                <th>Giá cuối tuần</th>
+                                <th>Thời gian hiệu lực</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ratePlan in Model.OrderBy(r => r.RoomTypeName).ThenBy(r => r.Name))
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@ratePlan.Name</strong>
+                                    </td>
+                                    <td>@ratePlan.RoomTypeName</td>
+                                    <td>@ratePlan.HotelName</td>
+                                    <td>
+                                        <span class="badge bg-@(ratePlan.Type == "Flexible" ? "success" : "warning")">
+                                            @ratePlan.TypeDisplay
+                                        </span>
+                                        @if (ratePlan.Type == "Flexible" && ratePlan.FreeCancelUntilHours.HasValue)
+                                        {
+                                            <br /><small class="text-muted">Hủy miễn phí: @ratePlan.FreeCancelUntilHours giờ</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <strong class="text-primary">@ratePlan.Price.ToString("N0") VNĐ</strong>
+                                    </td>
+                                    <td>
+                                        @if (ratePlan.IsWeekendRateActive && ratePlan.WeekendAdjustmentPercent.HasValue)
+                                        {
+                                            var weekendPrice = ratePlan.CalculateFinalPrice(true);
+                                            <span class="badge bg-info">
+                                                @weekendPrice.ToString("N0") VNĐ
+                                                <small>(+@ratePlan.WeekendAdjustmentPercent%)</small>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Không áp dụng</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>
+                                            Từ: <strong>@ratePlan.StartDate.ToString("dd/MM/yyyy")</strong><br />
+                                            Đến: <strong>@ratePlan.EndDate.ToString("dd/MM/yyyy")</strong>
+                                            @if (ratePlan.DaysActive > 0)
+                                            {
+                                                <br /><span class="text-muted">(@ratePlan.DaysActive ngày)</span>
+                                            }
+                                        </small>
+                                    </td>
+                                    <td>
+                                        @if (ratePlan.IsCurrentlyEffective)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>Đang hiệu lực
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-clock me-1"></i>Không hiệu lực
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@ratePlan.Id" 
+                                               class="btn btn-sm btn-info" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@ratePlan.Id" 
+                                               class="btn btn-sm btn-warning" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@ratePlan.Id" 
+                                               class="btn btn-sm btn-danger" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

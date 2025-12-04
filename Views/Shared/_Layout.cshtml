@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Hotel Management System</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Theme Configuration -->
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary admin-navbar">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-hotel me-2"></i>
+                    Hotel Management
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog me-1"></i>
+                                        Quản trị
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-dark">
+                                        <li><h6 class="dropdown-header">Quản lý tài nguyên</h6></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Hotel" asp-action="Index">
+                                            <i class="fas fa-hotel me-2"></i>Quản lý khách sạn
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="RoomType" asp-action="Index">
+                                            <i class="fas fa-bed me-2"></i>Quản lý loại phòng
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Room" asp-action="Index">
+                                            <i class="fas fa-door-open me-2"></i>Quản lý phòng
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Amenity" asp-action="Index">
+                                            <i class="fas fa-star me-2"></i>Quản lý tiện nghi
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header">Quản lý giá cả</h6></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="RatePlan" asp-action="Index">
+                                            <i class="fas fa-tags me-2"></i>Quản lý Rate Plans
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Promotion" asp-action="Index">
+                                            <i class="fas fa-gift me-2"></i>Quản lý khuyến mãi
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header">Quản lý kinh doanh</h6></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Guest" asp-action="Index">
+                                            <i class="fas fa-users me-2"></i>Quản lý khách hàng
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Booking" asp-action="Index">
+                                            <i class="fas fa-calendar-check me-2"></i>Quản lý Booking
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Payment" asp-action="Index">
+                                            <i class="fas fa-money-bill-wave me-2"></i>Quản lý Thanh toán
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Invoice" asp-action="Index">
+                                            <i class="fas fa-file-invoice-dollar me-2"></i>Quản lý Hóa đơn
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header">Quản lý vận hành</h6></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Housekeeping" asp-action="Index">
+                                            <i class="fas fa-tasks me-2"></i>Danh sách Housekeeping
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Housekeeping" asp-action="Dashboard">
+                                            <i class="fas fa-chart-pie me-2"></i>Dashboard Housekeeping
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Report" asp-action="Dashboard">
+                                            <i class="fas fa-chart-line me-2"></i>Báo cáo & Thống kê
+                                        </a></li>
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><h6 class="dropdown-header">Hệ thống</h6></li>
+                                            <li><a class="dropdown-item" asp-controller="Auth" asp-action="Register">
+                                                <i class="fas fa-user-plus me-2"></i>Tạo tài khoản
+                                            </a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                            
+                            @* Menu cho Housekeeping Staff *@
+                            @if (User.IsInRole("Housekeeping"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="Admin" asp-controller="Housekeeping" asp-action="MyTasks">
+                                        <i class="fas fa-tasks me-1"></i>
+                                        Tasks của tôi
+                                    </a>
+                                </li>
+                            }
+                            
+                            @if (User.IsInRole("Admin") || User.IsInRole("Manager") || User.IsInRole("Receptionist"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Booking" asp-action="Search">
+                                        <i class="fas fa-search me-1"></i>
+                                        Đặt phòng
+                                    </a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                    
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle me-1"></i>
+                                    @User.Identity.Name
+                                    <span class="badge bg-warning ms-2">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+                                    <li>
+                                        <form asp-area="" asp-controller="Auth" asp-action="Logout" method="post" class="dropdown-item p-0">
+                                            <button type="submit" class="btn btn-link dropdown-item">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Auth" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt me-1"></i>
+                                    Đăng nhập
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main" class="pb-3">
+        @RenderBody()
+    </main>
+
+    <footer class="border-top footer text-muted bg-light mt-5">
+        <div class="container py-3">
+            <div class="row">
+                <div class="col-md-6">
+                    &copy; 2025 - Hotel Management System
+                </div>
+                <div class="col-md-6 text-end">
+                    <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

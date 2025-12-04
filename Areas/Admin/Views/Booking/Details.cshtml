@@ -1,0 +1,305 @@
+@model HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel
+@{
+    ViewData["Title"] = $"Chi tiết Booking {Model.BookingCode}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-check"></i> Chi tiết Booking</h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <!-- Booking Info Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin Booking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Mã booking:</strong> @Model.BookingCode
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Ngày đặt:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Trạng thái:</strong>
+                            <span class="badge @Model.StatusBadgeClass">@Model.StatusDisplay</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Thanh toán:</strong>
+                            <span class="badge @Model.PaymentStatusBadgeClass">@Model.PaymentStatusDisplay</span>
+                        </div>
+                    </div>
+                    @if (Model.CancelledAt.HasValue)
+                    {
+                        <div class="alert alert-danger">
+                            <strong>Đã hủy vào:</strong> @Model.CancelledAt.Value.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    }
+                    @if (Model.ModifiedAt.HasValue)
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-edit"></i> Chỉnh sửa lần cuối: @Model.ModifiedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Guest Info Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user"></i> Thông tin Khách hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Họ tên:</strong></div>
+                        <div class="col-md-8">
+                            <a asp-action="History" asp-route-guestId="@Model.GuestId">
+                                @Model.GuestName
+                            </a>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.GuestEmail))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Email:</strong></div>
+                            <div class="col-md-8">@Model.GuestEmail</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.GuestPhone))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Số điện thoại:</strong></div>
+                            <div class="col-md-8">@Model.GuestPhone</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Room Info Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bed"></i> Thông tin Phòng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Khách sạn:</strong></div>
+                        <div class="col-md-8">@Model.HotelName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Số phòng:</strong></div>
+                        <div class="col-md-8"><strong class="text-primary">@Model.RoomNumber</strong></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Loại phòng:</strong></div>
+                        <div class="col-md-8">@Model.RoomTypeName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Check-in:</strong></div>
+                        <div class="col-md-8">
+                            @Model.CheckInDate.ToString("dd/MM/yyyy")
+                            @if (Model.CheckInActualDate.HasValue)
+                            {
+                                <span class="badge bg-success">Đã check-in: @Model.CheckInActualDate.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Check-out:</strong></div>
+                        <div class="col-md-8">
+                            @Model.CheckOutDate.ToString("dd/MM/yyyy")
+                            @if (Model.CheckOutActualDate.HasValue)
+                            {
+                                <span class="badge bg-secondary">Đã check-out: @Model.CheckOutActualDate.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><strong>Số đêm:</strong></div>
+                        <div class="col-md-8">@Model.Nights đêm</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate Plan & Promotion Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tags"></i> Chính sách Giá & Khuyến mãi</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.RatePlanName))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Gói giá:</strong></div>
+                            <div class="col-md-8">@Model.RatePlanName (@Model.RatePlanType)</div>
+                        </div>
+                    }
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Chính sách hủy:</strong></div>
+                        <div class="col-md-8">
+                            <small class="text-muted">@Model.CancellationPolicyInfo</small>
+                        </div>
+                    </div>
+
+                    @if (Model.PromotionId.HasValue)
+                    {
+                        <div class="alert alert-success">
+                            <strong><i class="fas fa-gift"></i> Mã khuyến mãi:</strong> @Model.PromotionCode<br />
+                            <strong>Giảm giá:</strong> @Model.DiscountAmount.ToString("N0") đ
+                            @if (!Model.IsCancelled)
+                            {
+                                <form asp-action="RemovePromotion" method="post" class="d-inline" onsubmit="return confirm('Xóa mã khuyến mãi?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times"></i> Xóa
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    }
+                    else if (!Model.IsCancelled && Model.Status != "CheckedOut")
+                    {
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <form asp-action="ApplyPromotion" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <div class="input-group">
+                                        <input type="text" name="promotionCode" class="form-control" placeholder="Nhập mã khuyến mãi" required />
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-check"></i> Áp dụng
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="col-lg-4">
+            <!-- Financial Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Tổng chi phí</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tổng tiền phòng:</span>
+                        <strong>@Model.TotalAmount.ToString("N0") đ</strong>
+                    </div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Giảm giá:</span>
+                            <strong>- @Model.DiscountAmount.ToString("N0") đ</strong>
+                        </div>
+                    }
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <strong>Thành tiền:</strong>
+                        <h4 class="text-primary mb-0">@Model.FinalAmount.ToString("N0") đ</h4>
+                    </div>
+                    <hr />
+                    <a asp-area="Admin" asp-controller="Payment" asp-action="BookingPayments" asp-route-bookingId="@Model.Id" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-receipt"></i> Xem Payment
+                    </a>
+                    <a asp-area="Admin" asp-controller="Invoice" asp-action="BookingInvoice" asp-route-bookingId="@Model.Id" class="btn btn-outline-success w-100">
+                        <i class="fas fa-file-invoice"></i> Xem Hóa đơn
+                    </a>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Thao tác</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.CanCheckIn)
+                    {
+                        <form asp-action="CheckIn" method="post" onsubmit="return confirm('Xác nhận check-in cho booking này?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success w-100 mb-2">
+                                <i class="fas fa-sign-in-alt"></i> Check-in
+                            </button>
+                        </form>
+                    }
+
+                    @if (Model.CanCheckOut)
+                    {
+                        <form asp-action="CheckOut" method="post" onsubmit="return confirm('Xác nhận check-out cho booking này?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-warning w-100 mb-2">
+                                <i class="fas fa-sign-out-alt"></i> Check-out
+                            </button>
+                        </form>
+                    }
+
+                    @if (Model.IsModifiable)
+                    {
+                        <a asp-action="Modify" asp-route-id="@Model.Id" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-edit"></i> Chỉnh sửa Booking
+                        </a>
+                    }
+
+                    @if (Model.IsCancellable)
+                    {
+                        <a asp-action="Cancel" asp-route-id="@Model.Id" class="btn btn-danger w-100">
+                            <i class="fas fa-times-circle"></i> Hủy Booking
+                        </a>
+                    }
+
+                    @if (Model.IsCancelled || Model.IsCompleted)
+                    {
+                        <div class="alert alert-secondary mb-0">
+                            <small>Booking này đã kết thúc. Không thể thực hiện thao tác.</small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (Model.IsModifiable && Model.DaysUntilCheckIn > 0)
+            {
+                <div class="card mt-3">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                        <p class="mb-0">
+                            <strong>@Model.DaysUntilCheckIn</strong> ngày nữa<br />
+                            <small class="text-muted">đến ngày check-in</small>
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

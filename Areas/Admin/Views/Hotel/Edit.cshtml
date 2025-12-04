@@ -1,0 +1,73 @@
+@model HotelManagementSystem.Models.ViewModels.Hotel.HotelViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa khách sạn";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Chỉnh sửa khách sạn: @Model.Name
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CreatedAt" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label"></label>
+                            <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Timezone" class="form-label"></label>
+                            <select asp-for="Timezone" class="form-select">
+                                <option value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (GMT+7)</option>
+                                <option value="Asia/Bangkok">Asia/Bangkok (GMT+7)</option>
+                                <option value="Asia/Singapore">Asia/Singapore (GMT+8)</option>
+                                <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
+                                <option value="Asia/Seoul">Asia/Seoul (GMT+9)</option>
+                                <option value="UTC">UTC (GMT+0)</option>
+                            </select>
+                            <span asp-validation-for="Timezone" class="text-danger"></span>
+                        </div>
+
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Lưu ý:</strong> Thay đổi múi giờ có thể ảnh hưởng đến các booking hiện tại.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>
+                                Cập nhật
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,151 @@
+@model HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel
+@{
+    ViewData["Title"] = $"Hủy Booking {Model.BookingCode}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-times-circle"></i> Hủy Booking</h2>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Warning Card -->
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle"></i> Xác nhận hủy booking</h5>
+                <p class="mb-0">Bạn đang thực hiện hủy booking <strong>@Model.BookingCode</strong>. Vui lòng kiểm tra kỹ chính sách hủy trước khi xác nhận.</p>
+            </div>
+
+            <!-- Booking Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin Booking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Mã booking:</strong></div>
+                        <div class="col-md-8">@Model.BookingCode</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Khách hàng:</strong></div>
+                        <div class="col-md-8">@Model.GuestName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Phòng:</strong></div>
+                        <div class="col-md-8">@Model.RoomNumber - @Model.RoomTypeName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Check-in:</strong></div>
+                        <div class="col-md-8">@Model.CheckInDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Check-out:</strong></div>
+                        <div class="col-md-8">@Model.CheckOutDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><strong>Số đêm:</strong></div>
+                        <div class="col-md-8">@Model.Nights đêm</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cancellation Policy -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-contract"></i> Chính sách Hủy</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Loại gói giá:</strong> @Model.RatePlanType</p>
+                    <div class="alert @(Model.CanCancelFree ? "alert-success" : "alert-warning")">
+                        <strong>@Model.CancellationPolicyInfo</strong>
+                    </div>
+
+                    @if (Model.CanCancelFree)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> <strong>Miễn phí hủy!</strong><br />
+                            Bạn còn <strong>@Model.HoursUntilCheckIn</strong> giờ nữa đến thời điểm check-in.
+                        </div>
+                    }
+                    else
+                    {
+                        @if (Model.RatePlanType == "NonRefundable")
+                        {
+                            <div class="alert alert-danger">
+                                <i class="fas fa-ban"></i> <strong>Không hoàn tiền</strong><br />
+                                Gói giá này không hỗ trợ hoàn tiền khi hủy.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <i class="fas fa-info-circle"></i> <strong>Hoàn 50% tổng tiền</strong><br />
+                                Đã quá thời hạn hủy miễn phí. Bạn sẽ được hoàn lại 50% số tiền đã thanh toán.
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Refund Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Tổng kết Hoàn tiền</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-6">Tổng tiền booking:</div>
+                        <div class="col-6 text-end"><strong>@Model.TotalAmount.ToString("N0") đ</strong></div>
+                    </div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="row mb-2 text-success">
+                            <div class="col-6">Đã giảm giá:</div>
+                            <div class="col-6 text-end"><strong>- @Model.DiscountAmount.ToString("N0") đ</strong></div>
+                        </div>
+                    }
+                    <div class="row mb-2">
+                        <div class="col-6">Thành tiền:</div>
+                        <div class="col-6 text-end"><strong>@Model.FinalAmount.ToString("N0") đ</strong></div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-6"><strong class="text-primary">Số tiền hoàn lại:</strong></div>
+                        <div class="col-6 text-end">
+                            <h4 class="@(ViewBag.RefundAmount > 0 ? "text-success" : "text-danger") mb-0">
+                                @(((decimal)ViewBag.RefundAmount).ToString("N0")) đ
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Form -->
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="CancelConfirmed" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Lý do hủy:</strong></label>
+                            <textarea name="cancelReason" class="form-control" rows="3" placeholder="Nhập lý do hủy booking (không bắt buộc)"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Bạn có chắc chắn muốn hủy booking này?');">
+                                <i class="fas fa-times-circle"></i> Xác nhận Hủy Booking
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

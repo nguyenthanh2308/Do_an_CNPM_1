@@ -1,0 +1,126 @@
+@model HotelManagementSystem.Models.ViewModels.Housekeeping.HousekeepingTaskViewModel
+
+@{
+    ViewData["Title"] = "Phân Công Công Việc";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus"></i> Phân Công Công Việc
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Task Information -->
+                    <div class="alert alert-light border">
+                        <h5 class="mb-3">Thông Tin Công Việc</h5>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Phòng:</div>
+                            <div class="col-sm-8">@Model.RoomNumber - @Model.RoomTypeName</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Khách Sạn:</div>
+                            <div class="col-sm-8">@Model.HotelName</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Loại Công Việc:</div>
+                            <div class="col-sm-8">
+                                <span class="badge @Model.TaskTypeBadgeClass">@Model.TaskTypeDisplay</span>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Ưu Tiên:</div>
+                            <div class="col-sm-8">
+                                <span class="badge @Model.PriorityBadgeClass">@Model.PriorityDisplay</span>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Thời Gian:</div>
+                            <div class="col-sm-8">@Model.ScheduledTimeDisplay</div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Notes))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">Ghi Chú:</div>
+                                <div class="col-sm-8">@Model.Notes</div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (Model.AssignedUserId.HasValue)
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            Công việc này hiện đang được phân công cho: <strong>@Model.AssignedUserName</strong>
+                        </div>
+                    }
+
+                    <!-- Assignment Form -->
+                    <form asp-action="Assign" asp-route-id="@Model.Id" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-user"></i> Phân Công Cho Nhân Viên <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" 
+                                   name="userId" 
+                                   class="form-control" 
+                                   placeholder="Nhập User ID của nhân viên Housekeeping"
+                                   value="@Model.AssignedUserId"
+                                   required />
+                            <small class="form-text text-muted">
+                                Nhân viên phải có role "Housekeeping" mới có thể được phân công
+                            </small>
+                        </div>
+
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i> <strong>Lưu ý:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Chỉ có thể phân công cho nhân viên có role <strong>Housekeeping</strong></li>
+                                <li>Công việc phải ở trạng thái <strong>Pending</strong> mới có thể phân công lại</li>
+                                <li>Nhân viên sẽ nhận được thông báo về công việc được phân công</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-warning text-dark">
+                                <i class="fas fa-user-check"></i> Xác Nhận Phân Công
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Reference Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle"></i> Hướng Dẫn Nhanh
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Làm thế nào để tìm User ID?</strong></p>
+                    <ol>
+                        <li>Truy cập trang quản lý User</li>
+                        <li>Lọc users có role "Housekeeping"</li>
+                        <li>Copy User ID của nhân viên cần phân công</li>
+                    </ol>
+                    <p class="mb-0 text-muted">
+                        <small><i class="fas fa-lightbulb"></i> Tip: Bạn có thể tạo danh sách nhân viên Housekeeping để dễ dàng phân công công việc</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

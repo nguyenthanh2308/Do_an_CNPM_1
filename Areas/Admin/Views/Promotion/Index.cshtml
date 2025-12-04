@@ -1,0 +1,207 @@
+@model List<HotelManagementSystem.Models.ViewModels.Promotion.PromotionViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý khuyến mãi";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-gift me-2"></i>
+            Quản lý khuyến mãi
+        </h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            Thêm khuyến mãi mới
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="stat-value">@Model.Count</div>
+                <div class="stat-label">Tổng khuyến mãi</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-value">@Model.Count(p => p.IsCurrentlyActive)</div>
+                <div class="stat-label">Đang hoạt động</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value">@Model.Count(p => p.IsUpcoming)</div>
+                <div class="stat-label">Sắp áp dụng</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card secondary">
+                <div class="stat-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="stat-value">@Model.Count(p => p.IsExpired)</div>
+                <div class="stat-label">Đã hết hạn</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promotions Table -->
+    <div class="card shadow">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>
+                Danh sách khuyến mãi
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Chưa có khuyến mãi nào. Vui lòng thêm mới.</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Thêm khuyến mãi
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã</th>
+                                <th>Loại</th>
+                                <th>Giá trị</th>
+                                <th>Thời gian áp dụng</th>
+                                <th>Điều kiện</th>
+                                <th>Sử dụng</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var promo in Model.OrderByDescending(p => p.IsCurrentlyActive).ThenBy(p => p.StartDate))
+                            {
+                                <tr>
+                                    <td>
+                                        <strong class="text-primary">@promo.Code</strong>
+                                        <br />
+                                        <small class="text-muted">ID: @promo.Id</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(promo.Type == "Percent" ? "info" : "success")">
+                                            @promo.TypeDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>@promo.ValueDisplay</strong>
+                                        @if (promo.Type == "Percent" && promo.MaxDiscountAmount.HasValue)
+                                        {
+                                            <br />
+                                            <small class="text-muted">Tối đa: @promo.MaxDiscountAmount.Value.ToString("N0") VNĐ</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>
+                                            Từ: <strong>@promo.StartDate.ToString("dd/MM/yyyy")</strong><br />
+                                            Đến: <strong>@promo.EndDate.ToString("dd/MM/yyyy")</strong>
+                                            @if (promo.IsCurrentlyActive)
+                                            {
+                                                <br /><span class="text-success">Còn @promo.DaysRemaining ngày</span>
+                                            }
+                                        </small>
+                                    </td>
+                                    <td>
+                                        @if (promo.MinOrderValue.HasValue)
+                                        {
+                                            <small>
+                                                <i class="fas fa-shopping-cart me-1"></i>
+                                                Min: @promo.MinOrderValue.Value.ToString("N0") VNĐ
+                                            </small>
+                                            <br />
+                                        }
+                                        @if (promo.IsNewCustomerOnly)
+                                        {
+                                            <small>
+                                                <i class="fas fa-user-plus me-1"></i>
+                                                Khách mới
+                                            </small>
+                                            <br />
+                                        }
+                                        @if (!promo.MinOrderValue.HasValue && !promo.IsNewCustomerOnly)
+                                        {
+                                            <span class="text-muted">Không có</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (promo.MaxUsageCount.HasValue)
+                                        {
+                                            <span class="badge bg-@(promo.IsUsageLimitReached ? "danger" : "primary")">
+                                                @promo.CurrentUsageCount / @promo.MaxUsageCount
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Không giới hạn</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @promo.StatusBadgeClass">
+                                            @promo.StatusDisplay
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@promo.Id" 
+                                               class="btn btn-sm btn-info" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@promo.Id" 
+                                               class="btn btn-sm btn-warning" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@promo.Id" 
+                                               class="btn btn-sm btn-danger" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

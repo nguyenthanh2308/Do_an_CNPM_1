@@ -1,0 +1,242 @@
+@model List<HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel>
+@{
+    ViewData["Title"] = "Quản lý Booking";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-check"></i> Quản lý Booking</h2>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-value">@ViewBag.TotalBookings</div>
+                <div class="stat-label">Tổng số booking</div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value">@ViewBag.PendingCount</div>
+                <div class="stat-label">Chờ xác nhận</div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="stat-value">@ViewBag.ConfirmedCount</div>
+                <div class="stat-label">Đã xác nhận</div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="stat-value">@ViewBag.CheckedInCount</div>
+                <div class="stat-label">Đang ở</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-12 mb-3">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="stat-value">@(((decimal)ViewBag.TotalRevenue).ToString("N0")) đ</div>
+                <div class="stat-label">Doanh thu</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-filter"></i> Bộ lọc
+        </div>
+        <div class="card-body">
+            <form method="get" asp-action="Index">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select name="status" class="form-select">
+                            <option value="">-- Tất cả --</option>
+                            <option value="Pending" selected="@(ViewBag.Status == "Pending")">Chờ xác nhận</option>
+                            <option value="Confirmed" selected="@(ViewBag.Status == "Confirmed")">Đã xác nhận</option>
+                            <option value="CheckedIn" selected="@(ViewBag.Status == "CheckedIn")">Đã nhận phòng</option>
+                            <option value="CheckedOut" selected="@(ViewBag.Status == "CheckedOut")">Đã trả phòng</option>
+                            <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">Đã hủy</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Từ ngày</label>
+                        <input type="date" name="fromDate" value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")" class="form-control" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Đến ngày</label>
+                        <input type="date" name="toDate" value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")" class="form-control" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Lọc
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-redo"></i> Đặt lại
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bookings Table -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list"></i> Danh sách Booking (@Model.Count)
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã booking</th>
+                                <th>Khách hàng</th>
+                                <th>Phòng</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Số đêm</th>
+                                <th>Trạng thái</th>
+                                <th>Thanh toán</th>
+                                <th>Tổng tiền</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@booking.BookingCode</strong><br />
+                                        <small class="text-muted">@booking.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <a asp-action="History" asp-route-guestId="@booking.GuestId">
+                                            @booking.GuestName
+                                        </a><br />
+                                        <small class="text-muted">
+                                            @if (!string.IsNullOrEmpty(booking.GuestPhone))
+                                            {
+                                                <i class="fas fa-phone"></i> @booking.GuestPhone
+                                            }
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <strong>@booking.RoomNumber</strong><br />
+                                        <small class="text-muted">@booking.RoomTypeName</small>
+                                    </td>
+                                    <td>
+                                        @booking.CheckInDate.ToString("dd/MM/yyyy")
+                                        @if (booking.IsToday)
+                                        {
+                                            <span class="badge bg-warning">Hôm nay</span>
+                                        }
+                                        else if (booking.IsOverdue)
+                                        {
+                                            <span class="badge bg-danger">Quá hạn</span>
+                                        }
+                                    </td>
+                                    <td>@booking.CheckOutDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@booking.Nights đêm</td>
+                                    <td>
+                                        <span class="badge @booking.StatusBadgeClass">
+                                            @booking.StatusDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @booking.PaymentStatusBadgeClass">
+                                            @booking.PaymentStatusDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (booking.DiscountAmount > 0)
+                                        {
+                                            <del class="text-muted">@booking.TotalAmount.ToString("N0") đ</del><br />
+                                            <strong class="text-success">@booking.FinalAmount.ToString("N0") đ</strong>
+                                        }
+                                        else
+                                        {
+                                            <strong>@booking.FinalAmount.ToString("N0") đ</strong>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@booking.Id" class="btn btn-sm btn-info" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if (booking.CanCheckIn)
+                                            {
+                                                <form asp-action="CheckIn" method="post" style="display:inline;" onsubmit="return confirm('Xác nhận check-in?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@booking.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-success" title="Check-in">
+                                                        <i class="fas fa-sign-in-alt"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            @if (booking.CanCheckOut)
+                                            {
+                                                <form asp-action="CheckOut" method="post" style="display:inline;" onsubmit="return confirm('Xác nhận check-out?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@booking.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-warning" title="Check-out">
+                                                        <i class="fas fa-sign-out-alt"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Không có booking nào</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,255 @@
+@model List<HotelManagementSystem.Models.ViewModels.Guest.GuestViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý khách hàng";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-users me-2"></i>
+            Quản lý khách hàng
+        </h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>
+            Thêm khách hàng mới
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Search Box -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3">
+                <div class="col-md-10">
+                    <label class="form-label">
+                        <i class="fas fa-search me-2"></i>Tìm kiếm khách hàng
+                    </label>
+                    <input type="text" name="keyword" class="form-control" 
+                           placeholder="Nhập tên, email, số điện thoại hoặc CMND/CCCD..." 
+                           value="@ViewBag.Keyword" />
+                    <small class="text-muted">Có thể tìm theo tên, email, số điện thoại hoặc số CMND/CCCD</small>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>Tìm kiếm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value">@Model.Count</div>
+                <div class="stat-label">Tổng khách hàng</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="stat-value">@Model.Count(g => g.IsNewCustomer)</div>
+                <div class="stat-label">Khách mới</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="stat-value">@Model.Count(g => g.TotalBookings >= 10)</div>
+                <div class="stat-label">Khách VIP</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-value">@Model.Count(g => g.HasRecentActivity)</div>
+                <div class="stat-label">Hoạt động gần đây</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guests Table -->
+    <div class="card shadow">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>
+                Danh sách khách hàng
+                @if (!string.IsNullOrWhiteSpace(ViewBag.Keyword))
+                {
+                    <span class="badge bg-info">Kết quả tìm kiếm: @Model.Count</span>
+                }
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">
+                        @if (!string.IsNullOrWhiteSpace(ViewBag.Keyword))
+                        {
+                            <span>Không tìm thấy khách hàng nào với từ khóa "@ViewBag.Keyword"</span>
+                        }
+                        else
+                        {
+                            <span>Chưa có khách hàng nào. Vui lòng thêm mới.</span>
+                        }
+                    </p>
+                    @if (string.IsNullOrWhiteSpace(ViewBag.Keyword))
+                    {
+                        <a asp-action="Create" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Thêm khách hàng
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Xóa bộ lọc
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Khách hàng</th>
+                                <th>Thông tin liên hệ</th>
+                                <th>CMND/CCCD</th>
+                                <th>Phân loại</th>
+                                <th>Booking</th>
+                                <th>Tổng chi tiêu</th>
+                                <th>Ngày tạo</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var guest in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@guest.FullName</strong>
+                                        <br />
+                                        <small class="text-muted">ID: @guest.Id</small>
+                                    </td>
+                                    <td>
+                                        @if (guest.HasEmail)
+                                        {
+                                            <div>
+                                                <i class="fas fa-envelope text-primary me-1"></i>
+                                                <small>@guest.Email</small>
+                                            </div>
+                                        }
+                                        @if (guest.HasPhone)
+                                        {
+                                            <div>
+                                                <i class="fas fa-phone text-success me-1"></i>
+                                                <small>@guest.Phone</small>
+                                            </div>
+                                        }
+                                        @if (!guest.HasEmail && !guest.HasPhone)
+                                        {
+                                            <span class="text-muted small">Chưa có</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (guest.HasIdNumber)
+                                        {
+                                            <span>@guest.IdNumber</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Chưa có</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @guest.CustomerTypeBadgeClass">
+                                            @guest.CustomerTypeDisplay
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-primary">@guest.TotalBookings</strong>
+                                        @if (guest.TotalBookings > 0)
+                                        {
+                                            <br />
+                                            <small class="text-muted">
+                                                <i class="fas fa-check text-success me-1"></i>@guest.CompletedBookings |
+                                                <i class="fas fa-times text-danger me-1"></i>@guest.CancelledBookings
+                                            </small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (guest.TotalSpent > 0)
+                                        {
+                                            <strong class="text-success">@guest.TotalSpent.ToString("N0") VNĐ</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">0 VNĐ</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>@guest.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                        @if (guest.LastBookingDate.HasValue)
+                                        {
+                                            <br />
+                                            <small class="text-muted">
+                                                Gần nhất: @guest.LastBookingDate.Value.ToString("dd/MM/yyyy")
+                                            </small>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@guest.Id" 
+                                               class="btn btn-sm btn-info" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@guest.Id" 
+                                               class="btn btn-sm btn-warning" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@guest.Id" 
+                                               class="btn btn-sm btn-danger" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

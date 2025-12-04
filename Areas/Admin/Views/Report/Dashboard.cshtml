@@ -1,0 +1,224 @@
+@model HotelManagementSystem.Models.ViewModels.Report.DashboardSummaryViewModel
+@{
+    ViewData["Title"] = "Dashboard - Báo cáo & Thống kê";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-line"></i> Dashboard - Tổng quan</h2>
+        <div>
+            <a asp-action="Revenue" class="btn btn-outline-primary">
+                <i class="fas fa-dollar-sign"></i> Doanh thu
+            </a>
+            <a asp-action="Occupancy" class="btn btn-outline-info">
+                <i class="fas fa-bed"></i> Lấp đầy
+            </a>
+            <a asp-action="BookingStatus" class="btn btn-outline-warning">
+                <i class="fas fa-clipboard-list"></i> Booking
+            </a>
+        </div>
+    </div>
+
+    <!-- Today Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-value">@Model.TodayRevenue.ToString("N0")</div>
+                <div class="stat-label">Doanh thu hôm nay (@Model.TodayBookings booking)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <div class="stat-value">@Model.TodayCheckIns</div>
+                <div class="stat-label">Check-in hôm nay</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <div class="stat-value">@Model.TodayCheckOuts</div>
+                <div class="stat-label">Check-out hôm nay</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-bed"></i>
+                </div>
+                <div class="stat-value">@Model.CurrentOccupiedRooms / @Model.TotalRooms</div>
+                <div class="stat-label">
+                    @((Model.TotalRooms > 0 ? (double)Model.CurrentOccupiedRooms / Model.TotalRooms * 100 : 0).ToString("N1"))% lấp đầy
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Month & Year Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-calendar-alt"></i> Tháng này</h6>
+                    <h4>@Model.MonthRevenue.ToString("N0") VNĐ</h4>
+                    <p class="mb-1">@Model.MonthBookings booking</p>
+                    <p class="mb-1">Lấp đầy: @Model.MonthOccupancyRate.ToString("N1")%</p>
+                    @if (Model.RevenueTrend >= 0)
+                    {
+                        <span class="badge bg-success">
+                            <i class="fas fa-arrow-up"></i> +@Model.RevenueTrend.ToString("N1")%
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">
+                            <i class="fas fa-arrow-down"></i> @Model.RevenueTrend.ToString("N1")%
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-calendar"></i> Năm nay</h6>
+                    <h4>@Model.YearRevenue.ToString("N0") VNĐ</h4>
+                    <p class="mb-0">@Model.YearBookings booking</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-tasks"></i> Công việc chờ xử lý</h6>
+                    <h4 class="@(Model.PendingTasks > 10 ? "text-danger" : "")">
+                        @Model.PendingTasks
+                    </h4>
+                    <p class="mb-1">Task dọn phòng</p>
+                    <h5 class="@(Model.UnpaidInvoices > 5 ? "text-danger" : "")">
+                        @Model.UnpaidInvoices
+                    </h5>
+                    <p class="mb-0">Hóa đơn chưa thanh toán</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line"></i> Doanh thu 7 ngày gần đây</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Tỷ lệ lấp đầy 7 ngày gần đây</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="occupancyChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Last7DaysRevenue.Select(d => d.Label))),
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Last7DaysRevenue.Select(d => d.Revenue))),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString() + ' VNĐ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' VNĐ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Occupancy Chart
+        const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+        const occupancyChart = new Chart(occupancyCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Last7DaysOccupancy.Select(d => d.Label))),
+                datasets: [{
+                    label: 'Tỷ lệ lấp đầy (%)',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Last7DaysOccupancy.Select(d => d.OccupancyRate))),
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Lấp đầy: ' + context.parsed.y.toFixed(1) + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

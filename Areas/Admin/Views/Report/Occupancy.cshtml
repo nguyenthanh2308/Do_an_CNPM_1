@@ -1,0 +1,222 @@
+@model HotelManagementSystem.Models.ViewModels.Report.OccupancyReportViewModel
+@{
+    ViewData["Title"] = "Báo cáo Lấp đầy Phòng";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-bed"></i> Báo cáo Lấp đầy Phòng</h2>
+        <a asp-action="Dashboard" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Về Dashboard
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Từ ngày</label>
+                    <input type="date" name="fromDate" class="form-control" 
+                           value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Đến ngày</label>
+                    <input type="date" name="toDate" class="form-control" 
+                           value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Tìm kiếm
+                    </button>
+                    <a asp-action="ExportOccupancy" 
+                       asp-route-fromDate="@Model.FromDate.ToString("yyyy-MM-dd")"
+                       asp-route-toDate="@Model.ToDate.ToString("yyyy-MM-dd")"
+                       asp-route-format="csv"
+                       class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Export CSV
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-door-open"></i> Tổng số phòng</h6>
+                    <h3>@Model.TotalRooms</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-calculator"></i> Tổng room-nights</h6>
+                    <h3>@Model.TotalRoomNights.ToString("N0")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-check-circle"></i> Đã sử dụng</h6>
+                    <h3>@Model.OccupiedRoomNights.ToString("N0")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-percentage"></i> Tỷ lệ lấp đầy</h6>
+                    <h3>@Model.OccupancyRate.ToString("N1")%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-chart-bar"></i> Biểu đồ tỷ lệ lấp đầy</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="occupancyChart" style="height: 400px;"></canvas>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-table"></i> Chi tiết theo ngày</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th class="text-center">Tổng phòng</th>
+                            <th class="text-center">Phòng đã ở</th>
+                            <th class="text-center">Phòng trống</th>
+                            <th class="text-end">Tỷ lệ lấp đầy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Data)
+                        {
+                            var emptyRooms = item.TotalRooms - item.OccupiedRooms;
+                            var badgeClass = item.OccupancyRate >= 80 ? "bg-success" : 
+                                           item.OccupancyRate >= 60 ? "bg-warning" : "bg-danger";
+                            <tr>
+                                <td>@item.Label</td>
+                                <td class="text-center">@item.TotalRooms</td>
+                                <td class="text-center">@item.OccupiedRooms</td>
+                                <td class="text-center">@emptyRooms</td>
+                                <td class="text-end">
+                                    <span class="badge @badgeClass">@item.OccupancyRate.ToString("N1")%</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- By Room Type -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-layer-group"></i> Theo loại phòng</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Loại phòng</th>
+                            <th class="text-center">Số phòng</th>
+                            <th class="text-end">Tỷ lệ lấp đầy</th>
+                            <th>Đánh giá</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ByRoomType)
+                        {
+                            var badgeClass = item.OccupancyRate >= 80 ? "bg-success" : 
+                                           item.OccupancyRate >= 60 ? "bg-warning" : "bg-danger";
+                            var rating = item.OccupancyRate >= 80 ? "Xuất sắc" :
+                                       item.OccupancyRate >= 60 ? "Tốt" :
+                                       item.OccupancyRate >= 40 ? "Trung bình" : "Cần cải thiện";
+                            <tr>
+                                <td>@item.RoomType</td>
+                                <td class="text-center">@item.TotalRooms</td>
+                                <td class="text-end">
+                                    <span class="badge @badgeClass">@item.OccupancyRate.ToString("N1")%</span>
+                                </td>
+                                <td>@rating</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const ctx = document.getElementById('occupancyChart').getContext('2d');
+        const occupancyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data.Select(d => d.Label))),
+                datasets: [{
+                    label: 'Tỷ lệ lấp đầy (%)',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data.Select(d => d.OccupancyRate))),
+                    backgroundColor: function(context) {
+                        const value = context.parsed.y;
+                        return value >= 80 ? 'rgba(75, 192, 192, 0.7)' :
+                               value >= 60 ? 'rgba(255, 205, 86, 0.7)' :
+                               'rgba(255, 99, 132, 0.7)';
+                    },
+                    borderColor: function(context) {
+                        const value = context.parsed.y;
+                        return value >= 80 ? 'rgb(75, 192, 192)' :
+                               value >= 60 ? 'rgb(255, 205, 86)' :
+                               'rgb(255, 99, 132)';
+                    },
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Lấp đầy: ' + context.parsed.y.toFixed(1) + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

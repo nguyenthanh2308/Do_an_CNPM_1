@@ -1,0 +1,267 @@
+@model HotelManagementSystem.Models.ViewModels.Invoice.InvoiceViewModel
+@{
+    ViewData["Title"] = $"Hóa đơn {Model.InvoiceNumber}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-invoice"></i> Chi tiết Hóa đơn</h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show">
+            <i class="fas fa-info-circle"></i> @TempData["InfoMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Main Invoice Info -->
+        <div class="col-lg-8">
+            <!-- Invoice Header -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar"></i> Thông tin Hóa đơn</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Mã hóa đơn:</strong> <span class="text-primary">@Model.InvoiceNumber</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Trạng thái:</strong>
+                            <span class="badge @Model.StatusBadgeClass">@Model.StatusDisplay</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Ngày phát hành:</strong> @Model.IssuedAt.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                        <div class="col-md-6">
+                            @if (Model.PaidAt.HasValue)
+                            {
+                                <strong>Ngày thanh toán:</strong> @Model.PaidAt.Value.ToString("dd/MM/yyyy HH:mm")
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.PaymentMethod))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Phương thức thanh toán:</strong> @Model.PaymentMethod
+                            </div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="alert alert-info">
+                            <strong>Ghi chú:</strong><br />
+                            @Model.Notes
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Booking Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Thông tin Booking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Mã booking:</strong></div>
+                        <div class="col-md-8">
+                            <a asp-controller="Booking" asp-action="Details" asp-route-id="@Model.BookingId">
+                                @Model.BookingCode
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Khách sạn:</strong></div>
+                        <div class="col-md-8">@Model.HotelName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Phòng:</strong></div>
+                        <div class="col-md-8"><strong class="text-primary">@Model.RoomNumber</strong> - @Model.RoomTypeName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Check-in/Check-out:</strong></div>
+                        <div class="col-md-8">@Model.FormattedCheckInOut (@Model.Nights đêm)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guest Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user"></i> Thông tin Khách hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Họ tên:</strong></div>
+                        <div class="col-md-8">@Model.GuestName</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.GuestEmail))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Email:</strong></div>
+                            <div class="col-md-8">@Model.GuestEmail</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.GuestPhone))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Số điện thoại:</strong></div>
+                            <div class="col-md-8">@Model.GuestPhone</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Financial & Actions -->
+        <div class="col-lg-4">
+            <!-- Financial Breakdown -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Chi tiết Thanh toán</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tiền phòng (@Model.Nights đêm):</span>
+                        <strong>@Model.RoomCharge.ToString("N0") đ</strong>
+                    </div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Giảm giá:</span>
+                            <strong>- @Model.DiscountAmount.ToString("N0") đ</strong>
+                        </div>
+                    }
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Thuế VAT (10%):</span>
+                        <strong>@Model.TaxAmount.ToString("N0") đ</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Phí dịch vụ (5%):</span>
+                        <strong>@Model.ServiceCharge.ToString("N0") đ</strong>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <strong>Tổng cộng:</strong>
+                        <h4 class="text-primary mb-0">@Model.TotalAmount.ToString("N0") đ</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Thao tác</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.CanDownload)
+                    {
+                        <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-download"></i> Tải PDF
+                        </a>
+                        <a asp-action="View" asp-route-id="@Model.Id" class="btn btn-secondary w-100 mb-2" target="_blank">
+                            <i class="fas fa-file-pdf"></i> Xem PDF
+                        </a>
+                    }
+
+                    @if (Model.CanMarkAsPaid)
+                    {
+                        <hr />
+                        <form asp-action="MarkAsPaid" method="post" onsubmit="return confirm('Xác nhận hóa đơn đã thanh toán?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label">Phương thức thanh toán:</label>
+                                <select name="paymentMethod" class="form-select">
+                                    <option value="Cash">Tiền mặt</option>
+                                    <option value="Card">Thẻ</option>
+                                    <option value="Transfer">Chuyển khoản</option>
+                                    <option value="Other">Khác</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-check-circle"></i> Đánh dấu đã thanh toán
+                            </button>
+                        </form>
+                    }
+
+                    @if (Model.CanCancel)
+                    {
+                        <hr />
+                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                            <i class="fas fa-times-circle"></i> Hủy Hóa đơn
+                        </button>
+                    }
+
+                    @if (Model.IsPaid)
+                    {
+                        <div class="alert alert-success mt-3 mb-0">
+                            <i class="fas fa-check-circle"></i> Hóa đơn đã thanh toán
+                        </div>
+                    }
+
+                    @if (Model.IsCancelled)
+                    {
+                        <div class="alert alert-danger mt-3 mb-0">
+                            <i class="fas fa-ban"></i> Hóa đơn đã bị hủy
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Cancel" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Hủy Hóa đơn</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn hủy hóa đơn <strong>@Model.InvoiceNumber</strong>?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Lý do hủy (tùy chọn):</label>
+                        <textarea name="reason" class="form-control" rows="3" placeholder="Nhập lý do hủy hóa đơn..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times-circle"></i> Xác nhận hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

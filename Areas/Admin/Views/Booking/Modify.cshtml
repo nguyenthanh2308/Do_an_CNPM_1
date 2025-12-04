@@ -1,0 +1,247 @@
+@model HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel
+@{
+    ViewData["Title"] = $"Chỉnh sửa Booking {Model.BookingCode}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-edit"></i> Chỉnh sửa Booking</h2>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Current Booking Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin Hiện tại</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Mã booking:</strong></div>
+                        <div class="col-md-8">@Model.BookingCode</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Khách hàng:</strong></div>
+                        <div class="col-md-8">@Model.GuestName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Khách sạn:</strong></div>
+                        <div class="col-md-8">@Model.HotelName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Phòng:</strong></div>
+                        <div class="col-md-8"><strong class="text-primary">@Model.RoomNumber</strong> - @Model.RoomTypeName</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Check-in:</strong></div>
+                        <div class="col-md-8">@Model.CheckInDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-4"><strong>Check-out:</strong></div>
+                        <div class="col-md-8">@Model.CheckOutDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><strong>Số đêm:</strong></div>
+                        <div class="col-md-8">@Model.Nights đêm</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modify Dates -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Thay đổi Ngày</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ModifyDates" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Ngày Check-in mới:</strong></label>
+                                <input type="date" 
+                                       name="newCheckInDate" 
+                                       class="form-control" 
+                                       value="@Model.CheckInDate.ToString("yyyy-MM-dd")"
+                                       min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                       required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Ngày Check-out mới:</strong></label>
+                                <input type="date" 
+                                       name="newCheckOutDate" 
+                                       class="form-control" 
+                                       value="@Model.CheckOutDate.ToString("yyyy-MM-dd")"
+                                       min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                                       required />
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Lưu ý: Giá phòng sẽ được tính lại dựa trên số đêm mới và giữ nguyên giá mỗi đêm theo gói giá ban đầu.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận thay đổi ngày?');">
+                            <i class="fas fa-save"></i> Lưu thay đổi Ngày
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modify Room -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bed"></i> Thay đổi Phòng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Chú ý:</strong> Chức năng này yêu cầu kiểm tra tính khả dụng của phòng mới trong khoảng thời gian hiện tại.
+                    </div>
+
+                    <form asp-action="ModifyRoom" method="post" id="modifyRoomForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Chọn phòng mới:</strong></label>
+                            <select name="newRoomId" class="form-select" id="roomSelect" required>
+                                <option value="">-- Vui lòng chọn phòng --</option>
+                            </select>
+                            <small class="text-muted">Danh sách chỉ hiển thị các phòng cùng khách sạn và khả dụng trong khoảng thời gian booking.</small>
+                        </div>
+
+                        <div id="roomInfo" class="alert alert-secondary d-none">
+                            <strong>Thông tin phòng đã chọn:</strong>
+                            <div id="roomDetails"></div>
+                        </div>
+
+                        <button type="button" class="btn btn-info me-2" onclick="loadAvailableRooms()">
+                            <i class="fas fa-sync"></i> Tải danh sách phòng khả dụng
+                        </button>
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận thay đổi phòng?');">
+                            <i class="fas fa-save"></i> Lưu thay đổi Phòng
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Panel -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Hướng dẫn</h5>
+                </div>
+                <div class="card-body">
+                    <h6><i class="fas fa-calendar-alt"></i> Thay đổi Ngày:</h6>
+                    <ul class="small">
+                        <li>Phải chọn ngày check-in trong tương lai</li>
+                        <li>Ngày check-out phải sau check-in ít nhất 1 ngày</li>
+                        <li>Hệ thống tự động kiểm tra phòng có khả dụng trong khoảng thời gian mới</li>
+                        <li>Tổng tiền sẽ được tính lại</li>
+                    </ul>
+
+                    <h6 class="mt-3"><i class="fas fa-bed"></i> Thay đổi Phòng:</h6>
+                    <ul class="small">
+                        <li>Chỉ có thể đổi sang phòng cùng khách sạn</li>
+                        <li>Phòng mới phải khả dụng trong khoảng thời gian booking</li>
+                        <li>Nhấn "Tải danh sách phòng" để xem phòng có thể đổi</li>
+                        <li>Giá không thay đổi khi đổi phòng</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Thông tin Giá</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tổng tiền hiện tại:</span>
+                        <strong>@Model.TotalAmount.ToString("N0") đ</strong>
+                    </div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Giảm giá:</span>
+                            <strong>- @Model.DiscountAmount.ToString("N0") đ</strong>
+                        </div>
+                    }
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <strong>Thành tiền:</strong>
+                        <h5 class="text-primary mb-0">@Model.FinalAmount.ToString("N0") đ</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function loadAvailableRooms() {
+            const hotelId = @Model.HotelId;
+            const checkInDate = '@Model.CheckInDate.ToString("yyyy-MM-dd")';
+            const checkOutDate = '@Model.CheckOutDate.ToString("yyyy-MM-dd")';
+            const currentRoomId = @Model.RoomId;
+
+            fetch(`/Admin/Booking/GetAvailableRooms?checkInDate=${checkInDate}&checkOutDate=${checkOutDate}&hotelId=${hotelId}`)
+                .then(response => response.json())
+                .then(rooms => {
+                    const select = document.getElementById('roomSelect');
+                    select.innerHTML = '<option value="">-- Vui lòng chọn phòng --</option>';
+                    
+                    rooms.forEach(room => {
+                        if (room.id !== currentRoomId) {
+                            const option = document.createElement('option');
+                            option.value = room.id;
+                            option.textContent = `${room.roomNumber} - ${room.roomTypeName} (Sức chứa: ${room.capacity})`;
+                            select.appendChild(option);
+                        }
+                    });
+
+                    if (rooms.length === 0 || rooms.every(r => r.id === currentRoomId)) {
+                        alert('Không có phòng khả dụng khác trong khoảng thời gian này.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Lỗi khi tải danh sách phòng. Vui lòng thử lại.');
+                });
+        }
+
+        document.getElementById('roomSelect')?.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const roomInfo = document.getElementById('roomInfo');
+            const roomDetails = document.getElementById('roomDetails');
+
+            if (this.value) {
+                roomInfo.classList.remove('d-none');
+                roomDetails.innerHTML = selectedOption.textContent;
+            } else {
+                roomInfo.classList.add('d-none');
+            }
+        });
+    </script>
+}

@@ -1,0 +1,317 @@
+@model List<(ulong GuestId, string GuestName, decimal TotalSpent, int BookingCount)>
+
+@{
+    ViewData["Title"] = "Top Khách Hàng";
+    var fromDate = ViewBag.FromDate as DateTime?;
+    var toDate = ViewBag.ToDate as DateTime?;
+    var top = ViewBag.Top as int? ?? 10;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-trophy text-warning"></i> Top @top Khách Hàng
+        </h2>
+        <div>
+            <a asp-action="Dashboard" class="btn btn-outline-primary">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            <a asp-action="Revenue" class="btn btn-outline-secondary">
+                <i class="fas fa-money-bill-wave"></i> Doanh Thu
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="TopGuests">
+                <div class="row align-items-end">
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label class="form-label">Từ Ngày</label>
+                        <input type="date" 
+                               name="fromDate" 
+                               class="form-control" 
+                               value="@(fromDate?.ToString("yyyy-MM-dd"))" />
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label class="form-label">Đến Ngày</label>
+                        <input type="date" 
+                               name="toDate" 
+                               class="form-control" 
+                               value="@(toDate?.ToString("yyyy-MM-dd"))" />
+                    </div>
+                    <div class="col-md-2 mb-3 mb-md-0">
+                        <label class="form-label">Top</label>
+                        <select name="top" class="form-select">
+                            <option value="5" selected="@(top == 5)">5</option>
+                            <option value="10" selected="@(top == 10)">10</option>
+                            <option value="20" selected="@(top == 20)">20</option>
+                            <option value="50" selected="@(top == 50)">50</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Tìm Kiếm
+                        </button>
+                        <a asp-action="TopGuests" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (fromDate.HasValue || toDate.HasValue)
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            Khoảng thời gian: 
+            <strong>
+                @(fromDate?.ToString("dd/MM/yyyy") ?? "Từ đầu") 
+                - 
+                @(toDate?.ToString("dd/MM/yyyy") ?? "Đến nay")
+            </strong>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> Không có dữ liệu khách hàng trong khoảng thời gian này.
+        </div>
+    }
+    else
+    {
+        <!-- Summary Card -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h4>@Model.Sum(g => g.TotalSpent).ToString("N0") VNĐ</h4>
+                        <p class="mb-0">Tổng Doanh Thu Từ Top Khách</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h4>@Model.Sum(g => g.BookingCount)</h4>
+                        <p class="mb-0">Tổng Số Booking</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h4>@((Model.Sum(g => g.TotalSpent) / Model.Sum(g => g.BookingCount)).ToString("N0")) VNĐ</h4>
+                        <p class="mb-0">Trung Bình / Booking</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Guests Table -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-users"></i> Danh Sách Top @top Khách Hàng
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th width="10%" class="text-center">Hạng</th>
+                                <th width="15%">ID</th>
+                                <th width="30%">Tên Khách Hàng</th>
+                                <th width="15%" class="text-end">Tổng Chi Tiêu</th>
+                                <th width="15%" class="text-center">Số Booking</th>
+                                <th width="15%" class="text-end">TB/Booking</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ var rank = 1; }
+                            @foreach (var guest in Model)
+                            {
+                                var rankBadge = rank switch
+                                {
+                                    1 => "bg-warning",
+                                    2 => "bg-secondary",
+                                    3 => "bg-bronze",
+                                    _ => "bg-light text-dark"
+                                };
+
+                                var rankIcon = rank switch
+                                {
+                                    1 => "fas fa-crown",
+                                    2 => "fas fa-medal",
+                                    3 => "fas fa-award",
+                                    _ => ""
+                                };
+
+                                <tr>
+                                    <td class="text-center">
+                                        <h4 class="mb-0">
+                                            <span class="badge @rankBadge">
+                                                @if (!string.IsNullOrEmpty(rankIcon))
+                                                {
+                                                    <i class="@rankIcon"></i>
+                                                }
+                                                #@rank
+                                            </span>
+                                        </h4>
+                                    </td>
+                                    <td>
+                                        <code>@guest.GuestId</code>
+                                    </td>
+                                    <td>
+                                        <strong>@guest.GuestName</strong>
+                                        @if (rank <= 3)
+                                        {
+                                            <br />
+                                            <small class="text-muted">
+                                                <i class="fas fa-star text-warning"></i> VIP Customer
+                                            </small>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">
+                                            @guest.TotalSpent.ToString("N0") VNĐ
+                                        </strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">
+                                            @guest.BookingCount bookings
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="text-muted">
+                                            @((guest.TotalSpent / guest.BookingCount).ToString("N0")) VNĐ
+                                        </span>
+                                    </td>
+                                </tr>
+                                rank++;
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="3" class="text-end">TỔNG CỘNG:</th>
+                                <th class="text-end">
+                                    <strong>@Model.Sum(g => g.TotalSpent).ToString("N0") VNĐ</strong>
+                                </th>
+                                <th class="text-center">
+                                    <strong>@Model.Sum(g => g.BookingCount)</strong>
+                                </th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar"></i> Biểu Đồ Top Khách Hàng
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topGuestsChart" height="100"></canvas>
+            </div>
+        </div>
+
+        <!-- Insights Card -->
+        <div class="card mt-4 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb"></i> Insights
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>
+                        Khách hàng <strong>@Model.First().GuestName</strong> là khách hàng chi tiêu cao nhất với 
+                        <strong>@Model.First().TotalSpent.ToString("N0") VNĐ</strong>
+                    </li>
+                    <li>
+                        Top @top khách hàng đóng góp <strong>@Model.Sum(g => g.TotalSpent).ToString("N0") VNĐ</strong> doanh thu
+                    </li>
+                    <li>
+                        Trung bình mỗi khách hàng trong top @top có 
+                        <strong>@(Model.Average(g => g.BookingCount).ToString("F1"))</strong> booking
+                    </li>
+                    <li class="text-success">
+                        <i class="fas fa-check"></i> Nên chăm sóc đặc biệt top 3 khách hàng để duy trì loyalty
+                    </li>
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        @if (Model.Any())
+        {
+            <text>
+            // Top Guests Chart
+            const ctx = document.getElementById('topGuestsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", Model.Select(g => $"'{g.GuestName}'")))],
+                    datasets: [{
+                        label: 'Tổng Chi Tiêu (VNĐ)',
+                        data: [@string.Join(",", Model.Select(g => g.TotalSpent))],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + 
+                                           context.parsed.y.toLocaleString('vi-VN') + ' VNĐ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN') + ' VNĐ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+    </script>
+
+    <style>
+        .bg-bronze {
+            background-color: #cd7f32 !important;
+            color: white;
+        }
+    </style>
+}

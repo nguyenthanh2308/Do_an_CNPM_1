@@ -1,0 +1,156 @@
+@{
+    ViewData["Title"] = "Tạo Hóa đơn";
+    var booking = ViewBag.Booking as HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel;
+    
+    if (booking == null)
+    {
+        return;
+    }
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-invoice"></i> Tạo Hóa đơn</h2>
+        <a asp-controller="Booking" asp-action="Details" asp-route-id="@booking.Id" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại Booking
+        </a>
+    </div>
+
+    <!-- Booking Summary -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Thông tin Booking</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Mã booking:</strong><br />
+                    @booking.BookingCode
+                </div>
+                <div class="col-md-3">
+                    <strong>Khách hàng:</strong><br />
+                    @booking.GuestName
+                </div>
+                <div class="col-md-3">
+                    <strong>Phòng:</strong><br />
+                    @booking.RoomNumber - @booking.RoomTypeName
+                </div>
+                <div class="col-md-3">
+                    <strong>Check-in/Check-out:</strong><br />
+                    @booking.CheckInDate.ToString("dd/MM/yyyy") - @booking.CheckOutDate.ToString("dd/MM/yyyy")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Preview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h4 class="text-primary">@booking.TotalAmount.ToString("N0") đ</h4>
+                    <p class="mb-0">Tiền phòng</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    @{
+                        var finalAmount = booking.TotalAmount - booking.DiscountAmount;
+                        var tax = Math.Round(finalAmount * 0.1m, 0);
+                        var service = Math.Round(finalAmount * 0.05m, 0);
+                    }
+                    <h4 class="text-success">@tax.ToString("N0") đ + @service.ToString("N0") đ</h4>
+                    <p class="mb-0">VAT (10%) + Phí dịch vụ (5%)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    @{
+                        var totalWithTax = finalAmount + tax + service;
+                    }
+                    <h3 class="text-danger">@totalWithTax.ToString("N0") đ</h3>
+                    <p class="mb-0">Tổng hóa đơn (dự kiến)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Invoice Form -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-file-plus"></i> Tạo Hóa đơn mới</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="bookingId" value="@booking.Id" />
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Hóa đơn sẽ được tự động phát hành sau khi tạo</li>
+                        <li>Mã hóa đơn sẽ được tạo tự động theo định dạng INV-YYYYMMDD-XXXX</li>
+                        <li>Hóa đơn bao gồm VAT 10% và phí dịch vụ 5%</li>
+                        <li>Hóa đơn có thể tải xuống dưới dạng PDF sau khi tạo</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ghi chú (tùy chọn)</label>
+                    <textarea name="notes" class="form-control" rows="4" 
+                              placeholder="Nhập ghi chú cho hóa đơn..."></textarea>
+                    <small class="text-muted">Có thể ghi thêm thông tin về điều khoản thanh toán, ghi chú đặc biệt, v.v.</small>
+                </div>
+
+                <!-- Financial Breakdown -->
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">Chi tiết tính toán:</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tiền phòng (@((booking.CheckOutDate - booking.CheckInDate).Days) đêm):</span>
+                            <strong>@booking.TotalAmount.ToString("N0") đ</strong>
+                        </div>
+                        @if (booking.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Giảm giá:</span>
+                                <strong>- @booking.DiscountAmount.ToString("N0") đ</strong>
+                            </div>
+                            <hr />
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tạm tính:</span>
+                                <strong>@finalAmount.ToString("N0") đ</strong>
+                            </div>
+                        }
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Thuế VAT (10%):</span>
+                            <strong>@tax.ToString("N0") đ</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Phí dịch vụ (5%):</span>
+                            <strong>@service.ToString("N0") đ</strong>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between">
+                            <strong class="text-danger">Tổng hóa đơn:</strong>
+                            <h4 class="text-danger mb-0">@totalWithTax.ToString("N0") đ</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-controller="Booking" asp-action="Details" asp-route-id="@booking.Id" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Hủy
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Tạo Hóa đơn
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
