@@ -1,0 +1,99 @@
+@model HotelManagementSystem.Models.ViewModels.Booking.RoomDetailsViewModel
+
+@{
+    ViewData["Title"] = "Chi Tiết Phòng " + Model.RoomNumber;
+}
+
+<div class="container mt-5 mb-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="javascript:history.back()">Tìm kiếm</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Chi tiết phòng @Model.RoomNumber</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-lg border-0 overflow-hidden">
+        <div class="row g-0">
+            <div class="col-md-6">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 400px;" alt="@Model.RoomTypeName">
+                }
+                else
+                {
+                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center h-100" style="min-height: 400px;">
+                        <i class="fas fa-image fa-5x"></i>
+                    </div>
+                }
+            </div>
+            <div class="col-md-6">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h2 class="card-title fw-bold text-primary mb-0">@Model.RoomTypeName</h2>
+                        <span class="badge bg-success fs-6">@Model.Status</span>
+                    </div>
+                    <p class="text-muted mb-4"><i class="fas fa-map-marker-alt me-2"></i>@Model.HotelName - @Model.HotelAddress</p>
+
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <p class="mb-1 fw-bold">Số phòng:</p>
+                            <p class="text-muted">@Model.RoomNumber</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1 fw-bold">Tầng:</p>
+                            <p class="text-muted">@Model.Floor</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1 fw-bold">Sức chứa:</p>
+                            <p class="text-muted">@Model.Capacity người</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1 fw-bold">Giá cơ bản:</p>
+                            <p class="text-primary fw-bold fs-5">@Model.BasePrice.ToString("N0") VNĐ <small class="text-muted fw-normal fs-6">/ đêm</small></p>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-4">
+                            <h5 class="fw-bold">Mô tả</h5>
+                            <p class="text-muted">@Model.Description</p>
+                        </div>
+                    }
+
+                    @if (Model.Amenities != null && Model.Amenities.Any())
+                    {
+                        <div class="mb-4">
+                            <h5 class="fw-bold">Tiện nghi</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var amenity in Model.Amenities)
+                                {
+                                    <span class="badge bg-light text-dark border"><i class="fas fa-check text-success me-1"></i>@amenity</span>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <hr class="my-4">
+
+                    <div class="d-grid gap-2">
+                        <form asp-action="Book" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="roomId" value="@Model.RoomId" />
+                            <input type="hidden" name="checkInDate" value="@Model.CheckInDate.ToString("yyyy-MM-dd")" />
+                            <input type="hidden" name="checkOutDate" value="@Model.CheckOutDate.ToString("yyyy-MM-dd")" />
+                            <input type="hidden" name="numberOfGuests" value="@Model.NumberOfGuests" />
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-calendar-check me-2"></i>Đặt Phòng Ngay
+                            </button>
+                        </form>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại tìm kiếm
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

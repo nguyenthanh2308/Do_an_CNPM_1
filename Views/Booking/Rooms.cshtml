@@ -1,0 +1,68 @@
+@model List<HotelManagementSystem.Models.ViewModels.Booking.RoomViewModel>
+
+@{
+    ViewData["Title"] = "Danh Sách Phòng";
+}
+
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary">Danh Sách Phòng</h2>
+        <p class="text-muted">Khám phá các hạng phòng sang trọng và tiện nghi của chúng tôi</p>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var room in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 room-card">
+                    <div class="position-relative">
+                        <img src="@(string.IsNullOrEmpty(room.RoomType.DefaultImageUrl) ? "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" : room.RoomType.DefaultImageUrl)" 
+                             class="card-img-top" alt="@room.RoomType.Name" style="height: 250px; object-fit: cover;">
+                        <span class="position-absolute top-0 end-0 m-2 badge @(room.Status == "Vacant" ? "bg-success" : "bg-danger")">
+                            @(room.Status == "Vacant" ? "Còn trống" : "Đã đặt")
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">@room.RoomType.Name - @room.Number</h5>
+                        <p class="card-text text-muted small">@room.RoomType.Description</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="text-primary fw-bold fs-5">
+                                @room.Price.ToString("N0") VNĐ <span class="fs-6 text-muted fw-normal">/ đêm</span>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="fas fa-user-friends"></i> @room.RoomType.Capacity khách
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pb-3">
+                        <div class="d-grid">
+                            @if (room.Status == "Vacant")
+                            {
+                                <a asp-action="Search" asp-route-RoomTypeId="@room.RoomType.Id" class="btn btn-outline-primary">
+                                    <i class="fas fa-calendar-check me-2"></i>Đặt Ngay
+                                </a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fas fa-ban me-2"></i>Đã Đặt
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .room-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .room-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>

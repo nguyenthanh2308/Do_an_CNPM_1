@@ -1,0 +1,109 @@
+@model HotelManagementSystem.Models.Entities.Invoice
+@{
+    ViewData["Title"] = "Hóa Đơn - " + Model.Number;
+    var booking = ViewBag.Booking as HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel;
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow">
+        <div class="card-body p-5">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-6">
+                    <h2 class="text-primary"><i class="fas fa-hotel me-2"></i>Hotel Management</h2>
+                    <p class="text-muted">123 Đường ABC, Quận 1, TP.HCM</p>
+                    <p class="text-muted">Phone: (028) 3838 3838</p>
+                </div>
+                <div class="col-6 text-end">
+                    <h3 class="fw-bold">HÓA ĐƠN</h3>
+                    <p class="mb-1"><strong>Số:</strong> @Model.Number</p>
+                    <p class="mb-1"><strong>Ngày:</strong> @Model.IssuedAt.ToString("dd/MM/yyyy")</p>
+                    <p class="mb-1">
+                        <strong>Trạng thái:</strong> 
+                        @if (Model.Status == "Paid")
+                        {
+                            <span class="badge bg-success">ĐÃ THANH TOÁN</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">THANH TOÁN TẠI QUẦY</span>
+                        }
+                    </p>
+                </div>
+            </div>
+
+            <hr />
+
+            <!-- Info -->
+            <div class="row mb-4">
+                <div class="col-6">
+                    <h5 class="fw-bold">Khách hàng:</h5>
+                    <p class="mb-1">@booking?.GuestName</p>
+                    <p class="mb-1">@booking?.GuestEmail</p>
+                    <p class="mb-1">@booking?.GuestPhone</p>
+                </div>
+                <div class="col-6 text-end">
+                    <h5 class="fw-bold">Chi tiết đặt phòng:</h5>
+                    <p class="mb-1"><strong>Mã Booking:</strong> #@booking?.Id</p>
+                    <p class="mb-1"><strong>Khách sạn:</strong> @booking?.HotelName</p>
+                    <p class="mb-1"><strong>Phòng:</strong> @booking?.RoomNumber (@booking?.RoomTypeName)</p>
+                    <p class="mb-1"><strong>Check-in:</strong> @booking?.CheckInDate.ToString("dd/MM/yyyy")</p>
+                    <p class="mb-1"><strong>Check-out:</strong> @booking?.CheckOutDate.ToString("dd/MM/yyyy")</p>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mô tả</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Tiền phòng (@booking?.Nights đêm)</td>
+                            <td class="text-center">@booking?.Nights</td>
+                            <td class="text-end">@((booking?.TotalAmount / (booking?.Nights > 0 ? booking.Nights : 1))?.ToString("N0")) VNĐ</td>
+                            <td class="text-end">@booking?.TotalAmount.ToString("N0") VNĐ</td>
+                        </tr>
+                        @if (booking?.DiscountAmount > 0)
+                        {
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Giảm giá (@booking.PromotionCode)</strong></td>
+                                <td class="text-end text-danger">-@booking.DiscountAmount.ToString("N0") VNĐ</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold fs-5">TỔNG CỘNG</td>
+                            <td class="text-end fw-bold fs-5 text-primary">@Model.Amount.ToString("N0") VNĐ</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="row mt-5">
+                <div class="col-12 text-center text-muted">
+                    <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
+                    <p>Đây là hóa đơn điện tử được tạo tự động.</p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-print-none mt-4 text-center">
+                <button onclick="window.print()" class="btn btn-secondary me-2">
+                    <i class="fas fa-print me-2"></i>In Hóa Đơn
+                </button>
+                <a asp-action="Details" asp-route-id="@booking?.Id" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

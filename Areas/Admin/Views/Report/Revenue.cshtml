@@ -91,6 +91,7 @@
     <!-- Data Table -->
     <div class="card mb-4">
         <div class="card-header">
+
             <h5><i class="fas fa-table"></i> Chi tiết doanh thu</h5>
         </div>
         <div class="card-body">
@@ -166,9 +167,9 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        const chartLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data.Select(d => d.Label)));
-        const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data.Select(d => d.Revenue)));
-        const bookingData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Data.Select(d => d.BookingCount)));
+        const chartLabels = @Json.Serialize(Model.Data.Select(d => d.Label));
+        const revenueData = @Json.Serialize(Model.Data.Select(d => d.Revenue));
+        const bookingData = @Json.Serialize(Model.Data.Select(d => d.BookingCount));
 
         const ctx = document.getElementById('revenueChart').getContext('2d');
         const revenueChart = new Chart(ctx, {

@@ -29,6 +29,16 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Giới thiệu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Booking" asp-action="Rooms">Phòng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#contact-footer">Liên hệ</a>
+                        </li>
+                        
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
@@ -107,29 +117,37 @@
                                     </a>
                                 </li>
                             }
-                            
-                            @if (User.IsInRole("Admin") || User.IsInRole("Manager") || User.IsInRole("Receptionist"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Booking" asp-action="Search">
-                                        <i class="fas fa-search me-1"></i>
-                                        Đặt phòng
-                                    </a>
-                                </li>
-                            }
                         }
                     </ul>
                     
                     <ul class="navbar-nav ms-auto">
+                        <li class="nav-item me-2">
+                             <a class="nav-link" asp-controller="Booking" asp-action="Search">
+                                <i class="fas fa-search"></i>
+                            </a>
+                        </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user-circle me-1"></i>
-                                    @User.Identity.Name
-                                    <span class="badge bg-warning ms-2">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle me-2 fa-lg"></i>
+                                    <span class="me-2">@User.Identity.Name</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+                                    @if (User.IsInRole("Customer"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-area="" asp-controller="Customer" asp-action="Profile">
+                                                <i class="fas fa-id-card me-2"></i>Hồ sơ cá nhân
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-area="" asp-controller="Customer" asp-action="MyBookings">
+                                                <i class="fas fa-history me-2"></i>Lịch sử đặt phòng
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    }
                                     <li>
                                         <form asp-area="" asp-controller="Auth" asp-action="Logout" method="post" class="dropdown-item p-0">
                                             <button type="submit" class="btn btn-link dropdown-item">
@@ -159,14 +177,24 @@
         @RenderBody()
     </main>
 
-    <footer class="border-top footer text-muted bg-light mt-5">
-        <div class="container py-3">
+    <footer class="border-top footer text-muted bg-light mt-5" id="contact-footer">
+        <div class="container py-4">
             <div class="row">
-                <div class="col-md-6">
-                    &copy; 2025 - Hotel Management System
+                <div class="col-md-4">
+                    <h5><i class="fas fa-hotel me-2"></i>Hotel Management</h5>
+                    <p>Trải nghiệm kỳ nghỉ tuyệt vời nhất của bạn.</p>
                 </div>
-                <div class="col-md-6 text-end">
-                    <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+                <div class="col-md-4">
+                    <h5>Liên hệ</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li><i class="fas fa-phone me-2"></i>(028) 3838 3838</li>
+                        <li><i class="fas fa-envelope me-2"></i>contact@hotel.com</li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-end">
+                    <p>&copy; 2025 - Hotel Management System</p>
+                    <a asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
                 </div>
             </div>
         </div>

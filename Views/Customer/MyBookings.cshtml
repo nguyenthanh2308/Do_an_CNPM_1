@@ -1,0 +1,108 @@
+@model List<HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel>
+
+@{
+    ViewData["Title"] = "Lịch sử đặt phòng";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-history text-primary"></i> Lịch sử đặt phòng</h2>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Trang chủ
+        </a>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã đặt phòng</th>
+                                <th>Khách sạn</th>
+                                <th>Phòng</th>
+                                <th>Ngày nhận</th>
+                                <th>Ngày trả</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td><strong>#@item.Id</strong></td>
+                                    <td>@item.HotelName</td>
+                                    <td>
+                                        <div>@item.RoomNumber</div>
+                                        <small class="text-muted">@item.RoomTypeName</small>
+                                    </td>
+                                    <td>@item.CheckInDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@item.CheckOutDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="fw-bold text-primary">@item.TotalAmount.ToString("N0") VNĐ</td>
+                                    <td>
+                                        @if (item.Status == "Confirmed")
+                                        {
+                                            <span class="badge bg-success">Đã xác nhận</span>
+                                        }
+                                        else if (item.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                        }
+                                        else if (item.Status == "Cancelled")
+                                        {
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                        }
+                                        else if (item.Status == "CheckedIn")
+                                        {
+                                            <span class="badge bg-info">Đang ở</span>
+                                        }
+                                        else if (item.Status == "CheckedOut")
+                                        {
+                                            <span class="badge bg-secondary">Đã trả phòng</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark">@item.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Chi tiết
+                                            </a>
+                                            @if (item.Status == "Confirmed" || item.Status == "Pending")
+                                            {
+
+                                                <form asp-controller="Booking" asp-action="Cancel" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đặt phòng này?');" style="display:inline;">
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
+                                                        <i class="fas fa-times"></i> Hủy
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+            <h4>Bạn chưa có đơn đặt phòng nào</h4>
+            <p class="text-muted">Hãy tìm kiếm và đặt phòng ngay hôm nay!</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">
+                <i class="fas fa-search me-2"></i>Tìm phòng ngay
+            </a>
+        </div>
+    }
+</div>

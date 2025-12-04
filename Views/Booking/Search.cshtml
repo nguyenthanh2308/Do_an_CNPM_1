@@ -134,8 +134,7 @@
 
     @Html.ValidationSummary(excludePropertyErrors: true, message: "", htmlAttributes: new { @class = "validation-summary-errors" })
 
-    <form asp-action="Search" method="post">
-        @Html.AntiForgeryToken()
+    <form asp-action="Search" method="get">
 
         <div class="form-row">
             <div class="form-group">
@@ -203,16 +202,26 @@
                                 <span class="badge-status @badgeClass">@status</span>
                             </td>
                             <td>
-                                <form asp-action="Book" method="post" style="display:inline;">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="roomId" value="@room.Id" />
-                                    <input type="hidden" name="checkInDate" value="@Model.CheckInDate?.ToString("yyyy-MM-dd")" />
-                                    <input type="hidden" name="checkOutDate" value="@Model.CheckOutDate?.ToString("yyyy-MM-dd")" />
-                                    <input type="hidden" name="numberOfGuests" value="@Model.NumberOfGuests" />
-                                    <button type="submit" class="btn-book">
-                                        Book
-                                    </button>
-                                </form>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="RoomDetails" 
+                                       asp-route-roomId="@room.Id" 
+                                       asp-route-checkInDate="@Model.CheckInDate?.ToString("yyyy-MM-dd")"
+                                       asp-route-checkOutDate="@Model.CheckOutDate?.ToString("yyyy-MM-dd")"
+                                       asp-route-numberOfGuests="@Model.NumberOfGuests"
+                                       class="btn btn-info text-white btn-sm" title="Xem chi tiết">
+                                        <i class="fas fa-info-circle"></i> Chi tiết
+                                    </a>
+                                    <form asp-action="Book" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="roomId" value="@room.Id" />
+                                        <input type="hidden" name="checkInDate" value="@Model.CheckInDate?.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="checkOutDate" value="@Model.CheckOutDate?.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="numberOfGuests" value="@Model.NumberOfGuests" />
+                                        <button type="submit" class="btn btn-success btn-sm ms-1">
+                                            <i class="fas fa-check"></i> Đặt
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }

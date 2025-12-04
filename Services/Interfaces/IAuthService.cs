@@ -43,5 +43,15 @@ namespace HotelManagementSystem.Services.Interfaces
         /// Tạo claims cho user để đăng nhập
         /// </summary>
         ClaimsIdentity CreateClaimsIdentity(User user);
+
+        /// <summary>
+        /// Cập nhật thông tin profile (User + Guest)
+        /// </summary>
+        Task<(bool Success, string Message)> UpdateProfileAsync(long userId, string fullName, string email, string phone, string address);
+
+        /// <summary>
+        /// Đổi mật khẩu
+        /// </summary>
+        Task<(bool Success, string Message)> ChangePasswordAsync(long userId, string currentPassword, string newPassword);
     }
 }

@@ -13,6 +13,9 @@ namespace HotelManagementSystem.Models.Entities
         [Column("id")]
         public long Id { get; set; }
 
+        [Column("user_id")]
+        public long? UserId { get; set; }
+
         [Required]
         [MaxLength(128)]
         [Column("full_name")]
@@ -36,5 +39,8 @@ namespace HotelManagementSystem.Models.Entities
 
         // Navigation: 1 Guest có nhiều Bookings
         public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+        [ForeignKey(nameof(UserId))]
+        public virtual User? User { get; set; }
     }
 }

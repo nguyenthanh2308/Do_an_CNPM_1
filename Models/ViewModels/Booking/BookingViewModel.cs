@@ -100,6 +100,7 @@ namespace HotelManagementSystem.Models.ViewModels.Booking
         // Display Properties
         public string StatusDisplay => Status switch
         {
+            "AwaitingPayment" => "Chờ thanh toán",
             "Pending" => "Chờ xác nhận",
             "Confirmed" => "Đã xác nhận",
             "CheckedIn" => "Đã nhận phòng",
@@ -110,6 +111,7 @@ namespace HotelManagementSystem.Models.ViewModels.Booking
         
         public string StatusBadgeClass => Status switch
         {
+            "AwaitingPayment" => "bg-warning",
             "Pending" => "bg-warning",
             "Confirmed" => "bg-info",
             "CheckedIn" => "bg-success",

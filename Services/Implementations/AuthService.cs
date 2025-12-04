@@ -74,6 +74,20 @@ namespace HotelManagementSystem.Services.Implementations
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            // Nếu là Customer, tạo luôn record Guest
+            if (model.Role == "Customer")
+            {
+                var guest = new Guest
+                {
+                    FullName = model.Username, // Tạm lấy username làm tên, user có thể update sau
+                    Email = model.Email,
+                    CreatedAt = DateTime.Now,
+                    UserId = user.Id
+                };
+                _context.Guests.Add(guest);
+                await _context.SaveChangesAsync();
+            }
+
             return user;
         }
 
@@ -118,6 +132,62 @@ namespace HotelManagementSystem.Services.Implementations
             };
 
             return new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        }
+
+        public async Task<(bool Success, string Message)> UpdateProfileAsync(long userId, string fullName, string email, string phone, string address)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return (false, "Không tìm thấy người dùng");
+
+            // Check email conflict if email changed
+            if (user.Email != email && await EmailExistsAsync(email))
+            {
+                return (false, "Email đã được sử dụng bởi tài khoản khác");
+            }
+
+            user.Email = email;
+
+            var guest = await _context.Guests.FirstOrDefaultAsync(g => g.UserId == userId);
+            if (guest != null)
+            {
+                guest.FullName = fullName;
+                guest.Email = email;
+                guest.Phone = phone;
+                // Guest entity currently doesn't have Address, so we ignore it or add it if needed. 
+                // Based on SRS, address might be needed, but Guest entity doesn't have it.
+                // We will just update what we have.
+            }
+            else
+            {
+                // Create guest if missing (should not happen for customers)
+                guest = new Guest
+                {
+                    UserId = userId,
+                    FullName = fullName,
+                    Email = email,
+                    Phone = phone,
+                    CreatedAt = DateTime.Now
+                };
+                _context.Guests.Add(guest);
+            }
+
+            await _context.SaveChangesAsync();
+            return (true, "Cập nhật thông tin thành công");
+        }
+
+        public async Task<(bool Success, string Message)> ChangePasswordAsync(long userId, string currentPassword, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return (false, "Không tìm thấy người dùng");
+
+            if (!VerifyPassword(currentPassword, user.PasswordHash))
+            {
+                return (false, "Mật khẩu hiện tại không đúng");
+            }
+
+            user.PasswordHash = HashPassword(newPassword);
+            await _context.SaveChangesAsync();
+            return (true, "Đổi mật khẩu thành công");
         }
     }
 }

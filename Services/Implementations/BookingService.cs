@@ -146,7 +146,7 @@ namespace HotelManagementSystem.Services.Implementations
                 .Include(b => b.Hotel)
                 .Include(b => b.Promotion)
                 .Include(b => b.BookingRooms)
-                    .ThenInclude(br => br.Room)
+                    .ThenInclude(br => br.Room!)
                         .ThenInclude(r => r.RoomType)
                 .AsQueryable();
 
@@ -179,7 +179,7 @@ namespace HotelManagementSystem.Services.Implementations
                 .Include(b => b.Hotel)
                 .Include(b => b.Promotion)
                 .Include(b => b.BookingRooms)
-                    .ThenInclude(br => br.Room)
+                    .ThenInclude(br => br.Room!)
                         .ThenInclude(r => r.RoomType)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
@@ -193,7 +193,7 @@ namespace HotelManagementSystem.Services.Implementations
                 .Include(b => b.Hotel)
                 .Include(b => b.Promotion)
                 .Include(b => b.BookingRooms)
-                    .ThenInclude(br => br.Room)
+                    .ThenInclude(br => br.Room!)
                         .ThenInclude(r => r.RoomType)
                 .Where(b => b.GuestId == guestId)
                 .OrderByDescending(b => b.CreatedAt)

@@ -19,7 +19,7 @@ public class ReportService : IReportService
         var bookings = await _context.Bookings
             .Include(b => b.BookingRooms)
                 .ThenInclude(br => br.Room)
-                    .ThenInclude(r => r.RoomType)
+                    .ThenInclude(r => r!.RoomType)
             .Where(b => b.CreatedAt >= fromDate && b.CreatedAt <= toDate
                 && (b.Status == "Confirmed" || b.Status == "CheckedIn" || b.Status == "CheckedOut"))
             .ToListAsync();
@@ -77,7 +77,7 @@ public class ReportService : IReportService
         // Top room types by revenue
         var topRoomTypes = bookings
             .SelectMany(b => b.BookingRooms.Select(br => new { b, br }))
-            .GroupBy(x => x.br.Room.RoomType.Name)
+            .GroupBy(x => x.br.Room!.RoomType.Name)
             .Select(g => (RoomType: g.Key, Revenue: g.Sum(x => x.b.TotalAmount - x.b.DiscountAmount)))
             .OrderByDescending(x => x.Revenue)
             .Take(5)
