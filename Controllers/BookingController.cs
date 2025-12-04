@@ -22,9 +22,42 @@ namespace HotelManagementSystem.Controllers
             _context = context;
         }
 
+        // GET: /Booking/Rooms
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> Rooms()
+        {
+            var rooms = await _context.Rooms
+                .Include(r => r.Hotel)
+                .Include(r => r.RoomType)
+                .Where(r => r.Status != "Maintenance")
+                .ToListAsync();
+
+            var viewModels = rooms.Select(r => new HotelManagementSystem.Models.ViewModels.Booking.RoomViewModel
+            {
+                Id = r.Id,
+                Number = r.Number,
+                Hotel = new HotelManagementSystem.Models.ViewModels.Hotel.HotelViewModel { Name = r.Hotel.Name },
+                RoomType = new HotelManagementSystem.Models.ViewModels.RoomType.RoomTypeViewModel 
+                { 
+                    Name = r.RoomType.Name,
+                    Description = r.RoomType.Description,
+                    BasePrice = r.RoomType.BasePrice,
+                    Capacity = r.RoomType.Capacity,
+                    DefaultImageUrl = r.RoomType.DefaultImageUrl
+                },
+                Floor = (int)(r.Floor ?? 0),
+                Status = r.Status,
+                Price = r.RoomType.BasePrice
+            }).ToList();
+
+            return View(viewModels);
+        }
+
         // GET: /Booking/Search
         // GET: /Booking/Search
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> Search(BookingSearchViewModel model)
         {
             // If no date selected (initial load), show ALL rooms
@@ -166,14 +199,19 @@ namespace HotelManagementSystem.Controllers
                 var bookingEntity = await _context.Bookings.FindAsync(bookingId);
                 if (bookingEntity != null)
                 {
-                    bookingEntity.Status = "AwaitingPayment";
+                    bookingEntity.Status = "Pending";
                     await _context.SaveChangesAsync();
                 }
             }
             catch (Exception ex)
             {
                 // Nếu có lỗi (hết phòng, date không hợp lệ, ...) → quay lại Search với message
-                ModelState.AddModelError(string.Empty, ex.Message);
+                var errorMessage = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    errorMessage += " | Inner Error: " + ex.InnerException.Message;
+                }
+                ModelState.AddModelError(string.Empty, errorMessage);
 
                 var vm = new BookingSearchViewModel
                 {
