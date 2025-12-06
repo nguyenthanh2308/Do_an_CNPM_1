@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using HotelManagementSystem.Models.ViewModels.Booking;
 using HotelManagementSystem.Services.Interfaces;
@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelManagementSystem.Controllers
 {
-    [Authorize(Roles = "Admin,Manager,Receptionist,Customer")] // Staff và Customer có quyền booking
+    [Authorize(Roles = "Admin,Manager,Receptionist,Customer")] // Staff v� Customer c� quy?n booking
     public class BookingController : Controller
     {
         private readonly IRoomService _roomService;
@@ -83,7 +83,7 @@ namespace HotelManagementSystem.Controllers
                 return View(model);
             }
 
-            // Tìm phòng trống bằng RoomService
+            // T�m ph�ng tr?ng b?ng RoomService
             model.AvailableRooms = await _roomService.SearchAvailableRoomsAsync(
                 model.CheckInDate!.Value,
                 model.CheckOutDate!.Value,
@@ -105,7 +105,7 @@ namespace HotelManagementSystem.Controllers
             DateTime checkOutDate,
             int numberOfGuests)
         {
-            // Lấy GuestId từ User đang login
+            // L?y GuestId t? User dang login
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
             {
@@ -114,7 +114,7 @@ namespace HotelManagementSystem.Controllers
 
             long userId = long.Parse(userIdClaim.Value);
             
-            // Tìm Guest tương ứng với User
+            // T�m Guest tuong ?ng v?i User
             var guest = await _context.Guests.FirstOrDefaultAsync(g => g.UserId == userId);
             if (guest == null)
             {
@@ -141,7 +141,7 @@ namespace HotelManagementSystem.Controllers
 
             long bookingId;
 
-            // Nếu ratePlanId chưa có (từ Search view), tự động lấy RatePlan mặc định
+            // N?u ratePlanId chua c� (t? Search view), t? d?ng l?y RatePlan m?c d?nh
             if (ratePlanId == 0)
             {
                 var validRatePlan = await _context.RatePlans
@@ -155,7 +155,7 @@ namespace HotelManagementSystem.Controllers
                 }
                 else
                 {
-                    // Fallback: Lấy bất kỳ rate plan nào của RoomType đó
+                    // Fallback: L?y b?t k? rate plan n�o c?a RoomType d�
                     var anyRatePlan = await _context.RatePlans
                         .FirstOrDefaultAsync(rp => rp.RoomTypeId == room.RoomTypeId);
                         
@@ -205,7 +205,7 @@ namespace HotelManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                // Nếu có lỗi (hết phòng, date không hợp lệ, ...) → quay lại Search với message
+                // N?u c� l?i (h?t ph�ng, date kh�ng h?p l?, ...) ? quay l?i Search v?i message
                 var errorMessage = ex.Message;
                 if (ex.InnerException != null)
                 {
@@ -231,7 +231,7 @@ namespace HotelManagementSystem.Controllers
                 return View("Search", vm);
             }
 
-            // Sau khi đặt xong có thể redirect sang trang Confirm hoặc Detail
+            // Sau khi d?t xong c� th? redirect sang trang Confirm ho?c Detail
             return RedirectToAction("Details", "Booking", new { id = bookingId });
         }
 
@@ -277,7 +277,7 @@ namespace HotelManagementSystem.Controllers
                     }
                 }
 
-                var result = await _bookingService.CancelBookingAsync(id, "Khách hàng hủy qua web");
+                var result = await _bookingService.CancelBookingAsync(id, "Kh�ch h�ng h?y qua web");
                 if (result.Success)
                 {
                     TempData["SuccessMessage"] = result.Message;
@@ -289,7 +289,7 @@ namespace HotelManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Lỗi khi hủy: " + ex.Message;
+                TempData["ErrorMessage"] = "L?i khi h?y: " + ex.Message;
             }
 
             return RedirectToAction("MyBookings", "Customer");
@@ -311,7 +311,7 @@ namespace HotelManagementSystem.Controllers
 
             if (booking.Status != "Confirmed" && booking.Status != "Pending" && booking.Status != "AwaitingPayment")
             {
-                TempData["ErrorMessage"] = "Chỉ có thể chỉnh sửa booking đang chờ hoặc đã xác nhận.";
+                TempData["ErrorMessage"] = "Ch? c� th? ch?nh s?a booking dang ch? ho?c d� x�c nh?n.";
                 return RedirectToAction("MyBookings", "Customer");
             }
 
@@ -352,7 +352,7 @@ namespace HotelManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Lỗi: " + ex.Message;
+                TempData["ErrorMessage"] = "L?i: " + ex.Message;
                 return RedirectToAction("MyBookings", "Customer");
             }
         }
@@ -387,7 +387,7 @@ namespace HotelManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Lỗi: " + ex.Message;
+                TempData["ErrorMessage"] = "L?i: " + ex.Message;
             }
 
             return RedirectToAction("Details", new { id = bookingId });
@@ -415,16 +415,16 @@ namespace HotelManagementSystem.Controllers
                 
                 if (success)
                 {
-                    TempData["SuccessMessage"] = "Đã xóa mã khuyến mãi";
+                    TempData["SuccessMessage"] = "�� x�a m� khuy?n m�i";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Không thể xóa mã khuyến mãi";
+                    TempData["ErrorMessage"] = "Kh�ng th? x�a m� khuy?n m�i";
                 }
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Lỗi: " + ex.Message;
+                TempData["ErrorMessage"] = "L?i: " + ex.Message;
             }
 
             return RedirectToAction("Details", new { id = bookingId });
@@ -449,7 +449,7 @@ namespace HotelManagementSystem.Controllers
 
                 if (booking.PaymentStatus == "Paid")
                 {
-                    TempData["ErrorMessage"] = "Booking đã được thanh toán.";
+                    TempData["ErrorMessage"] = "Booking d� du?c thanh to�n.";
                     return RedirectToAction("Details", new { id = bookingId });
                 }
 
@@ -471,7 +471,7 @@ namespace HotelManagementSystem.Controllers
                     var bookingEntity = await _context.Bookings.FindAsync(bookingId);
                     if (bookingEntity != null)
                     {
-                        bookingEntity.Status = "Confirmed";
+                        bookingEntity.Status = "AwaitingConfirmation";
                     }
                     
                     // 3. Create Invoice (Unpaid)
@@ -489,7 +489,7 @@ namespace HotelManagementSystem.Controllers
                     _context.Invoices.Add(invoice);
 
                     await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Đã xác nhận thanh toán tại khách sạn! Vui lòng thanh toán khi nhận phòng.";
+                    TempData["SuccessMessage"] = "�� x�c nh?n thanh to�n t?i kh�ch s?n! Vui l�ng thanh to�n khi nh?n ph�ng.";
                 }
                 else
                 {
@@ -511,7 +511,7 @@ namespace HotelManagementSystem.Controllers
                     if (bookingEntity != null)
                     {
                         bookingEntity.PaymentStatus = "Paid";
-                        bookingEntity.Status = "Confirmed";
+                        bookingEntity.Status = "AwaitingConfirmation";
                     }
 
                     // 3. Create Invoice
@@ -529,22 +529,22 @@ namespace HotelManagementSystem.Controllers
                     _context.Invoices.Add(invoice);
 
                     await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Thanh toán thành công! Cảm ơn bạn đã sử dụng dịch vụ.";
+                    TempData["SuccessMessage"] = "Thanh to�n th�nh c�ng! C?m on b?n d� s? d?ng d?ch v?.";
                 }
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Lỗi thanh toán: " + ex.Message;
+                TempData["ErrorMessage"] = "L?i thanh to�n: " + ex.Message;
                 return RedirectToAction("Details", new { id = bookingId });
             }
 
             // Redirect to Invoice view instead of Details (as requested by user flow)
-            // But wait, user said "hoá đơn sẽ được tạo và chuyển vào phần lịch sử đặt phòng... hoá đơn chỉ có tác dụng hiển thị chi tiết"
-            // And "sau đó hoá đơn sẽ được tạo và chuyển vào phần lịch sử đặt phòng của khách hàng"
+            // But wait, user said "ho� don s? du?c t?o v� chuy?n v�o ph?n l?ch s? d?t ph�ng... ho� don ch? c� t�c d?ng hi?n th? chi ti?t"
+            // And "sau d� ho� don s? du?c t?o v� chuy?n v�o ph?n l?ch s? d?t ph�ng c?a kh�ch h�ng"
             // So maybe redirect to MyBookings or stay on Details but show success?
             // The previous flow redirected to Invoice. Let's redirect to MyBookings as it seems more appropriate for "moved to history".
             // Or redirect to Details and let the user navigate.
-            // User said: "chuyển vào phần lịch sử đặt phòng của khách hàng"
+            // User said: "chuy?n v�o ph?n l?ch s? d?t ph�ng c?a kh�ch h�ng"
             
             return RedirectToAction("MyBookings", "Customer");
         }
@@ -567,7 +567,7 @@ namespace HotelManagementSystem.Controllers
             var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.BookingId == id);
             if (invoice == null)
             {
-                TempData["ErrorMessage"] = "Chưa có hóa đơn cho booking này.";
+                TempData["ErrorMessage"] = "Chua c� h�a don cho booking n�y.";
                 return RedirectToAction("Details", new { id = id });
             }
             ViewBag.Booking = booking;

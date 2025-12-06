@@ -119,6 +119,7 @@ namespace HotelManagementSystem.Models.ViewModels.Booking
         {
             "AwaitingPayment" => "bg-warning",
             "Pending" => "bg-warning",
+            "AwaitingConfirmation" => "bg-info",
             "Confirmed" => "bg-info",
             "CheckedIn" => "bg-success",
             "CheckedOut" => "bg-secondary",
