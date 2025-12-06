@@ -12,6 +12,22 @@
         </a>
     </div>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong><i class="fas fa-check-circle"></i> Thành công!</strong> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong><i class="fas fa-exclamation-circle"></i> Lỗi!</strong> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     @if (Model != null && Model.Any())
     {
         <div class="card shadow-sm">
@@ -68,11 +84,18 @@
                                                 <i class="fas fa-eye"></i> Chi tiết
                                             </a>
                                             
-                                            @if (!item.PaymentSummary.IsFullyPaid && item.Status != "Cancelled")
+                                            @if (!item.PaymentSummary.IsFullyPaid && item.Status != "Cancelled" && item.PaymentStatus != "Paid" && item.Status != "AwaitingConfirmation")
                                             {
                                                 <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-success">
                                                     <i class="fas fa-credit-card"></i> Thanh toán
                                                 </a>
+                                            }
+
+                                            @if (item.PaymentStatus == "Paid" && item.Status == "AwaitingConfirmation")
+                                            {
+                                                <div class="alert alert-info mt-2 mb-0">
+                                                    <small><i class="fas fa-info-circle"></i> Đã thanh toán, chờ xác nhận</small>
+                                                </div>
                                             }
 
                                             @if (!string.IsNullOrEmpty(item.InvoiceNumber))

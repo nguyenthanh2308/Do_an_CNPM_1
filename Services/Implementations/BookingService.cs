@@ -14,10 +14,12 @@ namespace HotelManagementSystem.Services.Implementations
     public class BookingService : IBookingService
     {
         private readonly HotelDbContext _dbContext;
+        private readonly IPaymentTransactionService _paymentTransactionService;
 
-        public BookingService(HotelDbContext dbContext)
+        public BookingService(HotelDbContext dbContext, IPaymentTransactionService paymentTransactionService)
         {
             _dbContext = dbContext;
+            _paymentTransactionService = paymentTransactionService;
         }
 
         public async Task<long> CreateBookingAsync(
@@ -35,7 +37,7 @@ namespace HotelManagementSystem.Services.Implementations
             if (numberOfGuests <= 0)
                 throw new ArgumentException("Number of guests must be greater than zero.");
 
-            // Transaction d?m b?o các bu?c là atomic
+            // Transaction d?m b?o cï¿½c bu?c lï¿½ atomic
             await using var tx = await _dbContext.Database.BeginTransactionAsync();
 
             try
@@ -51,7 +53,7 @@ namespace HotelManagementSystem.Services.Implementations
                 if (room.RoomType == null || room.RoomType.Capacity < numberOfGuests)
                     throw new InvalidOperationException("Room capacity is not enough for the number of guests.");
 
-                // 2. Load RatePlan (d?m b?o cùng RoomType và còn hi?u l?c theo ngày)
+                // 2. Load RatePlan (d?m b?o cï¿½ng RoomType vï¿½ cï¿½n hi?u l?c theo ngï¿½y)
                 var ratePlan = await _dbContext.RatePlans
                     .FirstOrDefaultAsync(rp =>
                         rp.Id == ratePlanId &&
@@ -62,7 +64,7 @@ namespace HotelManagementSystem.Services.Implementations
                 if (ratePlan == null)
                     throw new InvalidOperationException("Rate plan not valid for given room type or dates.");
 
-                // 3. Ki?m tra l?i xem phòng còn tr?ng không (recheck availability)
+                // 3. Ki?m tra l?i xem phï¿½ng cï¿½n tr?ng khï¿½ng (recheck availability)
                 var hasConflict = await _dbContext.BookingRooms
                     .AnyAsync(br =>
                         br.RoomId == roomId &&
@@ -75,12 +77,12 @@ namespace HotelManagementSystem.Services.Implementations
                 if (hasConflict)
                     throw new InvalidOperationException("Room is no longer available for the selected dates.");
 
-                // 4. Tính toán t?ng ti?n d?a trên RatePlan.Price
+                // 4. Tï¿½nh toï¿½n t?ng ti?n d?a trï¿½n RatePlan.Price
                 var nights = (checkOutDate.Date - checkInDate.Date).Days;
                 if (nights <= 0)
                     throw new InvalidOperationException("Invalid nights calculation.");
 
-                var pricePerNight = ratePlan.Price; // có th? áp d?ng weekend_rule_json sau
+                var pricePerNight = ratePlan.Price; // cï¿½ th? ï¿½p d?ng weekend_rule_json sau
                 var totalAmount = pricePerNight * nights;
 
                 // 5. T?o Booking
@@ -101,14 +103,14 @@ namespace HotelManagementSystem.Services.Implementations
                     GuestId = guestId,
                     CheckInDate = checkInDate.Date,
                     CheckOutDate = checkOutDate.Date,
-                    Status = "Pending",     // ch? thanh toán
+                    Status = "Pending",     // ch? thanh toï¿½n
                     TotalAmount = totalAmount,
-                    PaymentStatus = "Unpaid", // thanh toán mô ph?ng sau
+                    PaymentStatus = "Unpaid", // thanh toï¿½n mï¿½ ph?ng sau
                     RatePlanSnapshotJson = JsonSerializer.Serialize(ratePlanSnapshot),
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // G?n BookingRoom (1 booking – 1 room)
+                // G?n BookingRoom (1 booking ï¿½ 1 room)
                 var bookingRoom = new BookingRoom
                 {
                     Booking = booking,
@@ -169,7 +171,12 @@ namespace HotelManagementSystem.Services.Implementations
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
-            return bookings.Select(MapToViewModel).ToList();
+            var result = new List<BookingViewModel>();
+            foreach (var booking in bookings)
+            {
+                result.Add(await MapToViewModelAsync(booking));
+            }
+            return result;
         }
 
         public async Task<BookingViewModel?> GetByIdAsync(long id)
@@ -183,7 +190,7 @@ namespace HotelManagementSystem.Services.Implementations
                         .ThenInclude(r => r.RoomType)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
-            return booking == null ? null : MapToViewModel(booking);
+            return booking == null ? null : await MapToViewModelAsync(booking);
         }
 
         public async Task<List<BookingViewModel>> GetByGuestIdAsync(long guestId)
@@ -199,7 +206,12 @@ namespace HotelManagementSystem.Services.Implementations
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
-            return bookings.Select(MapToViewModel).ToList();
+            var result = new List<BookingViewModel>();
+            foreach (var booking in bookings)
+            {
+                result.Add(await MapToViewModelAsync(booking));
+            }
+            return result;
         }
 
         public async Task<(bool Success, string Message, decimal RefundAmount)> CancelBookingAsync(
@@ -210,16 +222,16 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm th?y booking", 0);
+                return (false, "Khï¿½ng tï¿½m th?y booking", 0);
 
             if (booking.Status == "Cancelled")
-                return (false, "Booking dã du?c h?y tru?c dó", 0);
+                return (false, "Booking dï¿½ du?c h?y tru?c dï¿½", 0);
 
             if (booking.Status == "CheckedOut")
-                return (false, "Không th? h?y booking dã check-out", 0);
+                return (false, "Khï¿½ng th? h?y booking dï¿½ check-out", 0);
 
             if (booking.Status == "CheckedIn")
-                return (false, "Không th? h?y booking dang check-in. Vui lòng check-out tru?c.", 0);
+                return (false, "Khï¿½ng th? h?y booking dang check-in. Vui lï¿½ng check-out tru?c.", 0);
 
             var refundAmount = await CalculateRefundAmountAsync(bookingId);
 
@@ -234,8 +246,8 @@ namespace HotelManagementSystem.Services.Implementations
             await _dbContext.SaveChangesAsync();
 
             var message = refundAmount > 0
-                ? $"Booking dã du?c h?y thành công. S? ti?n hoàn l?i: {refundAmount:N0} VNÐ"
-                : "Booking dã du?c h?y thành công. Không hoàn ti?n theo chính sách.";
+                ? $"Booking dï¿½ du?c h?y thï¿½nh cï¿½ng. S? ti?n hoï¿½n l?i: {refundAmount:N0} VNï¿½"
+                : "Booking dï¿½ du?c h?y thï¿½nh cï¿½ng. Khï¿½ng hoï¿½n ti?n theo chï¿½nh sï¿½ch.";
 
             return (true, message, refundAmount);
         }
@@ -319,21 +331,21 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm th?y booking");
+                return (false, "Khï¿½ng tï¿½m th?y booking");
 
             if (booking.Status is "Cancelled" or "CheckedOut")
-                return (false, "Không th? ch?nh s?a booking dã h?y ho?c dã check-out");
+                return (false, "Khï¿½ng th? ch?nh s?a booking dï¿½ h?y ho?c dï¿½ check-out");
 
             if (booking.Status == "CheckedIn")
-                return (false, "Không th? ch?nh s?a booking dang check-in");
+                return (false, "Khï¿½ng th? ch?nh s?a booking dang check-in");
 
             if (newCheckInDate.HasValue && newCheckOutDate.HasValue)
             {
                 if (newCheckInDate.Value.Date >= newCheckOutDate.Value.Date)
-                    return (false, "Ngày check-in ph?i tru?c ngày check-out");
+                    return (false, "Ngï¿½y check-in ph?i tru?c ngï¿½y check-out");
 
                 if (newCheckInDate.Value.Date < DateTime.Today)
-                    return (false, "Ngày check-in không th? trong quá kh?");
+                    return (false, "Ngï¿½y check-in khï¿½ng th? trong quï¿½ kh?");
             }
 
             var modified = false;
@@ -354,7 +366,7 @@ namespace HotelManagementSystem.Services.Implementations
                         );
 
                     if (hasConflict)
-                        return (false, "Phòng không kh? d?ng trong kho?ng th?i gian m?i");
+                        return (false, "Phï¿½ng khï¿½ng kh? d?ng trong kho?ng th?i gian m?i");
 
                     booking.CheckInDate = newCheckInDate.Value.Date;
                     booking.CheckOutDate = newCheckOutDate.Value.Date;
@@ -386,7 +398,7 @@ namespace HotelManagementSystem.Services.Implementations
                         .FirstOrDefaultAsync(r => r.Id == newRoomId.Value && r.HotelId == booking.HotelId);
 
                     if (newRoom == null)
-                        return (false, "Phòng m?i không t?n t?i ho?c không thu?c khách s?n này");
+                        return (false, "Phï¿½ng m?i khï¿½ng t?n t?i ho?c khï¿½ng thu?c khï¿½ch s?n nï¿½y");
 
                     var hasConflict = await _dbContext.BookingRooms
                         .AnyAsync(br =>
@@ -399,7 +411,7 @@ namespace HotelManagementSystem.Services.Implementations
                         );
 
                     if (hasConflict)
-                        return (false, "Phòng m?i không kh? d?ng trong kho?ng th?i gian này");
+                        return (false, "Phï¿½ng m?i khï¿½ng kh? d?ng trong kho?ng th?i gian nï¿½y");
 
                     oldRoom.RoomId = newRoomId.Value;
                     modified = true;
@@ -410,10 +422,10 @@ namespace HotelManagementSystem.Services.Implementations
             {
                 booking.ModifiedAt = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync();
-                return (true, "Booking dã du?c ch?nh s?a thành công");
+                return (true, "Booking dï¿½ du?c ch?nh s?a thï¿½nh cï¿½ng");
             }
 
-            return (false, "Không có thay d?i nào du?c th?c hi?n");
+            return (false, "Khï¿½ng cï¿½ thay d?i nï¿½o du?c th?c hi?n");
         }
 
         public async Task<(bool Success, string Message)> CheckInAsync(long bookingId)
@@ -422,23 +434,23 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm th?y booking");
+                return (false, "Khï¿½ng tï¿½m th?y booking");
 
             if (booking.Status != "Confirmed")
-                return (false, $"Không th? check-in. Tr?ng thái hi?n t?i: {booking.Status}");
+                return (false, $"Khï¿½ng th? check-in. Tr?ng thï¿½i hi?n t?i: {booking.Status}");
 
             if (booking.CheckInDate.Date > DateTime.Today)
-                return (false, "Chua d?n ngày check-in");
+                return (false, "Chua d?n ngï¿½y check-in");
 
             if (booking.CheckInActualDate.HasValue)
-                return (false, "Booking dã du?c check-in tru?c dó");
+                return (false, "Booking dï¿½ du?c check-in tru?c dï¿½");
 
             booking.Status = "CheckedIn";
             booking.CheckInActualDate = DateTime.Now;
 
             await _dbContext.SaveChangesAsync();
 
-            return (true, "Check-in thành công");
+            return (true, "Check-in thï¿½nh cï¿½ng");
         }
 
         public async Task<(bool Success, string Message)> CheckOutAsync(long bookingId)
@@ -447,20 +459,20 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm th?y booking");
+                return (false, "Khï¿½ng tï¿½m th?y booking");
 
             if (booking.Status != "CheckedIn")
-                return (false, $"Không th? check-out. Tr?ng thái hi?n t?i: {booking.Status}");
+                return (false, $"Khï¿½ng th? check-out. Tr?ng thï¿½i hi?n t?i: {booking.Status}");
 
             if (booking.CheckOutActualDate.HasValue)
-                return (false, "Booking dã du?c check-out tru?c dó");
+                return (false, "Booking dï¿½ du?c check-out tru?c dï¿½");
 
             booking.Status = "CheckedOut";
             booking.CheckOutActualDate = DateTime.Now;
 
             await _dbContext.SaveChangesAsync();
 
-            return (true, "Check-out thành công");
+            return (true, "Check-out thï¿½nh cï¿½ng");
         }
 
         public async Task<(bool Success, string Message, decimal DiscountAmount)> ApplyPromotionAsync(
@@ -472,23 +484,23 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm th?y booking", 0);
+                return (false, "Khï¿½ng tï¿½m th?y booking", 0);
 
             if (booking.Status is "Cancelled" or "CheckedOut")
-                return (false, "Không th? áp d?ng khuy?n mãi cho booking dã h?y ho?c dã check-out", 0);
+                return (false, "Khï¿½ng th? ï¿½p d?ng khuy?n mï¿½i cho booking dï¿½ h?y ho?c dï¿½ check-out", 0);
 
             if (booking.PromotionId.HasValue)
-                return (false, "Booking dã áp d?ng khuy?n mãi. Vui lòng xóa mã hi?n t?i tru?c khi áp d?ng mã m?i.", 0);
+                return (false, "Booking dï¿½ ï¿½p d?ng khuy?n mï¿½i. Vui lï¿½ng xï¿½a mï¿½ hi?n t?i tru?c khi ï¿½p d?ng mï¿½ m?i.", 0);
 
             var promotion = await _dbContext.Promotions
                 .FirstOrDefaultAsync(p => p.Code == promotionCode);
 
             if (promotion == null)
-                return (false, "Mã khuy?n mãi không t?n t?i", 0);
+                return (false, "Mï¿½ khuy?n mï¿½i khï¿½ng t?n t?i", 0);
 
             var today = DateTime.Today;
             if (today < promotion.StartDate || today > promotion.EndDate)
-                return (false, "Mã khuy?n mãi không còn hi?u l?c", 0);
+                return (false, "Mï¿½ khuy?n mï¿½i khï¿½ng cï¿½n hi?u l?c", 0);
 
             if (!string.IsNullOrEmpty(promotion.ConditionsJson))
             {
@@ -500,7 +512,7 @@ namespace HotelManagementSystem.Services.Implementations
                     {
                         var minOrder = minOrderElement.GetDecimal();
                         if (booking.TotalAmount < minOrder)
-                            return (false, $"Ðon hàng ph?i t? {minOrder:N0} VNÐ tr? lên", 0);
+                            return (false, $"ï¿½on hï¿½ng ph?i t? {minOrder:N0} VNï¿½ tr? lï¿½n", 0);
                     }
 
                     if (conditions.TryGetProperty("max_usage_count", out var maxUsageElement) &&
@@ -510,7 +522,7 @@ namespace HotelManagementSystem.Services.Implementations
                         var currentUsage = currentUsageElement.GetInt32();
                         
                         if (currentUsage >= maxUsage)
-                            return (false, "Mã khuy?n mãi dã h?t lu?t s? d?ng", 0);
+                            return (false, "Mï¿½ khuy?n mï¿½i dï¿½ h?t lu?t s? d?ng", 0);
                     }
 
                     if (conditions.TryGetProperty("is_new_customer_only", out var isNewCustomerElement))
@@ -522,7 +534,7 @@ namespace HotelManagementSystem.Services.Implementations
                                 .CountAsync(b => b.GuestId == booking.GuestId && b.Status != "Cancelled");
                             
                             if (bookingCount > 1)
-                                return (false, "Mã khuy?n mãi ch? dành cho khách hàng m?i", 0);
+                                return (false, "Mï¿½ khuy?n mï¿½i ch? dï¿½nh cho khï¿½ch hï¿½ng m?i", 0);
                         }
                     }
                 }
@@ -537,7 +549,7 @@ namespace HotelManagementSystem.Services.Implementations
             await IncrementPromotionUsageAsync(promotion.Id);
             await _dbContext.SaveChangesAsync();
 
-            return (true, "Áp d?ng mã khuy?n mãi thành công", discountAmount);
+            return (true, "ï¿½p d?ng mï¿½ khuy?n mï¿½i thï¿½nh cï¿½ng", discountAmount);
         }
 
         public async Task<bool> RemovePromotionAsync(long bookingId)
@@ -560,7 +572,7 @@ namespace HotelManagementSystem.Services.Implementations
             return true;
         }
 
-        private BookingViewModel MapToViewModel(Booking booking)
+        private async Task<BookingViewModel> MapToViewModelAsync(Booking booking)
         {
             var bookingRoom = booking.BookingRooms.FirstOrDefault();
             var room = bookingRoom?.Room;
@@ -582,7 +594,7 @@ namespace HotelManagementSystem.Services.Implementations
                 catch { }
             }
 
-            return new BookingViewModel
+            var viewModel = new BookingViewModel
             {
                 Id = booking.Id,
                 HotelId = booking.HotelId,
@@ -612,6 +624,27 @@ namespace HotelManagementSystem.Services.Implementations
                 CheckInActualDate = booking.CheckInActualDate,
                 CheckOutActualDate = booking.CheckOutActualDate
             };
+
+            // Calculate PaymentSummary
+            var (totalAmount, paidAmount, remainingAmount) = await _paymentTransactionService.GetPaymentSummaryAsync(booking.Id);
+            viewModel.PaymentSummary = new Models.ViewModels.Payment.PaymentSummaryViewModel
+            {
+                BookingId = booking.Id,
+                TotalAmount = totalAmount,
+                PaidAmount = paidAmount,
+                RemainingAmount = remainingAmount,
+                PaymentStatus = booking.PaymentStatus
+            };
+
+            // Get Invoice info if exists
+            var invoice = await _dbContext.Invoices.FirstOrDefaultAsync(i => i.BookingId == booking.Id);
+            if (invoice != null)
+            {
+                viewModel.InvoiceNumber = invoice.Number;
+                viewModel.InvoiceStatus = invoice.Status;
+            }
+
+            return viewModel;
         }
 
         private decimal CalculatePromotionDiscount(Promotion promotion, decimal orderAmount)
