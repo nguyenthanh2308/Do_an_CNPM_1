@@ -1,7 +1,6 @@
-@model HotelManagementSystem.Models.Entities.Invoice
+@model HotelManagementSystem.Models.ViewModels.Invoice.InvoiceDetailViewModel
 @{
-    ViewData["Title"] = "Hóa Đơn - " + Model.Number;
-    var booking = ViewBag.Booking as HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel;
+    ViewData["Title"] = "Hóa Đơn - " + Model.InvoiceNumber;
 }
 
 <div class="container mt-5 mb-5">
@@ -10,24 +9,19 @@
             <!-- Header -->
             <div class="row mb-4">
                 <div class="col-6">
-                    <h2 class="text-primary"><i class="fas fa-hotel me-2"></i>Hotel Management</h2>
-                    <p class="text-muted">123 Đường ABC, Quận 1, TP.HCM</p>
+                    <h2 class="text-primary"><i class="fas fa-hotel me-2"></i>@Model.HotelName</h2>
+                    <p class="text-muted">@Model.HotelAddress</p>
                     <p class="text-muted">Phone: (028) 3838 3838</p>
                 </div>
                 <div class="col-6 text-end">
                     <h3 class="fw-bold">HÓA ĐƠN</h3>
-                    <p class="mb-1"><strong>Số:</strong> @Model.Number</p>
-                    <p class="mb-1"><strong>Ngày:</strong> @Model.IssuedAt.ToString("dd/MM/yyyy")</p>
+                    <p class="mb-1"><strong>Số:</strong> @Model.InvoiceNumber</p>
+                    <p class="mb-1"><strong>Ngày:</strong> @Model.IssuedAt.ToString("dd/MM/yyyy HH:mm")</p>
                     <p class="mb-1">
                         <strong>Trạng thái:</strong> 
-                        @if (Model.Status == "Paid")
-                        {
-                            <span class="badge bg-success">ĐÃ THANH TOÁN</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-warning text-dark">THANH TOÁN TẠI QUẦY</span>
-                        }
+                        <span class="badge @(Model.Status == "Paid" ? "bg-success" : "bg-warning text-dark")">
+                            @Model.StatusDisplay.ToUpper()
+                        </span>
                     </p>
                 </div>
             </div>
@@ -38,17 +32,16 @@
             <div class="row mb-4">
                 <div class="col-6">
                     <h5 class="fw-bold">Khách hàng:</h5>
-                    <p class="mb-1">@booking?.GuestName</p>
-                    <p class="mb-1">@booking?.GuestEmail</p>
-                    <p class="mb-1">@booking?.GuestPhone</p>
+                    <p class="mb-1">@Model.CustomerName</p>
+                    <p class="mb-1">@Model.CustomerEmail</p>
+                    <p class="mb-1">@Model.CustomerPhone</p>
                 </div>
                 <div class="col-6 text-end">
                     <h5 class="fw-bold">Chi tiết đặt phòng:</h5>
-                    <p class="mb-1"><strong>Mã Booking:</strong> #@booking?.Id</p>
-                    <p class="mb-1"><strong>Khách sạn:</strong> @booking?.HotelName</p>
-                    <p class="mb-1"><strong>Phòng:</strong> @booking?.RoomNumber (@booking?.RoomTypeName)</p>
-                    <p class="mb-1"><strong>Check-in:</strong> @booking?.CheckInDate.ToString("dd/MM/yyyy")</p>
-                    <p class="mb-1"><strong>Check-out:</strong> @booking?.CheckOutDate.ToString("dd/MM/yyyy")</p>
+                    <p class="mb-1"><strong>Mã Booking:</strong> #@Model.BookingId</p>
+                    <p class="mb-1"><strong>Phòng:</strong> @Model.RoomNumber (@Model.RoomTypeName)</p>
+                    <p class="mb-1"><strong>Check-in:</strong> @Model.CheckInDate.ToString("dd/MM/yyyy")</p>
+                    <p class="mb-1"><strong>Check-out:</strong> @Model.CheckOutDate.ToString("dd/MM/yyyy")</p>
                 </div>
             </div>
 
@@ -65,27 +58,62 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Tiền phòng (@booking?.Nights đêm)</td>
-                            <td class="text-center">@booking?.Nights</td>
-                            <td class="text-end">@((booking?.TotalAmount / (booking?.Nights > 0 ? booking.Nights : 1))?.ToString("N0")) VNĐ</td>
-                            <td class="text-end">@booking?.TotalAmount.ToString("N0") VNĐ</td>
+                            <td>Tiền phòng (@Model.Nights đêm)</td>
+                            <td class="text-center">@Model.Nights</td>
+                            <td class="text-end">@((Model.RoomTotal / (Model.Nights > 0 ? Model.Nights : 1)).ToString("N0")) VNĐ</td>
+                            <td class="text-end">@Model.RoomTotal.ToString("N0") VNĐ</td>
                         </tr>
-                        @if (booking?.DiscountAmount > 0)
+                        @if (Model.DiscountAmount > 0)
                         {
                             <tr>
-                                <td colspan="3" class="text-end"><strong>Giảm giá (@booking.PromotionCode)</strong></td>
-                                <td class="text-end text-danger">-@booking.DiscountAmount.ToString("N0") VNĐ</td>
+                                <td colspan="3" class="text-end"><strong>Giảm giá (@Model.PromotionCode)</strong></td>
+                                <td class="text-end text-danger">-@Model.DiscountAmount.ToString("N0") VNĐ</td>
                             </tr>
                         }
                     </tbody>
                     <tfoot>
                         <tr>
+                            <td colspan="3" class="text-end">Tổng tiền (trước thuế)</td>
+                            <td class="text-end">@Model.SubTotal.ToString("N0") VNĐ</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end">Thuế VAT (10%)</td>
+                            <td class="text-end">@Model.TaxAmount.ToString("N0") VNĐ</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end">Phí dịch vụ (5%)</td>
+                            <td class="text-end">@Model.ServiceCharge.ToString("N0") VNĐ</td>
+                        </tr>
+                        <tr>
                             <td colspan="3" class="text-end fw-bold fs-5">TỔNG CỘNG</td>
-                            <td class="text-end fw-bold fs-5 text-primary">@Model.Amount.ToString("N0") VNĐ</td>
+                            <td class="text-end fw-bold fs-5 text-primary">@Model.TotalAmount.ToString("N0") VNĐ</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
+
+            <!-- Payment Info -->
+            @if (Model.PaymentInfo.IsFullyPaid)
+            {
+                <div class="alert alert-success">
+                    <h5 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Thông tin thanh toán</h5>
+                    <p class="mb-0">
+                        Đã thanh toán đủ <strong>@Model.PaymentInfo.PaidAmount.ToString("N0") VNĐ</strong> 
+                        qua <strong>@Model.PaymentInfo.PaymentMethod</strong> 
+                        vào lúc @Model.PaymentInfo.LastPaymentDate?.ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-circle me-2"></i>Chưa thanh toán đủ</h5>
+                    <p class="mb-0">
+                        Đã thanh toán: <strong>@Model.PaymentInfo.PaidAmount.ToString("N0") VNĐ</strong><br/>
+                        Còn lại: <strong class="text-danger">@Model.PaymentInfo.RemainingAmount.ToString("N0") VNĐ</strong>
+                    </p>
+                </div>
+            }
 
             <!-- Footer -->
             <div class="row mt-5">
@@ -100,7 +128,7 @@
                 <button onclick="window.print()" class="btn btn-secondary me-2">
                     <i class="fas fa-print me-2"></i>In Hóa Đơn
                 </button>
-                <a asp-action="Details" asp-route-id="@booking?.Id" class="btn btn-outline-primary">
+                <a asp-action="Details" asp-route-id="@Model.BookingId" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left me-2"></i>Quay lại
                 </a>
             </div>

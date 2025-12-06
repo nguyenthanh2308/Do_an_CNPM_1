@@ -39,7 +39,7 @@ public class InvoiceController : Controller
     }
 
     // GET: /Admin/Invoice/Details/5
-    public async Task<IActionResult> Details(ulong id)
+    public async Task<IActionResult> Details(long id)
     {
         var invoice = await _invoiceService.GetByIdAsync(id);
         if (invoice == null)
@@ -52,10 +52,10 @@ public class InvoiceController : Controller
     }
 
     // GET: /Admin/Invoice/Create?bookingId=123
-    public async Task<IActionResult> Create(ulong bookingId)
+    public async Task<IActionResult> Create(long bookingId)
     {
         // Kiểm tra booking có tồn tại không
-        var booking = await _bookingService.GetByIdAsync((long)bookingId);
+        var booking = await _bookingService.GetByIdAsync(bookingId);
         if (booking == null)
         {
             TempData["ErrorMessage"] = "Không tìm thấy booking!";
@@ -77,7 +77,7 @@ public class InvoiceController : Controller
     // POST: /Admin/Invoice/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ulong bookingId, string? notes)
+    public async Task<IActionResult> Create(long bookingId, string? notes)
     {
         // Kiểm tra booking đã có invoice chưa
         var hasInvoice = await _invoiceService.HasInvoiceAsync(bookingId);
@@ -99,7 +99,7 @@ public class InvoiceController : Controller
     }
 
     // GET: /Admin/Invoice/BookingInvoice/123
-    public async Task<IActionResult> BookingInvoice(ulong bookingId)
+    public async Task<IActionResult> BookingInvoice(long bookingId)
     {
         var invoice = await _invoiceService.GetByBookingIdAsync(bookingId);
         if (invoice == null)
@@ -112,7 +112,7 @@ public class InvoiceController : Controller
     }
 
     // GET: /Admin/Invoice/Download/5
-    public async Task<IActionResult> Download(ulong id)
+    public async Task<IActionResult> Download(long id)
     {
         var invoice = await _invoiceService.GetByIdAsync(id);
         if (invoice == null)
@@ -137,7 +137,7 @@ public class InvoiceController : Controller
     }
 
     // GET: /Admin/Invoice/View/5 (Mock - preview PDF in browser)
-    public async Task<IActionResult> View(ulong id)
+    public async Task<IActionResult> View(long id)
     {
         var invoice = await _invoiceService.GetByIdAsync(id);
         if (invoice == null)
@@ -159,7 +159,7 @@ public class InvoiceController : Controller
     // POST: /Admin/Invoice/MarkAsPaid/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> MarkAsPaid(ulong id, string? paymentMethod)
+    public async Task<IActionResult> MarkAsPaid(long id, string? paymentMethod)
     {
         var success = await _invoiceService.MarkAsPaidAsync(id, paymentMethod);
         if (!success)
@@ -177,7 +177,7 @@ public class InvoiceController : Controller
     // POST: /Admin/Invoice/Cancel/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Cancel(ulong id, string? reason)
+    public async Task<IActionResult> Cancel(long id, string? reason)
     {
         var success = await _invoiceService.CancelInvoiceAsync(id, reason);
         if (!success)
@@ -196,7 +196,7 @@ public class InvoiceController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Delete(ulong id)
+    public async Task<IActionResult> Delete(long id)
     {
         var invoice = await _invoiceService.GetByIdAsync(id);
         if (invoice == null)

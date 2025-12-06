@@ -15,7 +15,7 @@ public class InvoiceService : IInvoiceService
         _context = context;
     }
 
-    public async Task<List<InvoiceViewModel>> GetAllAsync(string? status = null, ulong? bookingId = null, DateTime? fromDate = null, DateTime? toDate = null)
+    public async Task<List<InvoiceViewModel>> GetAllAsync(string? status = null, long? bookingId = null, DateTime? fromDate = null, DateTime? toDate = null)
     {
         var query = _context.Invoices
             .Include(i => i.Booking)
@@ -35,7 +35,7 @@ public class InvoiceService : IInvoiceService
 
         if (bookingId.HasValue)
         {
-            query = query.Where(i => i.BookingId == (long)bookingId.Value);
+            query = query.Where(i => i.BookingId == bookingId.Value);
         }
 
         if (fromDate.HasValue)
@@ -52,7 +52,7 @@ public class InvoiceService : IInvoiceService
         return invoices.Select(MapToViewModel).ToList();
     }
 
-    public async Task<InvoiceViewModel?> GetByIdAsync(ulong id)
+    public async Task<InvoiceViewModel?> GetByIdAsync(long id)
     {
         var invoice = await _context.Invoices
             .Include(i => i.Booking)
@@ -62,12 +62,12 @@ public class InvoiceService : IInvoiceService
                     .ThenInclude(r => r.RoomType)
             .Include(i => i.Booking.BookingRooms)
                 .ThenInclude(br => br.Room!.Hotel)
-            .FirstOrDefaultAsync(i => i.Id == (long)id);
+            .FirstOrDefaultAsync(i => i.Id == id);
 
         return invoice == null ? null : MapToViewModel(invoice);
     }
 
-    public async Task<InvoiceViewModel?> GetByBookingIdAsync(ulong bookingId)
+    public async Task<InvoiceViewModel?> GetByBookingIdAsync(long bookingId)
     {
         var invoice = await _context.Invoices
             .Include(i => i.Booking)
@@ -77,12 +77,12 @@ public class InvoiceService : IInvoiceService
                     .ThenInclude(r => r.RoomType)
             .Include(i => i.Booking.BookingRooms)
                 .ThenInclude(br => br.Room!.Hotel)
-            .FirstOrDefaultAsync(i => i.BookingId == (long)bookingId);
+            .FirstOrDefaultAsync(i => i.BookingId == bookingId);
 
         return invoice == null ? null : MapToViewModel(invoice);
     }
 
-    public async Task<InvoiceViewModel?> CreateInvoiceAsync(ulong bookingId, string? notes = null)
+    public async Task<InvoiceViewModel?> CreateInvoiceAsync(long bookingId, string? notes = null)
     {
         // Kiểm tra booking tồn tại
         var booking = await _context.Bookings
@@ -92,7 +92,7 @@ public class InvoiceService : IInvoiceService
                     .ThenInclude(r => r.RoomType)
             .Include(b => b.BookingRooms)
                 .ThenInclude(br => br.Room!.Hotel)
-            .FirstOrDefaultAsync(b => b.Id == (long)bookingId);
+            .FirstOrDefaultAsync(b => b.Id == bookingId);
 
         if (booking == null)
         {
@@ -100,7 +100,7 @@ public class InvoiceService : IInvoiceService
         }
 
         // Kiểm tra đã có invoice chưa
-        var existingInvoice = await _context.Invoices.FirstOrDefaultAsync(i => i.BookingId == (long)bookingId);
+        var existingInvoice = await _context.Invoices.FirstOrDefaultAsync(i => i.BookingId == bookingId);
         if (existingInvoice != null)
         {
             return null; // Booking đã có invoice rồi
@@ -121,7 +121,7 @@ public class InvoiceService : IInvoiceService
         var invoice = new Models.Entities.Invoice
         {
             InvoiceNumber = invoiceNumber,
-            BookingId = (long)bookingId,
+            BookingId = bookingId,
             Amount = totalAmount,
             IssuedAt = DateTime.Now,
             Status = "Issued", // Tự động phát hành khi tạo
@@ -133,7 +133,7 @@ public class InvoiceService : IInvoiceService
         await _context.SaveChangesAsync();
 
         // Reload để lấy đầy đủ navigation properties
-        return await GetByIdAsync((ulong)invoice.Id);
+        return await GetByIdAsync(invoice.Id);
     }
 
     public async Task<string> GenerateInvoiceNumberAsync()
@@ -154,9 +154,9 @@ public class InvoiceService : IInvoiceService
         return $"{prefix}-{sequence}";
     }
 
-    public async Task<bool> UpdateStatusAsync(ulong id, string newStatus)
+    public async Task<bool> UpdateStatusAsync(long id, string newStatus)
     {
-        var invoice = await _context.Invoices.FindAsync((long)id);
+        var invoice = await _context.Invoices.FindAsync(id);
         if (invoice == null)
         {
             return false;
@@ -181,9 +181,9 @@ public class InvoiceService : IInvoiceService
         return true;
     }
 
-    public async Task<bool> MarkAsPaidAsync(ulong id, string? paymentMethod = null)
+    public async Task<bool> MarkAsPaidAsync(long id, string? paymentMethod = null)
     {
-        var invoice = await _context.Invoices.FindAsync((long)id);
+        var invoice = await _context.Invoices.FindAsync(id);
         if (invoice == null || invoice.Status != "Issued")
         {
             return false;
@@ -198,9 +198,9 @@ public class InvoiceService : IInvoiceService
         return true;
     }
 
-    public async Task<bool> CancelInvoiceAsync(ulong id, string? reason = null)
+    public async Task<bool> CancelInvoiceAsync(long id, string? reason = null)
     {
-        var invoice = await _context.Invoices.FindAsync((long)id);
+        var invoice = await _context.Invoices.FindAsync(id);
         if (invoice == null || invoice.Status == "Paid")
         {
             return false; // Không thể hủy invoice đã thanh toán
@@ -217,7 +217,7 @@ public class InvoiceService : IInvoiceService
         return true;
     }
 
-    public async Task<string> GeneratePdfAsync(ulong id)
+    public async Task<string> GeneratePdfAsync(long id)
     {
         // Mock PDF generation - không implement thật
         // Trong thực tế sẽ dùng thư viện như iTextSharp, DinkToPdf, etc.
@@ -237,9 +237,9 @@ public class InvoiceService : IInvoiceService
         return mockPath;
     }
 
-    public async Task<bool> HasInvoiceAsync(ulong bookingId)
+    public async Task<bool> HasInvoiceAsync(long bookingId)
     {
-        return await _context.Invoices.AnyAsync(i => i.BookingId == (long)bookingId);
+        return await _context.Invoices.AnyAsync(i => i.BookingId == bookingId);
     }
 
     public async Task<(int TotalCount, decimal TotalAmount, int PaidCount, decimal PaidAmount)> GetStatisticsAsync()

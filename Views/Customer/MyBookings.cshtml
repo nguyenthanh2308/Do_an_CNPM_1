@@ -27,6 +27,7 @@
                                 <th>Ngày trả</th>
                                 <th>Tổng tiền</th>
                                 <th>Trạng thái</th>
+                                <th>Thanh toán</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -44,42 +45,48 @@
                                     <td>@item.CheckOutDate.ToString("dd/MM/yyyy")</td>
                                     <td class="fw-bold text-primary">@item.TotalAmount.ToString("N0") VNĐ</td>
                                     <td>
-                                        @if (item.Status == "Confirmed")
-                                        {
-                                            <span class="badge bg-success">Đã xác nhận</span>
-                                        }
-                                        else if (item.Status == "Pending")
-                                        {
-                                            <span class="badge bg-warning text-dark">Chờ xử lý</span>
-                                        }
-                                        else if (item.Status == "Cancelled")
-                                        {
-                                            <span class="badge bg-danger">Đã hủy</span>
-                                        }
-                                        else if (item.Status == "CheckedIn")
-                                        {
-                                            <span class="badge bg-info">Đang ở</span>
-                                        }
-                                        else if (item.Status == "CheckedOut")
-                                        {
-                                            <span class="badge bg-secondary">Đã trả phòng</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-light text-dark">@item.Status</span>
-                                        }
+                                        <span class="badge @item.StatusBadgeClass">@item.StatusDisplay</span>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                        <div class="d-flex flex-column gap-1">
+                                            <span class="badge @item.PaymentSummary.StatusBadgeClass">
+                                                @item.PaymentSummary.StatusDisplay
+                                            </span>
+                                            @if (item.PaymentSummary.PaidAmount > 0)
+                                            {
+                                                <small class="text-success">Đã trả: @item.PaymentSummary.PaidAmount.ToString("N0")</small>
+                                            }
+                                            @if (item.PaymentSummary.RemainingAmount > 0)
+                                            {
+                                                <small class="text-danger">Còn lại: @item.PaymentSummary.RemainingAmount.ToString("N0")</small>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group-vertical btn-group-sm">
+                                            <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary">
                                                 <i class="fas fa-eye"></i> Chi tiết
                                             </a>
-                                            @if (item.Status == "Confirmed" || item.Status == "Pending")
+                                            
+                                            @if (!item.PaymentSummary.IsFullyPaid && item.Status != "Cancelled")
                                             {
+                                                <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-success">
+                                                    <i class="fas fa-credit-card"></i> Thanh toán
+                                                </a>
+                                            }
 
-                                                <form asp-controller="Booking" asp-action="Cancel" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đặt phòng này?');" style="display:inline;">
+                                            @if (!string.IsNullOrEmpty(item.InvoiceNumber))
+                                            {
+                                                <a asp-controller="Booking" asp-action="Invoice" asp-route-id="@item.Id" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-file-invoice"></i> Hóa đơn
+                                                </a>
+                                            }
+
+                                            @if (item.IsCancellable)
+                                            {
+                                                <form asp-controller="Booking" asp-action="Cancel" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đặt phòng này?');">
                                                     <input type="hidden" name="id" value="@item.Id" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
+                                                    <button type="submit" class="btn btn-outline-danger w-100 mt-1">
                                                         <i class="fas fa-times"></i> Hủy
                                                     </button>
                                                 </form>

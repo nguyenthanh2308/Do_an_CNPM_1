@@ -96,6 +96,12 @@ namespace HotelManagementSystem.Models.ViewModels.Booking
         
         [Display(Name = "Check-out thực tế")]
         public DateTime? CheckOutActualDate { get; set; }
+
+        // New Properties for Phase 2 & 3
+        public HotelManagementSystem.Models.ViewModels.Payment.PaymentSummaryViewModel PaymentSummary { get; set; } = new();
+        
+        public string? InvoiceNumber { get; set; }
+        public string? InvoiceStatus { get; set; }
         
         // Display Properties
         public string StatusDisplay => Status switch

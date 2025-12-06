@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -35,12 +35,12 @@ namespace HotelManagementSystem.Services.Implementations
             if (numberOfGuests <= 0)
                 throw new ArgumentException("Number of guests must be greater than zero.");
 
-            // Transaction đảm bảo các bước là atomic
+            // Transaction d?m b?o c�c bu?c l� atomic
             await using var tx = await _dbContext.Database.BeginTransactionAsync();
 
             try
             {
-                // 1. Load Room + RoomType (để kiểm tra capacity)
+                // 1. Load Room + RoomType (d? ki?m tra capacity)
                 var room = await _dbContext.Rooms
                     .Include(r => r.RoomType)
                     .FirstOrDefaultAsync(r => r.Id == roomId && r.HotelId == hotelId);
@@ -51,7 +51,7 @@ namespace HotelManagementSystem.Services.Implementations
                 if (room.RoomType == null || room.RoomType.Capacity < numberOfGuests)
                     throw new InvalidOperationException("Room capacity is not enough for the number of guests.");
 
-                // 2. Load RatePlan (đảm bảo cùng RoomType và còn hiệu lực theo ngày)
+                // 2. Load RatePlan (d?m b?o c�ng RoomType v� c�n hi?u l?c theo ng�y)
                 var ratePlan = await _dbContext.RatePlans
                     .FirstOrDefaultAsync(rp =>
                         rp.Id == ratePlanId &&
@@ -62,7 +62,7 @@ namespace HotelManagementSystem.Services.Implementations
                 if (ratePlan == null)
                     throw new InvalidOperationException("Rate plan not valid for given room type or dates.");
 
-                // 3. Kiểm tra lại xem phòng còn trống không (recheck availability)
+                // 3. Ki?m tra l?i xem ph�ng c�n tr?ng kh�ng (recheck availability)
                 var hasConflict = await _dbContext.BookingRooms
                     .AnyAsync(br =>
                         br.RoomId == roomId &&
@@ -75,15 +75,15 @@ namespace HotelManagementSystem.Services.Implementations
                 if (hasConflict)
                     throw new InvalidOperationException("Room is no longer available for the selected dates.");
 
-                // 4. Tính toán tổng tiền dựa trên RatePlan.Price
+                // 4. T�nh to�n t?ng ti?n d?a tr�n RatePlan.Price
                 var nights = (checkOutDate.Date - checkInDate.Date).Days;
                 if (nights <= 0)
                     throw new InvalidOperationException("Invalid nights calculation.");
 
-                var pricePerNight = ratePlan.Price; // có thể áp dụng weekend_rule_json sau
+                var pricePerNight = ratePlan.Price; // c� th? �p d?ng weekend_rule_json sau
                 var totalAmount = pricePerNight * nights;
 
-                // 5. Tạo Booking
+                // 5. T?o Booking
                 var ratePlanSnapshot = new
                 {
                     ratePlan.Id,
@@ -101,14 +101,14 @@ namespace HotelManagementSystem.Services.Implementations
                     GuestId = guestId,
                     CheckInDate = checkInDate.Date,
                     CheckOutDate = checkOutDate.Date,
-                    Status = "Confirmed",     // sau khi đặt xong
+                    Status = "Pending",     // ch? thanh to�n
                     TotalAmount = totalAmount,
-                    PaymentStatus = "Unpaid", // thanh toán mô phỏng sau
+                    PaymentStatus = "Unpaid", // thanh to�n m� ph?ng sau
                     RatePlanSnapshotJson = JsonSerializer.Serialize(ratePlanSnapshot),
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // Gắn BookingRoom (1 booking – 1 room)
+                // G?n BookingRoom (1 booking � 1 room)
                 var bookingRoom = new BookingRoom
                 {
                     Booking = booking,
@@ -210,16 +210,16 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm thấy booking", 0);
+                return (false, "Kh�ng t�m th?y booking", 0);
 
             if (booking.Status == "Cancelled")
-                return (false, "Booking đã được hủy trước đó", 0);
+                return (false, "Booking d� du?c h?y tru?c d�", 0);
 
             if (booking.Status == "CheckedOut")
-                return (false, "Không thể hủy booking đã check-out", 0);
+                return (false, "Kh�ng th? h?y booking d� check-out", 0);
 
             if (booking.Status == "CheckedIn")
-                return (false, "Không thể hủy booking đang check-in. Vui lòng check-out trước.", 0);
+                return (false, "Kh�ng th? h?y booking dang check-in. Vui l�ng check-out tru?c.", 0);
 
             var refundAmount = await CalculateRefundAmountAsync(bookingId);
 
@@ -234,8 +234,8 @@ namespace HotelManagementSystem.Services.Implementations
             await _dbContext.SaveChangesAsync();
 
             var message = refundAmount > 0
-                ? $"Booking đã được hủy thành công. Số tiền hoàn lại: {refundAmount:N0} VNĐ"
-                : "Booking đã được hủy thành công. Không hoàn tiền theo chính sách.";
+                ? $"Booking d� du?c h?y th�nh c�ng. S? ti?n ho�n l?i: {refundAmount:N0} VN�"
+                : "Booking d� du?c h?y th�nh c�ng. Kh�ng ho�n ti?n theo ch�nh s�ch.";
 
             return (true, message, refundAmount);
         }
@@ -319,21 +319,21 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm thấy booking");
+                return (false, "Kh�ng t�m th?y booking");
 
             if (booking.Status is "Cancelled" or "CheckedOut")
-                return (false, "Không thể chỉnh sửa booking đã hủy hoặc đã check-out");
+                return (false, "Kh�ng th? ch?nh s?a booking d� h?y ho?c d� check-out");
 
             if (booking.Status == "CheckedIn")
-                return (false, "Không thể chỉnh sửa booking đang check-in");
+                return (false, "Kh�ng th? ch?nh s?a booking dang check-in");
 
             if (newCheckInDate.HasValue && newCheckOutDate.HasValue)
             {
                 if (newCheckInDate.Value.Date >= newCheckOutDate.Value.Date)
-                    return (false, "Ngày check-in phải trước ngày check-out");
+                    return (false, "Ng�y check-in ph?i tru?c ng�y check-out");
 
                 if (newCheckInDate.Value.Date < DateTime.Today)
-                    return (false, "Ngày check-in không thể trong quá khứ");
+                    return (false, "Ng�y check-in kh�ng th? trong qu� kh?");
             }
 
             var modified = false;
@@ -354,7 +354,7 @@ namespace HotelManagementSystem.Services.Implementations
                         );
 
                     if (hasConflict)
-                        return (false, "Phòng không khả dụng trong khoảng thời gian mới");
+                        return (false, "Ph�ng kh�ng kh? d?ng trong kho?ng th?i gian m?i");
 
                     booking.CheckInDate = newCheckInDate.Value.Date;
                     booking.CheckOutDate = newCheckOutDate.Value.Date;
@@ -386,7 +386,7 @@ namespace HotelManagementSystem.Services.Implementations
                         .FirstOrDefaultAsync(r => r.Id == newRoomId.Value && r.HotelId == booking.HotelId);
 
                     if (newRoom == null)
-                        return (false, "Phòng mới không tồn tại hoặc không thuộc khách sạn này");
+                        return (false, "Ph�ng m?i kh�ng t?n t?i ho?c kh�ng thu?c kh�ch s?n n�y");
 
                     var hasConflict = await _dbContext.BookingRooms
                         .AnyAsync(br =>
@@ -399,7 +399,7 @@ namespace HotelManagementSystem.Services.Implementations
                         );
 
                     if (hasConflict)
-                        return (false, "Phòng mới không khả dụng trong khoảng thời gian này");
+                        return (false, "Ph�ng m?i kh�ng kh? d?ng trong kho?ng th?i gian n�y");
 
                     oldRoom.RoomId = newRoomId.Value;
                     modified = true;
@@ -410,10 +410,10 @@ namespace HotelManagementSystem.Services.Implementations
             {
                 booking.ModifiedAt = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync();
-                return (true, "Booking đã được chỉnh sửa thành công");
+                return (true, "Booking d� du?c ch?nh s?a th�nh c�ng");
             }
 
-            return (false, "Không có thay đổi nào được thực hiện");
+            return (false, "Kh�ng c� thay d?i n�o du?c th?c hi?n");
         }
 
         public async Task<(bool Success, string Message)> CheckInAsync(long bookingId)
@@ -422,23 +422,23 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm thấy booking");
+                return (false, "Kh�ng t�m th?y booking");
 
             if (booking.Status != "Confirmed")
-                return (false, $"Không thể check-in. Trạng thái hiện tại: {booking.Status}");
+                return (false, $"Kh�ng th? check-in. Tr?ng th�i hi?n t?i: {booking.Status}");
 
             if (booking.CheckInDate.Date > DateTime.Today)
-                return (false, "Chưa đến ngày check-in");
+                return (false, "Chua d?n ng�y check-in");
 
             if (booking.CheckInActualDate.HasValue)
-                return (false, "Booking đã được check-in trước đó");
+                return (false, "Booking d� du?c check-in tru?c d�");
 
             booking.Status = "CheckedIn";
             booking.CheckInActualDate = DateTime.Now;
 
             await _dbContext.SaveChangesAsync();
 
-            return (true, "Check-in thành công");
+            return (true, "Check-in th�nh c�ng");
         }
 
         public async Task<(bool Success, string Message)> CheckOutAsync(long bookingId)
@@ -447,20 +447,20 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm thấy booking");
+                return (false, "Kh�ng t�m th?y booking");
 
             if (booking.Status != "CheckedIn")
-                return (false, $"Không thể check-out. Trạng thái hiện tại: {booking.Status}");
+                return (false, $"Kh�ng th? check-out. Tr?ng th�i hi?n t?i: {booking.Status}");
 
             if (booking.CheckOutActualDate.HasValue)
-                return (false, "Booking đã được check-out trước đó");
+                return (false, "Booking d� du?c check-out tru?c d�");
 
             booking.Status = "CheckedOut";
             booking.CheckOutActualDate = DateTime.Now;
 
             await _dbContext.SaveChangesAsync();
 
-            return (true, "Check-out thành công");
+            return (true, "Check-out th�nh c�ng");
         }
 
         public async Task<(bool Success, string Message, decimal DiscountAmount)> ApplyPromotionAsync(
@@ -472,23 +472,23 @@ namespace HotelManagementSystem.Services.Implementations
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
-                return (false, "Không tìm thấy booking", 0);
+                return (false, "Kh�ng t�m th?y booking", 0);
 
             if (booking.Status is "Cancelled" or "CheckedOut")
-                return (false, "Không thể áp dụng khuyến mãi cho booking đã hủy hoặc đã check-out", 0);
+                return (false, "Kh�ng th? �p d?ng khuy?n m�i cho booking d� h?y ho?c d� check-out", 0);
 
             if (booking.PromotionId.HasValue)
-                return (false, "Booking đã áp dụng khuyến mãi. Vui lòng xóa mã hiện tại trước khi áp dụng mã mới.", 0);
+                return (false, "Booking d� �p d?ng khuy?n m�i. Vui l�ng x�a m� hi?n t?i tru?c khi �p d?ng m� m?i.", 0);
 
             var promotion = await _dbContext.Promotions
                 .FirstOrDefaultAsync(p => p.Code == promotionCode);
 
             if (promotion == null)
-                return (false, "Mã khuyến mãi không tồn tại", 0);
+                return (false, "M� khuy?n m�i kh�ng t?n t?i", 0);
 
             var today = DateTime.Today;
             if (today < promotion.StartDate || today > promotion.EndDate)
-                return (false, "Mã khuyến mãi không còn hiệu lực", 0);
+                return (false, "M� khuy?n m�i kh�ng c�n hi?u l?c", 0);
 
             if (!string.IsNullOrEmpty(promotion.ConditionsJson))
             {
@@ -500,7 +500,7 @@ namespace HotelManagementSystem.Services.Implementations
                     {
                         var minOrder = minOrderElement.GetDecimal();
                         if (booking.TotalAmount < minOrder)
-                            return (false, $"Đơn hàng phải từ {minOrder:N0} VNĐ trở lên", 0);
+                            return (false, $"�on h�ng ph?i t? {minOrder:N0} VN� tr? l�n", 0);
                     }
 
                     if (conditions.TryGetProperty("max_usage_count", out var maxUsageElement) &&
@@ -510,7 +510,7 @@ namespace HotelManagementSystem.Services.Implementations
                         var currentUsage = currentUsageElement.GetInt32();
                         
                         if (currentUsage >= maxUsage)
-                            return (false, "Mã khuyến mãi đã hết lượt sử dụng", 0);
+                            return (false, "M� khuy?n m�i d� h?t lu?t s? d?ng", 0);
                     }
 
                     if (conditions.TryGetProperty("is_new_customer_only", out var isNewCustomerElement))
@@ -522,7 +522,7 @@ namespace HotelManagementSystem.Services.Implementations
                                 .CountAsync(b => b.GuestId == booking.GuestId && b.Status != "Cancelled");
                             
                             if (bookingCount > 1)
-                                return (false, "Mã khuyến mãi chỉ dành cho khách hàng mới", 0);
+                                return (false, "M� khuy?n m�i ch? d�nh cho kh�ch h�ng m?i", 0);
                         }
                     }
                 }
@@ -537,7 +537,7 @@ namespace HotelManagementSystem.Services.Implementations
             await IncrementPromotionUsageAsync(promotion.Id);
             await _dbContext.SaveChangesAsync();
 
-            return (true, "Áp dụng mã khuyến mãi thành công", discountAmount);
+            return (true, "�p d?ng m� khuy?n m�i th�nh c�ng", discountAmount);
         }
 
         public async Task<bool> RemovePromotionAsync(long bookingId)

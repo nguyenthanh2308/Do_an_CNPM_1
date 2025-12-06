@@ -13,13 +13,16 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
     {
         private readonly IPaymentService _paymentService;
         private readonly IBookingService _bookingService;
+        private readonly IPaymentTransactionService _paymentTransactionService;
 
         public PaymentController(
             IPaymentService paymentService,
-            IBookingService bookingService)
+            IBookingService bookingService,
+            IPaymentTransactionService paymentTransactionService)
         {
             _paymentService = paymentService;
             _bookingService = bookingService;
+            _paymentTransactionService = paymentTransactionService;
         }
 
         // GET: /Admin/Payment/Index
@@ -93,9 +96,17 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
         {
             try
             {
-                var paymentId = await _paymentService.CreatePaymentAsync(bookingId, method, amount);
-                TempData["SuccessMessage"] = "Tạo payment thành công";
-                return RedirectToAction(nameof(Details), new { id = paymentId });
+                var result = await _paymentTransactionService.CreatePaymentTransactionAsync(bookingId, amount, method);
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "Tạo payment thành công";
+                    return RedirectToAction(nameof(Details), new { id = result.PaymentId });
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.Message;
+                    return RedirectToAction(nameof(Create), new { bookingId });
+                }
             }
             catch (Exception ex)
             {
@@ -109,11 +120,12 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessMock(long id)
         {
-            var result = await _paymentService.ProcessMockPaymentAsync(id);
+            var txnCode = $"MOCK{DateTime.UtcNow.Ticks}";
+            var result = await _paymentTransactionService.CompletePaymentAsync(id, txnCode);
 
             if (result.Success)
             {
-                TempData["SuccessMessage"] = $"{result.Message} - Mã GD: {result.TxnCode}";
+                TempData["SuccessMessage"] = $"{result.Message} - Mã GD: {txnCode}";
             }
             else
             {
@@ -128,11 +140,12 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessPayAtProperty(long id)
         {
-            var result = await _paymentService.ProcessPayAtPropertyAsync(id);
+            var txnCode = $"PROP{DateTime.UtcNow.Ticks}";
+            var result = await _paymentTransactionService.CompletePaymentAsync(id, txnCode);
 
             if (result.Success)
             {
-                TempData["SuccessMessage"] = result.Message;
+                TempData["SuccessMessage"] = "Xác nhận thanh toán tại khách sạn thành công";
             }
             else
             {
@@ -152,7 +165,7 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            if (!payment.CanRefund)
+            if (payment.Status != "Paid")
             {
                 TempData["ErrorMessage"] = "Không thể hoàn tiền cho payment này";
                 return RedirectToAction(nameof(Details), new { id });
@@ -166,7 +179,7 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RefundConfirmed(long id, string reason)
         {
-            var result = await _paymentService.ProcessRefundAsync(id, reason);
+            var result = await _paymentTransactionService.RefundPaymentAsync(id, reason);
 
             if (result.Success)
             {
@@ -185,7 +198,7 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkFailed(long id)
         {
-            var success = await _paymentService.MarkAsFailedAsync(id);
+            var success = await _paymentTransactionService.MarkAsFailedAsync(id);
 
             if (success)
             {
