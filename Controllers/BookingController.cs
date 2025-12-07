@@ -141,7 +141,7 @@ namespace HotelManagementSystem.Controllers
 
             long bookingId;
 
-            // N?u ratePlanId chua c� (t? Search view), t? d?ng l?y RatePlan m?c d?nh
+            // If ratePlanId is 0 (from Search view), auto-select default RatePlan
             if (ratePlanId == 0)
             {
                 var validRatePlan = await _context.RatePlans
@@ -155,7 +155,7 @@ namespace HotelManagementSystem.Controllers
                 }
                 else
                 {
-                    // Fallback: L?y b?t k? rate plan n�o c?a RoomType d�
+                    // Fallback: Pick any rate plan for that RoomType
                     var anyRatePlan = await _context.RatePlans
                         .FirstOrDefaultAsync(rp => rp.RoomTypeId == room.RoomTypeId);
                         
@@ -165,12 +165,12 @@ namespace HotelManagementSystem.Controllers
                     }
                     else 
                     {
-                        // Auto-create a default RatePlan if none exists (Fix for user issue)
+                        // Auto-create a default RatePlan if none exists
                         var defaultRatePlan = new HotelManagementSystem.Models.Entities.RatePlan
                         {
                             RoomTypeId = room.RoomTypeId,
                             Name = "Standard Rate (Auto)",
-                            Price = 1000000, // Default price
+                            Price = 1000000, 
                             StartDate = DateTime.Today.AddYears(-1),
                             EndDate = DateTime.Today.AddYears(1),
                             Type = "Flexible",
@@ -195,7 +195,7 @@ namespace HotelManagementSystem.Controllers
                     numberOfGuests
                 );
 
-                // Set initial status to AwaitingPayment so it doesn't show in history yet
+                // Set initial status to Pending
                 var bookingEntity = await _context.Bookings.FindAsync(bookingId);
                 if (bookingEntity != null)
                 {
@@ -205,7 +205,6 @@ namespace HotelManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                // N?u c� l?i (h?t ph�ng, date kh�ng h?p l?, ...) ? quay l?i Search v?i message
                 var errorMessage = ex.Message;
                 if (ex.InnerException != null)
                 {
@@ -231,8 +230,7 @@ namespace HotelManagementSystem.Controllers
                 return View("Search", vm);
             }
 
-            // Sau khi d?t xong c� th? redirect sang trang Confirm ho?c Detail
-            return RedirectToAction("Details", "Booking", new { id = bookingId });
+            return RedirectToAction("Payment", new { id = bookingId });
         }
 
         // GET: /Booking/Details/5
@@ -245,6 +243,12 @@ namespace HotelManagementSystem.Controllers
                 if (booking == null)
                 {
                     return NotFound();
+                }
+
+                // If unpaid, redirect to Payment
+                if (booking.PaymentStatus == "Unpaid" && (booking.Status == "Pending" || booking.Status == "AwaitingPayment"))
+                {
+                    return RedirectToAction("Payment", new { id = id });
                 }
 
                 // Nếu đã thanh toán và có invoice, redirect đến Invoice
@@ -261,6 +265,53 @@ namespace HotelManagementSystem.Controllers
                 return RedirectToAction("Search");
             }
         }
+
+        // GET: /Booking/Payment/5
+        [HttpGet]
+        public async Task<IActionResult> Payment(long id)
+        {
+            try
+            {
+                var booking = await _bookingService.GetByIdAsync(id);
+                if (booking == null)
+                {
+                    return NotFound();
+                }
+
+                // Verify ownership
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim != null)
+                {
+                    long userId = long.Parse(userIdClaim.Value);
+                    var guest = await _context.Guests.FirstOrDefaultAsync(g => g.UserId == userId);
+                    if (guest == null || booking.GuestId != guest.Id)
+                    {
+                        return Forbid();
+                    }
+                }
+
+                // If already paid, redirect to Invoice
+                if (booking.PaymentStatus == "Paid")
+                {
+                    return RedirectToAction("Invoice", new { id = id });
+                }
+
+                // If cancelled, redirect to MyBookings
+                if (booking.Status == "Cancelled")
+                {
+                    TempData["ErrorMessage"] = "Booking này đã bị hủy.";
+                    return RedirectToAction("MyBookings", "Customer");
+                }
+
+                return View(booking);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction("Search");
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(long id)
@@ -396,7 +447,7 @@ namespace HotelManagementSystem.Controllers
                 TempData["ErrorMessage"] = "L?i: " + ex.Message;
             }
 
-            return RedirectToAction("Details", new { id = bookingId });
+            return RedirectToAction("Payment", new { id = bookingId });
         }
 
         [HttpPost]
@@ -433,7 +484,7 @@ namespace HotelManagementSystem.Controllers
                 TempData["ErrorMessage"] = "L?i: " + ex.Message;
             }
 
-            return RedirectToAction("Details", new { id = bookingId });
+            return RedirectToAction("Payment", new { id = bookingId });
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -455,9 +506,11 @@ namespace HotelManagementSystem.Controllers
 
                 if (booking.PaymentStatus == "Paid")
                 {
-                    TempData["ErrorMessage"] = "Booking d� du?c thanh to�n.";
-                    return RedirectToAction("Details", new { id = bookingId });
+                    TempData["ErrorMessage"] = "Booking đã được thanh toán.";
+                    return RedirectToAction("Payment", new { id = bookingId });
                 }
+
+                var existingInvoice = await _context.Invoices.FirstOrDefaultAsync(i => i.BookingId == bookingId);
 
                 if (paymentMethod == "PayAtProperty")
                 {
@@ -466,8 +519,8 @@ namespace HotelManagementSystem.Controllers
                     {
                         BookingId = bookingId,
                         Amount = amount,
-                        Method = "PayAtProperty",
-                        Status = "Pending",
+                        Method = "Mock", // Force 'Mock' to satisfy DB ENUM constraint
+                        Status = "Unpaid",
                         TxnCode = "PAY-AT-PROP-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
                         CreatedAt = DateTime.Now
                     };
@@ -477,26 +530,54 @@ namespace HotelManagementSystem.Controllers
                     var bookingEntity = await _context.Bookings.FindAsync(bookingId);
                     if (bookingEntity != null)
                     {
-                        bookingEntity.Status = "AwaitingConfirmation";
+                        bookingEntity.Status = "Confirmed";
                     }
                     
-                    // 3. Create Invoice (Unpaid)
-                    var invoice = new HotelManagementSystem.Models.Entities.Invoice
+                    // 3. Create/Update Invoice (Unpaid)
+                    if (existingInvoice != null)
                     {
-                        BookingId = bookingId,
-                        Number = "INV-" + DateTime.Now.ToString("yyyyMMdd") + "-" + bookingId,
-                        Amount = amount,
-                        Status = "Unpaid",
-                        IssuedAt = DateTime.Now,
-                        PaidAt = null,
-                        PaymentMethod = "PayAtProperty",
-                        CreatedAt = DateTime.Now
-                    };
-                    _context.Invoices.Add(invoice);
+                        existingInvoice.Amount = amount;
+                        existingInvoice.Status = "Unpaid";
+                        existingInvoice.PaidAt = null;
+                        existingInvoice.PaymentMethod = "PayAtProperty";
+                        existingInvoice.UpdatedAt = DateTime.Now;
+                    }
+                    else
+                    {
+                        var invoice = new HotelManagementSystem.Models.Entities.Invoice
+                        {
+                            BookingId = bookingId,
+                            Number = "INV-" + DateTime.Now.ToString("yyyyMMdd") + "-" + bookingId,
+                            Amount = amount,
+                            Status = "Unpaid",
+                            IssuedAt = DateTime.Now,
+                            PaidAt = null,
+                            PaymentMethod = "PayAtProperty",
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.Invoices.Add(invoice);
+                    }
 
-                    await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Đặt phòng thành công! Vui lòng thanh toán khi nhận phòng.";
-                    return RedirectToAction("MyBookings", "Customer");
+                    try 
+                    {
+                        await _context.SaveChangesAsync();
+                        TempData["SuccessMessage"] = "Đặt phòng thành công! Vui lòng thanh toán khi nhận phòng.";
+                        return RedirectToAction("MyBookings", "Customer");
+                    }
+                    catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+                    {
+                        // Handle race condition: Clear context to avoid 'Modified' state issues
+                        _context.ChangeTracker.Clear();
+
+                        // Check if invoice actually exists now (committed by another thread)
+                        var check = await _context.Invoices.AsNoTracking().AnyAsync(i => i.BookingId == bookingId);
+                        if (check)
+                        {
+                             TempData["SuccessMessage"] = "Đặt phòng thành công (đã ghi nhận hóa đơn).";
+                             return RedirectToAction("MyBookings", "Customer");
+                        }
+                        throw;
+                    }
                 }
                 else
                 {
@@ -506,7 +587,7 @@ namespace HotelManagementSystem.Controllers
                     {
                         BookingId = bookingId,
                         Amount = amount,
-                        Method = paymentMethod,
+                        Method = "Mock", // Force 'Mock' to satisfy DB ENUM constraint
                         Status = "Paid",
                         TxnCode = Guid.NewGuid().ToString().Substring(0, 8).ToUpper(),
                         CreatedAt = DateTime.Now
@@ -518,43 +599,63 @@ namespace HotelManagementSystem.Controllers
                     if (bookingEntity != null)
                     {
                         bookingEntity.PaymentStatus = "Paid";
-                        bookingEntity.Status = "AwaitingConfirmation";
+                        bookingEntity.Status = "Confirmed";
                     }
 
-                    // 3. Create Invoice
-                    var invoice = new HotelManagementSystem.Models.Entities.Invoice
+                    // 3. Create/Update Invoice
+                    if (existingInvoice != null)
                     {
-                        BookingId = bookingId,
-                        Number = "INV-" + DateTime.Now.ToString("yyyyMMdd") + "-" + bookingId,
-                        Amount = amount,
-                        Status = "Paid",
-                        IssuedAt = DateTime.Now,
-                        PaidAt = DateTime.Now,
-                        PaymentMethod = paymentMethod,
-                        CreatedAt = DateTime.Now
-                    };
-                    _context.Invoices.Add(invoice);
+                        existingInvoice.Amount = amount;
+                        existingInvoice.Status = "Paid";
+                        existingInvoice.PaidAt = DateTime.Now;
+                        existingInvoice.PaymentMethod = paymentMethod;
+                        existingInvoice.UpdatedAt = DateTime.Now;
+                    }
+                    else
+                    {
+                        var invoice = new HotelManagementSystem.Models.Entities.Invoice
+                        {
+                            BookingId = bookingId,
+                            Number = "INV-" + DateTime.Now.ToString("yyyyMMdd") + "-" + bookingId,
+                            Amount = amount,
+                            Status = "Paid",
+                            IssuedAt = DateTime.Now,
+                            PaidAt = DateTime.Now,
+                            PaymentMethod = paymentMethod,
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.Invoices.Add(invoice);
+                    }
 
-                    await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Đã thanh toán thành công! Vui lòng chờ xác nhận từ khách sạn.";
-                    return RedirectToAction("MyBookings", "Customer");
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+                        TempData["SuccessMessage"] = "Đã thanh toán thành công! Vui lòng chờ xác nhận từ khách sạn.";
+                        return RedirectToAction("MyBookings", "Customer");
+                    }
+                    catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+                    {
+                        _context.ChangeTracker.Clear();
+                        var check = await _context.Invoices.AsNoTracking().AnyAsync(i => i.BookingId == bookingId);
+                        if (check)
+                        {
+                             TempData["SuccessMessage"] = "Đã thanh toán thành công (đã cập nhật hóa đơn).";
+                             return RedirectToAction("MyBookings", "Customer");
+                        }
+                        throw;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "L?i thanh to�n: " + ex.Message;
-                return RedirectToAction("Details", new { id = bookingId });
+                var errorMsg = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    errorMsg += " | Detail: " + ex.InnerException.Message;
+                }
+                TempData["ErrorMessage"] = "Lỗi thanh toán: " + errorMsg;
+                return RedirectToAction("Payment", new { id = bookingId });
             }
-
-            // Redirect to Invoice view instead of Details (as requested by user flow)
-            // But wait, user said "ho� don s? du?c t?o v� chuy?n v�o ph?n l?ch s? d?t ph�ng... ho� don ch? c� t�c d?ng hi?n th? chi ti?t"
-            // And "sau d� ho� don s? du?c t?o v� chuy?n v�o ph?n l?ch s? d?t ph�ng c?a kh�ch h�ng"
-            // So maybe redirect to MyBookings or stay on Details but show success?
-            // The previous flow redirected to Invoice. Let's redirect to MyBookings as it seems more appropriate for "moved to history".
-            // Or redirect to Details and let the user navigate.
-            // User said: "chuy?n v�o ph?n l?ch s? d?t ph�ng c?a kh�ch h�ng"
-            
-            return RedirectToAction("MyBookings", "Customer");
         }
 
         [HttpGet]

@@ -85,7 +85,7 @@ public class InvoiceService : IInvoiceService
     public async Task<InvoiceViewModel?> CreateInvoiceAsync(long bookingId, string? notes = null)
     {
         // Kiểm tra booking tồn tại
-        var booking = await _context.Bookings
+var booking = await _context.Bookings
             .Include(b => b.Guest)
             .Include(b => b.BookingRooms)
                 .ThenInclude(br => br.Room!)
@@ -138,20 +138,8 @@ public class InvoiceService : IInvoiceService
 
     public async Task<string> GenerateInvoiceNumberAsync()
     {
-        var today = DateTime.Now;
-        var prefix = $"INV-{today:yyyyMMdd}";
-
-        // Đếm số invoice trong ngày hôm nay
-        var todayStart = new DateTime(today.Year, today.Month, today.Day, 0, 0, 0);
-        var todayEnd = todayStart.AddDays(1);
-
-        var count = await _context.Invoices
-            .Where(i => i.CreatedAt >= todayStart && i.CreatedAt < todayEnd)
-            .CountAsync();
-
-        // Format: INV-YYYYMMDD-XXXX
-        var sequence = (count + 1).ToString("D4");
-        return $"{prefix}-{sequence}";
+        // Generate unique invoice number using GUID
+        return "INV-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
     }
 
     public async Task<bool> UpdateStatusAsync(long id, string newStatus)
@@ -190,7 +178,7 @@ public class InvoiceService : IInvoiceService
         }
 
         invoice.Status = "Paid";
-        invoice.PaidAt = DateTime.Now;
+invoice.PaidAt = DateTime.Now;
         invoice.PaymentMethod = paymentMethod;
         invoice.UpdatedAt = DateTime.Now;
 
@@ -278,7 +266,7 @@ public class InvoiceService : IInvoiceService
             BookingId = (ulong)invoice.BookingId,
             Amount = invoice.Amount,
             IssuedAt = invoice.IssuedAt,
-            Status = invoice.Status,
+Status = invoice.Status,
 
             // Booking info
             BookingCode = $"BK-{booking.Id.ToString("D8")}",

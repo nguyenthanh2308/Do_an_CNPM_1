@@ -80,13 +80,13 @@
                                     </td>
                                     <td>
                                         <div class="btn-group-vertical btn-group-sm">
-                                            <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary">
+                                            <a asp-controller="Booking" asp-action="Invoice" asp-route-id="@item.Id" class="btn btn-outline-primary">
                                                 <i class="fas fa-eye"></i> Chi tiết
                                             </a>
                                             
                                             @if (!item.PaymentSummary.IsFullyPaid && item.Status != "Cancelled" && item.PaymentStatus != "Paid" && item.Status != "AwaitingConfirmation")
                                             {
-                                                <a asp-controller="Booking" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-success">
+                                                <a asp-controller="Booking" asp-action="Payment" asp-route-id="@item.Id" class="btn btn-outline-success">
                                                     <i class="fas fa-credit-card"></i> Thanh toán
                                                 </a>
                                             }

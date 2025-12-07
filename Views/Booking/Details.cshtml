@@ -22,6 +22,13 @@
                         </div>
                     }
                     
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <strong><i class="fas fa-exclamation-circle"></i> Lỗi!</strong> @TempData["ErrorMessage"]
+                        </div>
+                    }
+                    
                     @if ((Model.Status == "AwaitingPayment" || Model.Status == "Pending") && Model.PaymentStatus == "Unpaid")
                     {
                         <div class="alert alert-warning" role="alert">
@@ -124,139 +131,7 @@
                         </div>
                     }
 
-                    @if (Model.Status != "Confirmed" && Model.PaymentStatus != "Paid")
-                    {
-                        <div class="row mb-3">
-                            <div class="col-sm-4 fw-bold">Khuyến Mãi:</div>
-                            <div class="col-sm-8">
-                                @if (string.IsNullOrEmpty(Model.PromotionCode))
-                                {
-                                    <form asp-action="ApplyPromotion" method="post" class="input-group input-group-sm" style="max-width: 300px;">
-                                        <input type="hidden" name="bookingId" value="@Model.Id" />
-                                        <input type="text" name="promotionCode" class="form-control" placeholder="Nhập mã khuyến mãi" required>
-                                        <button class="btn btn-outline-primary" type="submit">Áp dụng</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge bg-success me-2">@Model.PromotionCode</span>
-                                        <span class="text-success me-2">-@Model.DiscountAmount.ToString("N0") VNĐ</span>
-                                        <form asp-action="RemovePromotion" method="post" style="display:inline;">
-                                            <input type="hidden" name="bookingId" value="@Model.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa mã">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
-                    else if (Model.DiscountAmount > 0)
-                    {
-                         <div class="row mb-3">
-                            <div class="col-sm-4 fw-bold">Khuyến Mãi:</div>
-                            <div class="col-sm-8">
-                                <span class="badge bg-success me-2">@Model.PromotionCode</span>
-                                <span class="text-success">-@Model.DiscountAmount.ToString("N0") VNĐ</span>
-                            </div>
-                        </div>
-                    }
 
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Thành Tiền:</div>
-                        <div class="col-sm-8">
-                            <h4 class="text-primary fw-bold">
-                                @((Model.TotalAmount - Model.DiscountAmount).ToString("N0")) VNĐ
-                            </h4>
-                        </div>
-                    </div>
-
-
-                    @if ((Model.Status == "AwaitingPayment" || Model.Status == "Pending") && Model.PaymentStatus == "Unpaid" && Model.Status != "Cancelled")
-                    {
-                        <div class="card mt-4 border-primary">
-                            <div class="card-header bg-primary text-white">
-                                <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Thanh Toán</h5>
-                            </div>
-                            <div class="card-body">
-                                <ul class="nav nav-tabs mb-3" id="paymentTabs" role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab">
-                                            <i class="fas fa-globe me-2"></i>Thanh Toán Online
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="property-tab" data-bs-toggle="tab" data-bs-target="#property" type="button" role="tab">
-                                            <i class="fas fa-hotel me-2"></i>Thanh Toán Tại Khách Sạn
-                                        </button>
-                                    </li>
-                                </ul>
-                                
-                                <div class="tab-content" id="paymentTabsContent">
-                                    <!-- Online Payment -->
-                                    <div class="tab-pane fade show active" id="online" role="tabpanel">
-                                        <form asp-action="ProcessPayment" method="post">
-                                            <input type="hidden" name="bookingId" value="@Model.Id" />
-                                            <input type="hidden" name="amount" value="@(Model.TotalAmount - Model.DiscountAmount)" />
-                                            
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Chọn phương thức:</label>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="paymentMethod" value="CreditCard" id="methodCard" checked>
-                                                    <label class="form-check-label" for="methodCard">
-                                                        <i class="fas fa-credit-card text-primary me-2"></i>Thẻ Tín Dụng / Ghi Nợ
-                                                    </label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="paymentMethod" value="EWallet" id="methodWallet">
-                                                    <label class="form-check-label" for="methodWallet">
-                                                        <i class="fas fa-wallet text-success me-2"></i>Ví Điện Tử (Momo/ZaloPay)
-                                                    </label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="paymentMethod" value="BankTransfer" id="methodBank">
-                                                    <label class="form-check-label" for="methodBank">
-                                                        <i class="fas fa-university text-info me-2"></i>Chuyển Khoản Ngân Hàng
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <div class="alert alert-info">
-                                                <small><i class="fas fa-info-circle"></i> Giao dịch được mô phỏng và sẽ thành công ngay lập tức.</small>
-                                            </div>
-
-                                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
-                                                <i class="fas fa-check-circle me-2"></i>Thanh Toán Ngay @((Model.TotalAmount - Model.DiscountAmount).ToString("N0")) VNĐ
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                    <!-- Pay at Property -->
-                                    <div class="tab-pane fade" id="property" role="tabpanel">
-                                        <form asp-action="ProcessPayment" method="post">
-                                            <input type="hidden" name="bookingId" value="@Model.Id" />
-                                            <input type="hidden" name="amount" value="@(Model.TotalAmount - Model.DiscountAmount)" />
-                                            <input type="hidden" name="paymentMethod" value="PayAtProperty" />
-
-                                            <div class="alert alert-warning">
-                                                <h6><i class="fas fa-exclamation-circle"></i> Lưu ý:</h6>
-                                                <ul class="mb-0 small">
-                                                    <li>Bạn sẽ thanh toán toàn bộ số tiền khi làm thủ tục nhận phòng.</li>
-                                                    <li>Vui lòng đến đúng giờ để giữ phòng.</li>
-                                                </ul>
-                                            </div>
-
-                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
-                                                <i class="fas fa-check me-2"></i>Xác Nhận Đặt Phòng
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
                     else if (Model.PaymentStatus == "Paid" && !string.IsNullOrEmpty(Model.InvoiceNumber))
                     {
                         <div class="card mt-4 border-success">
