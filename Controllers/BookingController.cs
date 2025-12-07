@@ -661,7 +661,13 @@ namespace HotelManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> Invoice(long id)
         {
-            var booking = await _bookingService.GetByIdAsync(id);
+            var booking = await _context.Bookings
+                .Include(b => b.Guest)
+                .Include(b => b.Hotel)
+                .Include(b => b.BookingRooms).ThenInclude(br => br.Room).ThenInclude(r => r.RoomType)
+                .Include(b => b.Promotion)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
             if (booking == null) return NotFound();
 
             // Verify ownership
@@ -676,13 +682,59 @@ namespace HotelManagementSystem.Controllers
             var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.BookingId == id);
             if (invoice == null)
             {
-                TempData["ErrorMessage"] = "Chua c� h�a don cho booking n�y.";
+                TempData["ErrorMessage"] = "Chưa có hóa đơn cho booking này.";
                 return RedirectToAction("Details", new { id = id });
             }
-            ViewBag.Booking = booking;
-            return View(invoice);
-        }
 
+            // Map to ViewModel
+            var room = booking.BookingRooms.FirstOrDefault()?.Room;
+            var roomType = booking.BookingRooms.FirstOrDefault()?.Room?.RoomType;
+            var nights = (booking.CheckOutDate - booking.CheckInDate).Days;
+            
+            var viewModel = new HotelManagementSystem.Models.ViewModels.Invoice.InvoiceDetailViewModel
+            {
+                InvoiceId = invoice.Id,
+                InvoiceNumber = invoice.Number,
+                IssuedAt = invoice.IssuedAt,
+                Status = invoice.Status,
+                Notes = invoice.Notes,
+                
+                // Customer Info
+                CustomerName = booking.Guest.FullName,
+                CustomerEmail = booking.Guest.Email ?? "",
+                CustomerPhone = booking.Guest.Phone ?? "",
+                
+                // Booking Info
+                BookingId = booking.Id,
+                HotelName = booking.Hotel.Name,
+                HotelAddress = booking.Hotel.Address ?? "",
+                RoomNumber = room?.Number ?? "N/A",
+                RoomTypeName = roomType?.Name ?? "N/A",
+                CheckInDate = booking.CheckInDate,
+                CheckOutDate = booking.CheckOutDate,
+                Nights = nights > 0 ? nights : 1,
+                
+                // Financials
+                RoomPricePerNight = booking.BookingRooms.FirstOrDefault()?.PricePerNight ?? 0,
+                RoomTotal = booking.TotalAmount + booking.DiscountAmount,
+                DiscountAmount = booking.DiscountAmount,
+                PromotionCode = booking.Promotion?.Code,
+                TotalAmount = booking.TotalAmount,
+                
+                // Payment Info
+                PaymentInfo = new HotelManagementSystem.Models.ViewModels.Payment.PaymentSummaryViewModel
+                {
+                    TotalAmount = booking.TotalAmount,
+                    PaidAmount = invoice.Status == "Paid" ? booking.TotalAmount : 0, 
+                    RemainingAmount = invoice.Status == "Paid" ? 0 : booking.TotalAmount,
+                    // IsFullyPaid is read-only, allowed to be calculated
+                    PaymentMethod = invoice.PaymentMethod ?? "N/A",
+                    LastPaymentDate = invoice.PaidAt
+                }
+            };
+
+            return View(viewModel);
+        }
         [HttpGet]
         public async Task<IActionResult> RoomDetails(long roomId, DateTime checkInDate, DateTime checkOutDate, int numberOfGuests)
         {
