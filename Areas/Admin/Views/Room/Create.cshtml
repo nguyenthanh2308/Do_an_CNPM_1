@@ -68,6 +68,15 @@
                             <span asp-validation-for="Status" class="text-danger"></span>
                         </div>
 
+                        <div class="mb-3">
+                            <label asp-for="ImageUrl" class="form-label">
+                                <i class="fas fa-image"></i> Hình Ảnh (URL)
+                            </label>
+                            <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/room-image.jpg" />
+                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                            <small class="form-text text-muted">Nhập URL hình ảnh của phòng. Để trống sẽ dùng hình mặc định từ Loại phòng.</small>
+                        </div>
+
                         <div class="alert alert-info" role="alert">
                             <i class="fas fa-lightbulb"></i> <strong>Lưu ý:</strong>
                             <ul class="mb-0 mt-2">

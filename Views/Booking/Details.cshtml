@@ -1,155 +1,197 @@
 @model HotelManagementSystem.Models.ViewModels.Booking.BookingViewModel
 
 @{
-    ViewData["Title"] = "Xác Nhận Đặt Phòng";
+    ViewData["Title"] = "Chi Tiết Đặt Phòng";
 }
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="fas fa-info-circle"></i> Thông Tin Đặt Phòng
-                    </h4>
-                </div>
-
+        <div class="col-md-10">
+            <!-- Invoice-like Header -->
+            <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    @if (TempData["SuccessMessage"] != null)
-                    {
-                        <div class="alert alert-success" role="alert">
-                            <strong><i class="fas fa-check-circle"></i> Thành công!</strong> @TempData["SuccessMessage"]
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 class="text-success mb-2">
+                                <i class="fas fa-hotel me-2"></i>@Model.HotelName
+                            </h3>
+                            <p class="text-muted mb-0">Chi tiết đặt phòng</p>
                         </div>
-                    }
-                    
-                    @if (TempData["ErrorMessage"] != null)
-                    {
-                        <div class="alert alert-danger" role="alert">
-                            <strong><i class="fas fa-exclamation-circle"></i> Lỗi!</strong> @TempData["ErrorMessage"]
-                        </div>
-                    }
-                    
-                    @if ((Model.Status == "AwaitingPayment" || Model.Status == "Pending") && Model.PaymentStatus == "Unpaid")
-                    {
-                        <div class="alert alert-warning" role="alert">
-                            <strong><i class="fas fa-exclamation-triangle"></i> Vui lòng thanh toán!</strong> Đơn đặt phòng của bạn đang chờ thanh toán để hoàn tất.
-                        </div>
-                    }
-
-                    <h5 class="border-bottom pb-2 mb-3">Thông Tin Đặt Phòng</h5>
-                    
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Mã Đặt Phòng:</div>
-                        <div class="col-sm-8">
-                            <span class="badge bg-primary fs-6">#@Model.Id</span>
+                        <div class="col-md-6 text-end">
+                            <h4 class="text-primary mb-2">CHI TIẾT ĐẶT PHÒNG</h4>
+                            <p class="mb-1"><strong>Mã Booking:</strong> #@Model.Id</p>
+                            <p class="mb-1"><strong>Ngày đặt:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="mb-0">
+                                <strong>Trạng thái:</strong> 
+                                <span class="badge @Model.StatusBadgeClass">@Model.StatusDisplay</span>
+                            </p>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Khách Sạn:</div>
-                        <div class="col-sm-8">@Model.HotelName</div>
-                    </div>
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success" role="alert">
+                    <strong><i class="fas fa-check-circle"></i> Thành công!</strong> @TempData["SuccessMessage"]
+                </div>
+            }
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <strong><i class="fas fa-exclamation-circle"></i> Lỗi!</strong> @TempData["ErrorMessage"]
+                </div>
+            }
 
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Phòng:</div>
-                        <div class="col-sm-8">
-                            <span class="badge bg-info">@Model.RoomNumber - @Model.RoomTypeName</span>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Ngày Nhận Phòng:</div>
-                        <div class="col-sm-8">
-                            <i class="far fa-calendar-check text-success"></i>
-                            @Model.CheckInDate.ToString("dd/MM/yyyy HH:mm")
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Ngày Trả Phòng:</div>
-                        <div class="col-sm-8">
-                            <i class="far fa-calendar-times text-danger"></i>
-                            @Model.CheckOutDate.ToString("dd/MM/yyyy HH:mm")
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Số Đêm:</div>
-                        <div class="col-sm-8">
-                            @Model.Nights đêm
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Khách Hàng:</div>
-                        <div class="col-sm-8">
-                            <i class="fas fa-user"></i> @Model.GuestName
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Customer Info -->
+                        <div class="col-md-6 mb-3">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-user text-primary me-2"></i>Thông tin khách hàng
+                            </h5>
+                            <p class="mb-1"><strong>@Model.GuestName</strong></p>
                             @if (!string.IsNullOrEmpty(Model.GuestEmail))
                             {
-                                <br /><small class="text-muted">@Model.GuestEmail</small>
+                                <p class="mb-1 text-muted">@Model.GuestEmail</p>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.GuestPhone))
+                            {
+                                <p class="mb-0 text-muted">@Model.GuestPhone</p>
                             }
                         </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Trạng Thái:</div>
-                        <div class="col-sm-8">
-                            <span class="badge @Model.StatusBadgeClass">@Model.StatusDisplay</span>
+                        
+                        <!-- Booking Info -->
+                        <div class="col-md-6 mb-3">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-bed text-primary me-2"></i>Chi tiết đặt phòng
+                            </h5>
+                            <p class="mb-1"><strong>Phòng:</strong> @Model.RoomNumber (@Model.RoomTypeName)</p>
+                            <p class="mb-1"><strong>Check-in:</strong> @Model.CheckInDate.ToString("dd/MM/yyyy")</p>
+                            <p class="mb-0"><strong>Check-out:</strong> @Model.CheckOutDate.ToString("dd/MM/yyyy")</p>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Thanh Toán:</div>
-                        <div class="col-sm-8">
-                            <span class="badge @Model.PaymentStatusBadgeClass">@Model.PaymentStatusDisplay</span>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Tổng Tiền:</div>
-                        <div class="col-sm-8">
-                            <h4 class="text-success mb-0">
-                                @Model.TotalAmount.ToString("N0") VNĐ
-                            </h4>
+            <!-- Pricing Table -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-0">
+                    <table class="table table-borderless mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mô tả</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end">Đơn giá</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tiền phòng (@Model.Nights đêm)</td>
+                                <td class="text-center">@Model.Nights</td>
+                                <td class="text-end">@Model.PricePerNight.ToString("N0") VNĐ</td>
+                                <td class="text-end">@Model.TotalAmount.ToString("N0") VNĐ</td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Tổng tiền (trước thuế):</td>
+                                <td class="text-end fw-bold">@Model.TotalAmount.ToString("N0") VNĐ</td>
+                            </tr>
                             @if (Model.DiscountAmount > 0)
                             {
-                                <small class="text-muted">
-                                    Giảm giá: @Model.DiscountAmount.ToString("N0") VNĐ<br />
-                                    Thành tiền: <strong>@Model.FinalAmount.ToString("N0") VNĐ</strong>
-                                </small>
+                                <tr class="text-success">
+                                    <td colspan="3" class="text-end">
+                                        Giảm giá 
+                                        @if (!string.IsNullOrEmpty(Model.PromotionCode))
+                                        {
+                                            <span class="badge bg-success">@Model.PromotionCode</span>
+                                        }:
+                                    </td>
+                                    <td class="text-end">-@Model.DiscountAmount.ToString("N0") VNĐ</td>
+                                </tr>
                             }
-                        </div>
-                    </div>
+                            <tr class="table-primary">
+                                <td colspan="3" class="text-end fs-5 fw-bold">TỔNG CỘNG:</td>
+                                <td class="text-end fs-5 fw-bold text-primary">@Model.FinalAmount.ToString("N0") VNĐ</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
 
-                    @if (!string.IsNullOrEmpty(Model.RatePlanName))
+            <!-- Payment Status -->
+            <div class="card shadow-sm mb-4 @(Model.PaymentStatus == "Paid" ? "border-success" : "border-warning")">
+                <div class="card-header @(Model.PaymentStatus == "Paid" ? "bg-success" : "bg-warning") @(Model.PaymentStatus == "Paid" ? "text-white" : "text-dark")">
+                    <h5 class="mb-0">
+                        @if (Model.PaymentStatus == "Paid")
+                        {
+                            <i class="fas fa-check-circle me-2"></i>@("Thông tin thanh toán")
+                        }
+                        else
+                        {
+                            <i class="fas fa-exclamation-triangle me-2"></i>@("Chờ thanh toán")
+                        }
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.PaymentStatus == "Paid")
                     {
-                        <div class="row mb-3">
-                            <div class="col-sm-4 fw-bold">Gói Giá:</div>
-                            <div class="col-sm-8">
-                                <span class="badge bg-secondary">@Model.RatePlanName</span>
-                            </div>
-                        </div>
+                        <p class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Đã thanh toán đủ <strong>@Model.FinalAmount.ToString("N0") VNĐ</strong>
+                        </p>
+                        @if (!string.IsNullOrEmpty(Model.InvoiceNumber))
+                        {
+                            <p class="mb-0">
+                                <strong>Số hóa đơn:</strong> @Model.InvoiceNumber
+                            </p>
+                        }
                     }
-
-
-                    else if (Model.PaymentStatus == "Paid" && !string.IsNullOrEmpty(Model.InvoiceNumber))
+                    else
                     {
-                        <div class="card mt-4 border-success">
-                            <div class="card-header bg-success text-white">
-                                <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Đã Thanh Toán</h5>
-                            </div>
-                            <div class="card-body">
-                                <p class="mb-3">Bạn đã thanh toán thành công. Vui lòng chờ xác nhận từ khách sạn.</p>
-                                <a asp-action="Invoice" asp-route-id="@Model.Id" class="btn btn-primary">
-                                    <i class="fas fa-file-invoice me-2"></i>Xem Hóa Đơn
-                                </a>
-                            </div>
-                        </div>
+                        <p class="mb-3">Đơn đặt phòng của bạn đang chờ thanh toán.</p>
+                        <a asp-action="Payment" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="fas fa-credit-card me-2"></i>Thanh Toán Ngay
+                        </a>
                     }
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 justify-content-between">
+                <a asp-controller="Customer" asp-action="MyBookings" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Về Lịch Sử
+                </a>
+                <div class="d-flex gap-2">
+                    @if (Model.PaymentStatus == "Paid" && !string.IsNullOrEmpty(Model.InvoiceNumber))
+                    {
+                        <a asp-action="Invoice" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="fas fa-file-invoice me-2"></i>Xem Hóa Đơn
+                        </a>
+                    }
+                    @if (Model.IsCancellable && Model.PaymentStatus != "Paid")
+                    {
+                        <form asp-action="Cancel" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-outline-danger" 
+                                onclick="return confirm('Bạn có chắc muốn hủy đặt phòng này?');">
+                                <i class="fas fa-times me-2"></i>Hủy Đặt Phòng
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
-        // Auto-scroll to top on page load
         window.scrollTo(0, 0);
     </script>
 }

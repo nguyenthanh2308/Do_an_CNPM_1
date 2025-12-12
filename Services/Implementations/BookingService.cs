@@ -622,7 +622,8 @@ namespace HotelManagementSystem.Services.Implementations
                 CancelledAt = booking.CancelledAt,
                 ModifiedAt = booking.ModifiedAt,
                 CheckInActualDate = booking.CheckInActualDate,
-                CheckOutActualDate = booking.CheckOutActualDate
+                CheckOutActualDate = booking.CheckOutActualDate,
+                PricePerNight = bookingRoom?.PricePerNight ?? roomType?.BasePrice ?? 0
             };
 
             // Calculate PaymentSummary

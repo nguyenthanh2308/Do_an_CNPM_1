@@ -47,14 +47,17 @@
                             </a>
                             @if (room.Status == "Vacant")
                             {
-                                <a asp-action="Search" 
-                                   asp-route-CheckInDate="@DateTime.Today.ToString("yyyy-MM-dd")"
-                                   asp-route-CheckOutDate="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
-                                   asp-route-NumberOfGuests="2"
-                                   asp-route-RoomTypeId="@room.RoomType.Id" 
-                                   class="btn btn-primary flex-fill">
-                                    <i class="fas fa-calendar-check me-1"></i>Đặt Ngay
-                                </a>
+                                <form asp-action="Book" method="post" class="flex-fill">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="roomId" value="@room.Id" />
+                                    <input type="hidden" name="ratePlanId" value="0" />
+                                    <input type="hidden" name="checkInDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="checkOutDate" value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="numberOfGuests" value="2" />
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-calendar-check me-1"></i>Đặt Ngay
+                                    </button>
+                                </form>
                             }
                             else
                             {

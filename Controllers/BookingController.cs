@@ -503,7 +503,7 @@ namespace HotelManagementSystem.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessPayment(long bookingId, decimal amount, string paymentMethod)
+        public async Task<IActionResult> ProcessPayment(long bookingId, decimal amount, string paymentMethod, int nights = 0)
         {
             try
             {
@@ -525,6 +525,45 @@ namespace HotelManagementSystem.Controllers
                     return RedirectToAction("Payment", new { id = bookingId });
                 }
 
+                // Update booking dates and amount if nights changed
+                var bookingEntity = await _context.Bookings
+                    .Include(b => b.BookingRooms)
+                    .FirstOrDefaultAsync(b => b.Id == bookingId);
+                    
+                if (bookingEntity != null && nights > 0 && nights != booking.Nights)
+                {
+                    // Update checkout date based on new nights
+                    bookingEntity.CheckOutDate = bookingEntity.CheckInDate.AddDays(nights);
+                    
+                    // Update BookingRoom nights
+                    var bookingRoom = bookingEntity.BookingRooms.FirstOrDefault();
+                    if (bookingRoom != null)
+                    {
+                        bookingRoom.Nights = nights;
+                        // Recalculate total
+                        bookingEntity.TotalAmount = bookingRoom.PricePerNight * nights;
+                    }
+                    
+                    // Recalculate discount if promotion applied
+                    if (bookingEntity.PromotionId.HasValue)
+                    {
+                        var promotion = await _context.Promotions.FindAsync(bookingEntity.PromotionId.Value);
+                        if (promotion != null)
+                        {
+                            if (promotion.Type == "Percent")
+                            {
+                                bookingEntity.DiscountAmount = bookingEntity.TotalAmount * (promotion.Value / 100);
+                            }
+                            else
+                            {
+                                bookingEntity.DiscountAmount = Math.Min(promotion.Value, bookingEntity.TotalAmount);
+                            }
+                        }
+                    }
+                    
+                    amount = bookingEntity.TotalAmount - bookingEntity.DiscountAmount;
+                }
+
                 var existingInvoice = await _context.Invoices.FirstOrDefaultAsync(i => i.BookingId == bookingId);
 
                 if (paymentMethod == "PayAtProperty")
@@ -542,7 +581,6 @@ namespace HotelManagementSystem.Controllers
                     _context.Payments.Add(payment);
 
                     // 2. Update Booking Status to Confirmed
-                    var bookingEntity = await _context.Bookings.FindAsync(bookingId);
                     if (bookingEntity != null)
                     {
                         bookingEntity.Status = "Confirmed";
@@ -610,7 +648,6 @@ namespace HotelManagementSystem.Controllers
                     _context.Payments.Add(payment);
 
                     // 2. Update Booking Status
-                    var bookingEntity = await _context.Bookings.FindAsync(bookingId);
                     if (bookingEntity != null)
                     {
                         bookingEntity.PaymentStatus = "Paid";

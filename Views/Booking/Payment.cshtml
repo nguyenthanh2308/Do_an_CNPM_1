@@ -62,13 +62,24 @@
                         <div class="col-sm-4 fw-bold">Ngày Trả:</div>
                         <div class="col-sm-8">
                             <i class="far fa-calendar-times text-danger"></i>
-                            @Model.CheckOutDate.ToString("dd/MM/yyyy")
+                            <span id="displayCheckOutDate">@Model.CheckOutDate.ToString("dd/MM/yyyy")</span>
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-sm-4 fw-bold">Số Đêm:</div>
-                        <div class="col-sm-8">@Model.Nights đêm</div>
+                        <div class="col-sm-8">
+                            <div class="input-group" style="max-width: 200px;">
+                                <button type="button" class="btn btn-outline-secondary" id="btnDecreaseNights">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" id="nightsInput" class="form-control text-center" value="@Model.Nights" min="1" max="30" readonly />
+                                <button type="button" class="btn btn-outline-secondary" id="btnIncreaseNights">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Giá/đêm: <span id="pricePerNight">@Model.PricePerNight.ToString("N0")</span> VNĐ</small>
+                        </div>
                     </div>
 
                     <hr />
@@ -153,9 +164,10 @@
                             <div class="tab-content" id="paymentTabsContent">
                                 <!-- Online Payment -->
                                 <div class="tab-pane fade show active" id="online" role="tabpanel">
-                                    <form asp-action="ProcessPayment" method="post">
+                                    <form asp-action="ProcessPayment" method="post" id="onlinePaymentForm">
                                         <input type="hidden" name="bookingId" value="@Model.Id" />
                                         <input type="hidden" name="amount" value="@(Model.TotalAmount - Model.DiscountAmount)" />
+                                        <input type="hidden" name="nights" id="nightsOnline" value="@Model.Nights" />
                                         
                                         <div class="mb-3">
                                             <label class="form-label fw-bold">Chọn phương thức:</label>
@@ -191,9 +203,10 @@
 
                                 <!-- Pay at Property -->
                                 <div class="tab-pane fade" id="property" role="tabpanel">
-                                    <form asp-action="ProcessPayment" method="post">
+                                    <form asp-action="ProcessPayment" method="post" id="propertyPaymentForm">
                                         <input type="hidden" name="bookingId" value="@Model.Id" />
                                         <input type="hidden" name="amount" value="@(Model.TotalAmount - Model.DiscountAmount)" />
+                                        <input type="hidden" name="nights" id="nightsProperty" value="@Model.Nights" />
                                         <input type="hidden" name="paymentMethod" value="PayAtProperty" />
 
                                         <div class="alert alert-warning">
@@ -229,5 +242,94 @@
     <script>
         // Auto-scroll to top on page load
         window.scrollTo(0, 0);
+        
+        // Nights selection functionality
+        (function() {
+            const checkInDate = new Date('@Model.CheckInDate.ToString("yyyy-MM-dd")');
+            const pricePerNight = @Model.PricePerNight;
+            const originalNights = @Model.Nights;
+            let currentNights = originalNights;
+            
+            const nightsInput = document.getElementById('nightsInput');
+            const btnIncrease = document.getElementById('btnIncreaseNights');
+            const btnDecrease = document.getElementById('btnDecreaseNights');
+            const displayCheckOutDate = document.getElementById('displayCheckOutDate');
+            
+            function formatDate(date) {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            
+            function formatCurrency(amount) {
+                return amount.toLocaleString('vi-VN');
+            }
+            
+            function updateDisplay() {
+                nightsInput.value = currentNights;
+                
+                // Calculate new checkout date
+                const newCheckOutDate = new Date(checkInDate);
+                newCheckOutDate.setDate(newCheckOutDate.getDate() + currentNights);
+                displayCheckOutDate.textContent = formatDate(newCheckOutDate);
+                
+                // Calculate new total
+                const newTotal = pricePerNight * currentNights;
+                const discountAmount = @Model.DiscountAmount;
+                const finalAmount = newTotal - discountAmount;
+                
+                // Update total display
+                const totalAmountEl = document.querySelector('[id^="totalAmount"]') || 
+                    document.querySelectorAll('.text-muted.mb-0 h5')[0]?.closest('div')?.querySelector('h5');
+                document.querySelectorAll('.card-body h5.text-muted').forEach(el => {
+                    if (el.textContent.includes('VNĐ')) {
+                        el.textContent = formatCurrency(newTotal) + ' VNĐ';
+                    }
+                });
+                
+                // Update final amount display
+                document.querySelectorAll('.card-body h4.text-primary').forEach(el => {
+                    if (el.textContent.includes('VNĐ')) {
+                        el.textContent = formatCurrency(finalAmount > 0 ? finalAmount : 0) + ' VNĐ';
+                    }
+                });
+                
+                // Update hidden form inputs
+                document.querySelectorAll('input[name="amount"]').forEach(input => {
+                    input.value = finalAmount > 0 ? finalAmount : 0;
+                });
+                
+                // Update hidden nights inputs
+                document.querySelectorAll('input[name="nights"]').forEach(input => {
+                    input.value = currentNights;
+                });
+                
+                // Update payment button text
+                document.querySelectorAll('button[type="submit"]').forEach(btn => {
+                    if (btn.textContent.includes('Thanh Toán Ngay')) {
+                        btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Thanh Toán Ngay ' + formatCurrency(finalAmount > 0 ? finalAmount : 0) + ' VNĐ';
+                    }
+                });
+            }
+            
+            if (btnIncrease) {
+                btnIncrease.addEventListener('click', function() {
+                    if (currentNights < 30) {
+                        currentNights++;
+                        updateDisplay();
+                    }
+                });
+            }
+            
+            if (btnDecrease) {
+                btnDecrease.addEventListener('click', function() {
+                    if (currentNights > 1) {
+                        currentNights--;
+                        updateDisplay();
+                    }
+                });
+            }
+        })();
     </script>
 }

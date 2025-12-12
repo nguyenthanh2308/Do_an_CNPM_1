@@ -69,6 +69,10 @@ namespace HotelManagementSystem.Models.ViewModels.Booking
         [DataType(DataType.Currency)]
         public decimal FinalAmount => TotalAmount - DiscountAmount;
         
+        [Display(Name = "Giá/đêm")]
+        [DataType(DataType.Currency)]
+        public decimal PricePerNight { get; set; }
+        
         // Promotion Info
         public long? PromotionId { get; set; }
         

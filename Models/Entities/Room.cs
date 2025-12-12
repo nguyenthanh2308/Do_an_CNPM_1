@@ -34,6 +34,10 @@ namespace HotelManagementSystem.Models.Entities
         [Column("status")]
         public string Status { get; set; } = "Vacant";
 
+        [MaxLength(255)]
+        [Column("image_url")]
+        public string? ImageUrl { get; set; }
+
         [Required]
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
