@@ -1,7 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using HotelManagementSystem.Models.Entities;
+using HotelManagementSystem.Models.ViewModels.RoomVM;
 using HotelManagementSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -9,21 +13,24 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Route("Admin/[controller]/[action]")]
-    [Authorize(Roles = "Admin,Manager")] // Chỉ Admin và Manager được truy cập
+    [Authorize(Roles = "Admin,Manager")]
     public class RoomController : Controller
     {
         private readonly IRoomService _roomService;
         private readonly IHotelService _hotelService;
         private readonly IRoomTypeService _roomTypeService;
+        private readonly IWebHostEnvironment _environment;
 
         public RoomController(
             IRoomService roomService,
             IHotelService hotelService,
-            IRoomTypeService roomTypeService)
+            IRoomTypeService roomTypeService,
+            IWebHostEnvironment environment)
         {
             _roomService = roomService;
             _hotelService = hotelService;
             _roomTypeService = roomTypeService;
+            _environment = environment;
         }
 
         // GET: Admin/Room/Index
@@ -31,7 +38,7 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
         public async Task<IActionResult> Index(long? hotelId, long? roomTypeId)
         {
             var rooms = await _roomService.GetAllAsync(hotelId, roomTypeId);
-            return View(rooms);   // View mạnh kiểu List<Room>
+            return View(rooms);
         }
 
         // GET: Admin/Room/Create
@@ -40,9 +47,9 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
         {
             await LoadDropdownsAsync();
             
-            var model = new Room
+            var model = new RoomViewModel
             {
-                Status = "Vacant" // mặc định
+                Status = "Vacant"
             };
             return View(model);
         }
@@ -50,11 +57,11 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
         // POST: Admin/Room/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            [Bind("HotelId,RoomTypeId,Number,Floor,Status")] Room model)
+        public async Task<IActionResult> Create(RoomViewModel model)
         {
-            ModelState.Remove("Hotel");
-            ModelState.Remove("RoomType");
+            ModelState.Remove("ImageFile");
+            ModelState.Remove("HotelName");
+            ModelState.Remove("RoomTypeName");
 
             if (!ModelState.IsValid)
             {
@@ -62,7 +69,25 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
                 return View(model);
             }
 
-            await _roomService.CreateAsync(model);
+            // Handle image upload
+            string? imageUrl = null;
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                imageUrl = await SaveImageAsync(model.ImageFile);
+            }
+
+            var room = new Room
+            {
+                HotelId = model.HotelId,
+                RoomTypeId = model.RoomTypeId,
+                Number = model.Number,
+                Floor = model.Floor,
+                Status = model.Status,
+                ImageUrl = imageUrl,
+                CreatedAt = DateTime.Now
+            };
+
+            await _roomService.CreateAsync(room);
             TempData["SuccessMessage"] = $"Đã tạo phòng {model.Number} thành công!";
             return RedirectToAction(nameof(Index));
         }
@@ -77,23 +102,35 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
                 return NotFound();
             }
 
+            var model = new RoomViewModel
+            {
+                Id = room.Id,
+                HotelId = room.HotelId,
+                RoomTypeId = room.RoomTypeId,
+                Number = room.Number,
+                Floor = room.Floor,
+                Status = room.Status,
+                ImageUrl = room.ImageUrl,
+                CreatedAt = room.CreatedAt
+            };
+
             await LoadDropdownsAsync(room.HotelId, room.RoomTypeId);
-            return View(room);
+            return View(model);
         }
 
         // POST: Admin/Room/Edit/5
         [HttpPost("{id:long}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(long id,
-            [Bind("Id,HotelId,RoomTypeId,Number,Floor,Status")] Room model)
+        public async Task<IActionResult> Edit(long id, RoomViewModel model)
         {
             if (id != model.Id)
             {
                 return BadRequest();
             }
 
-            ModelState.Remove("Hotel");
-            ModelState.Remove("RoomType");
+            ModelState.Remove("ImageFile");
+            ModelState.Remove("HotelName");
+            ModelState.Remove("RoomTypeName");
 
             if (!ModelState.IsValid)
             {
@@ -101,7 +138,25 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
                 return View(model);
             }
 
-            var updated = await _roomService.UpdateAsync(model);
+            // Handle image upload
+            string? imageUrl = model.ImageUrl;
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                imageUrl = await SaveImageAsync(model.ImageFile);
+            }
+
+            var room = new Room
+            {
+                Id = model.Id,
+                HotelId = model.HotelId,
+                RoomTypeId = model.RoomTypeId,
+                Number = model.Number,
+                Floor = model.Floor,
+                Status = model.Status,
+                ImageUrl = imageUrl
+            };
+
+            var updated = await _roomService.UpdateAsync(room);
             if (updated == null)
             {
                 return NotFound();
@@ -124,6 +179,26 @@ namespace HotelManagementSystem.Areas.Admin.Controllers
 
             TempData["SuccessMessage"] = "Đã xóa phòng thành công!";
             return RedirectToAction(nameof(Index));
+        }
+
+        // Helper method to save image
+        private async Task<string> SaveImageAsync(Microsoft.AspNetCore.Http.IFormFile imageFile)
+        {
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "rooms");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(imageFile.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(fileStream);
+            }
+
+            return $"/uploads/rooms/{uniqueFileName}";
         }
 
         // Helper method to load dropdowns

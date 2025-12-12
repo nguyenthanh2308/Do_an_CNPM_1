@@ -1,4 +1,4 @@
-@model HotelManagementSystem.Models.Entities.Room
+@model HotelManagementSystem.Models.ViewModels.RoomVM.RoomViewModel
 
 @{
     ViewData["Title"] = "Tạo Phòng Mới";
@@ -14,7 +14,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form asp-area="Admin" asp-action="Create" method="post">
+                    <form asp-area="Admin" asp-action="Create" method="post" enctype="multipart/form-data">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                         <div class="row">
@@ -58,23 +58,25 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Status" class="form-label">
-                                <i class="fas fa-info-circle"></i> Trạng Thái <span class="text-danger">*</span>
-                            </label>
-                            <select asp-for="Status" class="form-select" asp-items="@ViewBag.StatusList">
-                                <option value="">-- Chọn trạng thái --</option>
-                            </select>
-                            <span asp-validation-for="Status" class="text-danger"></span>
-                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Status" class="form-label">
+                                    <i class="fas fa-info-circle"></i> Trạng Thái <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="Status" class="form-select" asp-items="@ViewBag.StatusList">
+                                    <option value="">-- Chọn trạng thái --</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
 
-                        <div class="mb-3">
-                            <label asp-for="ImageUrl" class="form-label">
-                                <i class="fas fa-image"></i> Hình Ảnh (URL)
-                            </label>
-                            <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/room-image.jpg" />
-                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
-                            <small class="form-text text-muted">Nhập URL hình ảnh của phòng. Để trống sẽ dùng hình mặc định từ Loại phòng.</small>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ImageFile" class="form-label">
+                                    <i class="fas fa-image"></i> Hình ảnh phòng
+                                </label>
+                                <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" />
+                                <span asp-validation-for="ImageFile" class="text-danger"></span>
+                                <small class="form-text text-muted">Chấp nhận: .jpg, .jpeg, .png, .gif (tối đa 5MB)</small>
+                            </div>
                         </div>
 
                         <div class="alert alert-info" role="alert">
