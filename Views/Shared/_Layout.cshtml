@@ -30,10 +30,10 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Giới thiệu</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Giới thiệu</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Booking" asp-action="Rooms">Phòng</a>
+                            <a class="nav-link" asp-area="" asp-controller="Booking" asp-action="Rooms">Phòng</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#contact-footer">Liên hệ</a>
@@ -58,6 +58,9 @@
                                         </a></li>
                                         <li><a class="dropdown-item" asp-area="Admin" asp-controller="Room" asp-action="Index">
                                             <i class="fas fa-door-open me-2"></i>Quản lý phòng
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Booking" asp-action="Rooms">
+                                            <i class="fas fa-eye me-2"></i>Xem phòng (khách hàng)
                                         </a></li>
                                         <li><a class="dropdown-item" asp-area="Admin" asp-controller="Amenity" asp-action="Index">
                                             <i class="fas fa-star me-2"></i>Quản lý tiện nghi
@@ -122,7 +125,7 @@
                     
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item me-2">
-                             <a class="nav-link" asp-controller="Booking" asp-action="Search">
+                             <a class="nav-link" asp-area="" asp-controller="Booking" asp-action="Search">
                                 <i class="fas fa-search"></i>
                             </a>
                         </li>
