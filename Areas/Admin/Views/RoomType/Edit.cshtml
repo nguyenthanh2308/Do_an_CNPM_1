@@ -33,7 +33,7 @@
                             <label asp-for="HotelId" class="form-label">
                                 <i class="fas fa-hotel me-2"></i>@Html.DisplayNameFor(m => m.HotelId)
                             </label>
-                            <select asp-for="HotelId" asp-items="Model.Hotels" class="form-select">
+                            <select asp-for="HotelId" asp-items="@ViewBag.Hotels" class="form-select">
                                 <option value="">-- Chọn khách sạn --</option>
                             </select>
                             <span asp-validation-for="HotelId" class="text-danger"></span>
