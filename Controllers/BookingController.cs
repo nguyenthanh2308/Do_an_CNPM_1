@@ -27,10 +27,23 @@ namespace HotelManagementSystem.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Rooms()
         {
+            var today = DateTime.Today;
+            
             var rooms = await _context.Rooms
                 .Include(r => r.Hotel)
                 .Include(r => r.RoomType)
                 .Where(r => r.Status != "Maintenance")
+                .ToListAsync();
+
+            // Get all active bookings (Pending, Confirmed, CheckedIn) that overlap with today
+            var activeBookingRoomIds = await _context.BookingRooms
+                .Include(br => br.Booking)
+                .Where(br => br.Booking.Status != "Cancelled" 
+                          && br.Booking.Status != "CheckedOut"
+                          && br.Booking.CheckInDate <= today
+                          && br.Booking.CheckOutDate > today)
+                .Select(br => br.RoomId)
+                .Distinct()
                 .ToListAsync();
 
             var viewModels = rooms.Select(r => new HotelManagementSystem.Models.ViewModels.Booking.RoomViewModel
@@ -40,6 +53,7 @@ namespace HotelManagementSystem.Controllers
                 Hotel = new HotelManagementSystem.Models.ViewModels.Hotel.HotelViewModel { Name = r.Hotel.Name },
                 RoomType = new HotelManagementSystem.Models.ViewModels.RoomType.RoomTypeViewModel 
                 { 
+                    Id = r.RoomType.Id,
                     Name = r.RoomType.Name,
                     Description = r.RoomType.Description,
                     BasePrice = r.RoomType.BasePrice,
@@ -47,7 +61,8 @@ namespace HotelManagementSystem.Controllers
                     DefaultImageUrl = r.RoomType.DefaultImageUrl
                 },
                 Floor = (int)(r.Floor ?? 0),
-                Status = r.Status,
+                // Set status based on active bookings
+                Status = activeBookingRoomIds.Contains(r.Id) ? "Occupied" : (r.Status == "Cleaning" ? "Cleaning" : "Vacant"),
                 Price = r.RoomType.BasePrice
             }).ToList();
 
@@ -334,7 +349,7 @@ namespace HotelManagementSystem.Controllers
                     }
                 }
 
-                var result = await _bookingService.CancelBookingAsync(id, "Kh�ch h�ng h?y qua web");
+                var result = await _bookingService.CancelBookingAsync(id, "Khách hàng hủy qua web");
                 if (result.Success)
                 {
                     TempData["SuccessMessage"] = result.Message;
@@ -346,7 +361,7 @@ namespace HotelManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "L?i khi h?y: " + ex.Message;
+                TempData["ErrorMessage"] = "Lỗi khi hủy: " + ex.Message;
             }
 
             return RedirectToAction("MyBookings", "Customer");
@@ -368,7 +383,7 @@ namespace HotelManagementSystem.Controllers
 
             if (booking.Status != "Confirmed" && booking.Status != "Pending" && booking.Status != "AwaitingPayment")
             {
-                TempData["ErrorMessage"] = "Ch? c� th? ch?nh s?a booking dang ch? ho?c d� x�c nh?n.";
+                TempData["ErrorMessage"] = "Chưa thể chỉnh sửa booking đang chờ hoặc đã xác nhận.";
                 return RedirectToAction("MyBookings", "Customer");
             }
 
@@ -444,7 +459,7 @@ namespace HotelManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "L?i: " + ex.Message;
+                TempData["ErrorMessage"] = "Lỗi: " + ex.Message;
             }
 
             return RedirectToAction("Payment", new { id = bookingId });
@@ -472,16 +487,16 @@ namespace HotelManagementSystem.Controllers
                 
                 if (success)
                 {
-                    TempData["SuccessMessage"] = "�� x�a m� khuy?n m�i";
+                    TempData["SuccessMessage"] = "Xóa mã khuyến mãi thành công";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Kh�ng th? x�a m� khuy?n m�i";
+                    TempData["ErrorMessage"] = "Không thể xoá mã khuyến mãi";
                 }
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "L?i: " + ex.Message;
+                TempData["ErrorMessage"] = "Lỗi: " + ex.Message;
             }
 
             return RedirectToAction("Payment", new { id = bookingId });
