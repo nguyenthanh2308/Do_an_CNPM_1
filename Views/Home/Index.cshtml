@@ -1,63 +1,420 @@
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Giới Thiệu";
 }
 
-<div class="container mt-5">
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold text-primary">
-            <i class="fas fa-hotel"></i> Hotel Management System
-        </h1>
-        <p class="lead text-muted">Trải nghiệm kỳ nghỉ tuyệt vời nhất của bạn</p>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80" class="img-fluid rounded shadow-lg mb-4" alt="Hotel Image">
-            <p class="lead">Chào mừng đến với hệ thống quản lý khách sạn hiện đại và tiện nghi.</p>
+<!-- Hero Section -->
+<section class="position-relative" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: -1rem;">
+    <div class="container py-5">
+        <div class="row align-items-center" style="min-height: 450px;">
+            <div class="col-lg-6 text-white py-5">
+                <h1 class="display-3 fw-bold mb-4">
+                    <i class="fas fa-hotel me-3"></i>Hotel Management
+                </h1>
+                <p class="lead mb-4 opacity-90">
+                    Hệ thống quản lý khách sạn hiện đại - Trải nghiệm đặt phòng trực tuyến dễ dàng, nhanh chóng và an toàn.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a asp-area="" asp-controller="Booking" asp-action="Rooms" class="btn btn-light btn-lg px-4 rounded-pill shadow">
+                        <i class="fas fa-bed me-2"></i>Xem Phòng
+                    </a>
+                    <a asp-area="" asp-controller="Booking" asp-action="Search" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+                        <i class="fas fa-search me-2"></i>Tìm Kiếm
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center py-5">
+                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                     alt="Hotel" class="img-fluid rounded-4 shadow-lg hero-img" style="max-height: 400px; object-fit: cover;">
+            </div>
         </div>
     </div>
+</section>
 
-
-    <div class="row mt-5 justify-content-center">
-        <div class="col-md-8 text-center">
-            <h2 class="mb-4">Dịch vụ đẳng cấp quốc tế</h2>
-            <p class="text-muted mb-5">Hệ thống phòng nghỉ sang trọng, tiện nghi hiện đại cùng đội ngũ nhân viên chuyên nghiệp.</p>
-            
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <i class="fas fa-wifi fa-2x text-primary mb-3"></i>
-                            <h5 class="card-title">Wifi Miễn Phí</h5>
-                            <p class="card-text small">Kết nối tốc độ cao mọi lúc mọi nơi.</p>
+<!-- About Section -->
+<section class="py-5 bg-light fade-in">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <span class="badge bg-primary px-3 py-2 mb-3">VỀ CHÚNG TÔI</span>
+                <h2 class="display-5 fw-bold mb-4">Hệ Thống Quản Lý Khách Sạn Hiện Đại</h2>
+                <p class="lead text-muted mb-4">
+                    Chúng tôi mang đến giải pháp quản lý khách sạn toàn diện, từ đặt phòng trực tuyến, 
+                    quản lý thanh toán đến báo cáo doanh thu chi tiết. Với giao diện thân thiện và 
+                    tính năng mạnh mẽ, hệ thống giúp tối ưu hóa hoạt động kinh doanh của bạn.
+                </p>
+                <div class="row g-4 mt-4">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                            <span class="fw-semibold">Đặt phòng 24/7</span>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <i class="fas fa-swimming-pool fa-2x text-primary mb-3"></i>
-                            <h5 class="card-title">Hồ Bơi</h5>
-                            <p class="card-text small">Thư giãn tại hồ bơi vô cực.</p>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                            <span class="fw-semibold">Thanh toán bảo mật</span>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <i class="fas fa-utensils fa-2x text-primary mb-3"></i>
-                            <h5 class="card-title">Nhà Hàng</h5>
-                            <p class="card-text small">Ẩm thực đa dạng từ Á sang Âu.</p>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                            <span class="fw-semibold">Hỗ trợ đa nền tảng</span>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
 
-            <div class="mt-5">
-                <a asp-controller="Booking" asp-action="Rooms" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
-                    <i class="fas fa-calendar-check me-2"></i>Đặt Phòng Ngay
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-primary px-3 py-2 mb-3">TÍNH NĂNG</span>
+            <h2 class="display-5 fw-bold">Tính Năng Nổi Bật</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex p-4 mb-4">
+                            <i class="fas fa-calendar-check fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Đặt Phòng Online</h5>
+                        <p class="card-text text-muted small">Đặt phòng nhanh chóng mọi lúc mọi nơi với quy trình đơn giản.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-4 mb-4">
+                            <i class="fas fa-credit-card fa-2x text-success"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Thanh Toán Bảo Mật</h5>
+                        <p class="card-text text-muted small">Nhiều phương thức thanh toán an toàn, bảo mật tuyệt đối.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex p-4 mb-4">
+                            <i class="fas fa-gift fa-2x text-warning"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Khuyến Mãi Hấp Dẫn</h5>
+                        <p class="card-text text-muted small">Nhiều ưu đãi và mã giảm giá độc quyền cho khách hàng.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="rounded-circle bg-info bg-opacity-10 d-inline-flex p-4 mb-4">
+                            <i class="fas fa-headset fa-2x text-info"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Hỗ Trợ 24/7</h5>
+                        <p class="card-text text-muted small">Đội ngũ hỗ trợ khách hàng luôn sẵn sàng phục vụ bạn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-6 col-lg-3">
+                <div class="p-4">
+                    <i class="fas fa-hotel fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-0 counter">5+</h2>
+                    <p class="text-white-50 mb-0">Khách Sạn</p>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-4">
+                    <i class="fas fa-door-open fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-0 counter">100+</h2>
+                    <p class="text-white-50 mb-0">Phòng</p>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-4">
+                    <i class="fas fa-calendar-check fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-0 counter">500+</h2>
+                    <p class="text-white-50 mb-0">Lượt Đặt Phòng</p>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-4">
+                    <i class="fas fa-users fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-4 fw-bold mb-0 counter">1000+</h2>
+                    <p class="text-white-50 mb-0">Khách Hàng</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hotels Section -->
+<section class="py-5 fade-in">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-primary px-3 py-2 mb-3">KHÁCH SẠN</span>
+            <h2 class="display-5 fw-bold">Hệ Thống Khách Sạn</h2>
+            <p class="text-muted">Khám phá các khách sạn đẳng cấp trong hệ thống của chúng tôi</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                         class="card-img-top" alt="Hotel 1" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">
+                            <i class="fas fa-hotel text-primary me-2"></i>Grand Luxury Hotel
+                        </h5>
+                        <p class="card-text text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt text-danger me-2"></i>Quận 1, TP. Hồ Chí Minh
+                        </p>
+                        <p class="card-text">
+                            <span class="text-primary fw-bold">Từ 800,000 VNĐ</span>
+                            <span class="text-muted small">/ đêm</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                         class="card-img-top" alt="Hotel 2" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">
+                            <i class="fas fa-hotel text-primary me-2"></i>Seaside Resort
+                        </h5>
+                        <p class="card-text text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt text-danger me-2"></i>Vũng Tàu, Bà Rịa
+                        </p>
+                        <p class="card-text">
+                            <span class="text-primary fw-bold">Từ 1,200,000 VNĐ</span>
+                            <span class="text-muted small">/ đêm</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                         class="card-img-top" alt="Hotel 3" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">
+                            <i class="fas fa-hotel text-primary me-2"></i>Mountain View Hotel
+                        </h5>
+                        <p class="card-text text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt text-danger me-2"></i>Đà Lạt, Lâm Đồng
+                        </p>
+                        <p class="card-text">
+                            <span class="text-primary fw-bold">Từ 950,000 VNĐ</span>
+                            <span class="text-muted small">/ đêm</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-dark text-white fade-in">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mb-4 mb-lg-0">
+                <h2 class="display-6 fw-bold mb-2">Sẵn sàng đặt phòng?</h2>
+                <p class="lead text-white-50 mb-0">Tìm kiếm và đặt phòng khách sạn phù hợp với bạn ngay hôm nay!</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a asp-area="" asp-controller="Booking" asp-action="Rooms" class="btn btn-primary btn-lg px-5 rounded-pill shadow pulse-btn">
+                    <i class="fas fa-bed me-2"></i>Xem Phòng Ngay
                 </a>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<style>
+    /* Fade In Animation */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Slide In Left */
+    .slide-in-left {
+        opacity: 0;
+        transform: translateX(-50px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .slide-in-left.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Slide In Right */
+    .slide-in-right {
+        opacity: 0;
+        transform: translateX(50px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .slide-in-right.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Scale In */
+    .scale-in {
+        opacity: 0;
+        transform: scale(0.8);
+        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+    .scale-in.visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* Hover Lift Effect */
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+    }
+
+    /* Card Hover */
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 1rem 2rem rgba(0,0,0,.15) !important;
+    }
+
+    /* Button Pulse */
+    .pulse-btn {
+        animation: pulse 2s infinite;
+    }
+    @@keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(102, 126, 234, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
+    }
+
+    /* Hero Image Float */
+    .hero-img {
+        animation: float 3s ease-in-out infinite;
+    }
+    @@keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+    }
+
+    /* Counter Animation */
+    .counter {
+        display: inline-block;
+    }
+
+    /* Icon Bounce */
+    .icon-bounce:hover i {
+        animation: bounce 0.5s ease;
+    }
+    @@keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    /* Gradient Text */
+    .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Stats Number Glow */
+    .stats-section .display-4 {
+        text-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+
+    /* Feature Card Icon Rotate */
+    .card:hover .rounded-circle i {
+        transition: transform 0.3s ease;
+        transform: rotate(10deg) scale(1.1);
+    }
+
+    /* Smooth Scroll */
+    html {
+        scroll-behavior: smooth;
+    }
+</style>
+
+@section Scripts {
+<script>
+    // Scroll Animation Observer
+    document.addEventListener('DOMContentLoaded', function() {
+        const fadeElements = document.querySelectorAll('.fade-in, .slide-in-left, .slide-in-right, .scale-in');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        fadeElements.forEach(el => observer.observe(el));
+
+        // Counter Animation for Stats
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = counter.innerText;
+            const hasPlus = target.includes('+');
+            const numericValue = parseInt(target.replace(/\D/g, ''));
+            
+            let current = 0;
+            const increment = numericValue / 50;
+            const duration = 2000;
+            const stepTime = duration / 50;
+
+            const updateCounter = () => {
+                current += increment;
+                if (current < numericValue) {
+                    counter.innerText = Math.ceil(current) + (hasPlus ? '+' : '');
+                    setTimeout(updateCounter, stepTime);
+                } else {
+                    counter.innerText = numericValue + (hasPlus ? '+' : '');
+                }
+            };
+
+            // Start when visible
+            const counterObserver = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    updateCounter();
+                    counterObserver.disconnect();
+                }
+            });
+            counterObserver.observe(counter);
+        });
+    });
+</script>
+}
