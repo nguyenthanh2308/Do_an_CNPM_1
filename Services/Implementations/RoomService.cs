@@ -99,6 +99,7 @@ namespace HotelManagementSystem.Services.Implementations
             existing.Number = room.Number;
             existing.Floor = room.Floor;
             existing.Status = room.Status;
+            existing.ImageUrl = room.ImageUrl;
 
             await _dbContext.SaveChangesAsync();
             return existing;
