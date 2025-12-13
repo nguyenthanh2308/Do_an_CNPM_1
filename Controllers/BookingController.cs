@@ -50,6 +50,7 @@ namespace HotelManagementSystem.Controllers
             {
                 Id = r.Id,
                 Number = r.Number,
+                ImageUrl = r.ImageUrl,
                 Hotel = new HotelManagementSystem.Models.ViewModels.Hotel.HotelViewModel { Name = r.Hotel.Name },
                 RoomType = new HotelManagementSystem.Models.ViewModels.RoomType.RoomTypeViewModel 
                 { 

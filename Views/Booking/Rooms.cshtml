@@ -16,8 +16,15 @@
             <div class="col">
                 <div class="card h-100 shadow-sm border-0 room-card">
                     <div class="position-relative">
-                        <img src="@(string.IsNullOrEmpty(room.RoomType.DefaultImageUrl) ? "https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" : room.RoomType.DefaultImageUrl)" 
-                             class="card-img-top" alt="@room.RoomType.Name" style="height: 250px; object-fit: cover;">
+                        @{
+                            var imageUrl = !string.IsNullOrEmpty(room.ImageUrl) 
+                                ? room.ImageUrl 
+                                : (!string.IsNullOrEmpty(room.RoomType?.DefaultImageUrl) 
+                                    ? room.RoomType.DefaultImageUrl 
+                                    : "/images/default-room.jpg");
+                        }
+                        <img src="@imageUrl" 
+                             class="card-img-top" alt="@room.RoomType?.Name - @room.Number" style="height: 250px; object-fit: cover;">
                         <span class="position-absolute top-0 end-0 m-2 badge @(room.Status == "Vacant" ? "bg-success" : "bg-danger")">
                             @(room.Status == "Vacant" ? "Còn trống" : "Đã đặt")
                         </span>

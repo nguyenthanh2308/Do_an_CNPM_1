@@ -11,6 +11,7 @@ namespace HotelManagementSystem.Models.ViewModels.Booking
         public int Floor { get; set; }
         public string Status { get; set; } = null!;
         public decimal Price { get; set; }
+        public string? ImageUrl { get; set; }
 
         public HotelViewModel Hotel { get; set; } = null!;
         public RoomTypeViewModel RoomType { get; set; } = null!;
