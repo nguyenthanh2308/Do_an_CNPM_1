@@ -48,7 +48,7 @@
                                asp-route-roomId="@room.Id"
                                asp-route-checkInDate="@DateTime.Today.ToString("yyyy-MM-dd")"
                                asp-route-checkOutDate="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
-                               asp-route-numberOfGuests="2"
+                               asp-route-numberOfGuests="@room.RoomType.Capacity"
                                class="btn btn-outline-info flex-fill">
                                 <i class="fas fa-info-circle me-1"></i>Chi tiết
                             </a>
@@ -60,7 +60,7 @@
                                     <input type="hidden" name="ratePlanId" value="0" />
                                     <input type="hidden" name="checkInDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
                                     <input type="hidden" name="checkOutDate" value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" />
-                                    <input type="hidden" name="numberOfGuests" value="2" />
+                                    <input type="hidden" name="numberOfGuests" value="@room.RoomType.Capacity" />
                                     <button type="submit" class="btn btn-primary w-100">
                                         <i class="fas fa-calendar-check me-1"></i>Đặt Ngay
                                     </button>

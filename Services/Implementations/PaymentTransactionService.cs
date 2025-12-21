@@ -170,18 +170,14 @@ namespace HotelManagementSystem.Services.Implementations
             var booking = await _context.Bookings.FindAsync(bookingId);
             if (booking == null) return (0, 0, 0);
 
+            // Total amount should match what user actually pays (no hidden tax/service charge)
             var totalAmount = booking.TotalAmount - booking.DiscountAmount;
-            
-            // Calculate tax and service charge (logic duplicated from InvoiceService - should be centralized)
-            var taxAmount = Math.Round(totalAmount * 0.1m, 0);
-            var serviceCharge = Math.Round(totalAmount * 0.05m, 0);
-            var finalTotal = totalAmount + taxAmount + serviceCharge;
 
             var paidAmount = await _context.Payments
                 .Where(p => p.BookingId == bookingId && p.Status == "Paid")
                 .SumAsync(p => p.Amount);
 
-            return (finalTotal, paidAmount, finalTotal - paidAmount);
+            return (totalAmount, paidAmount, totalAmount - paidAmount);
         }
 
         public async Task<bool> MarkAsFailedAsync(long paymentId)

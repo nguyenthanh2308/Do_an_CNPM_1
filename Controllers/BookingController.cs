@@ -563,6 +563,9 @@ namespace HotelManagementSystem.Controllers
                     }
                     
                     amount = bookingEntity.TotalAmount - bookingEntity.DiscountAmount;
+                    
+                    // CRITICAL: Save the updated booking amounts to database BEFORE creating payment/invoice
+                    await _context.SaveChangesAsync();
                 }
 
                 var existingInvoice = await _context.Invoices.FirstOrDefaultAsync(i => i.BookingId == bookingId);
@@ -823,6 +826,63 @@ namespace HotelManagementSystem.Controllers
             };
 
             return View(viewModel);
+        }
+
+        // POST: /Booking/CancelPendingBooking
+        // Cancel and DELETE a pending booking from payment page
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelPendingBooking(long id)
+        {
+            try
+            {
+                var booking = await _context.Bookings
+                    .Include(b => b.BookingRooms)
+                    .FirstOrDefaultAsync(b => b.Id == id);
+                    
+                if (booking == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy booking.";
+                    return RedirectToAction("Search");
+                }
+
+                // Verify ownership
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim != null)
+                {
+                    long userId = long.Parse(userIdClaim.Value);
+                    var guest = await _context.Guests.FirstOrDefaultAsync(g => g.UserId == userId);
+                    if (guest == null || booking.GuestId != guest.Id)
+                    {
+                        return Forbid();
+                    }
+                }
+
+                // Only allow deletion of Pending bookings (not yet paid)
+                if (booking.Status != "Pending" || booking.PaymentStatus == "Paid")
+                {
+                    TempData["ErrorMessage"] = "Chỉ có thể hủy đặt phòng chưa thanh toán.";
+                    return RedirectToAction("Payment", new { id });
+                }
+
+                // Delete BookingRooms first (foreign key constraint)
+                if (booking.BookingRooms.Any())
+                {
+                    _context.BookingRooms.RemoveRange(booking.BookingRooms);
+                }
+                
+                // Delete Booking
+                _context.Bookings.Remove(booking);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Đã hủy đặt phòng. Thông tin đặt phòng đã bị xóa.";
+                return RedirectToAction("Search");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Lỗi khi hủy đặt phòng: {ex.Message}";
+                return RedirectToAction("Search");
+            }
         }
     }
 }

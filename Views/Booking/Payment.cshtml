@@ -226,11 +226,16 @@
                         </div>
                     </div>
 
-                    <!-- Back Button -->
+                    <!-- Back Button - Cancels booking -->
                     <div class="mt-3">
-                        <a asp-action="Search" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Quay Lại
-                        </a>
+                        <form asp-action="CancelPendingBooking" method="post" style="display: inline;" 
+                              onsubmit="return confirm('Bạn có chắc muốn quay lại? Đặt phòng sẽ bị hủy và xóa khỏi hệ thống.');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Quay Lại
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
