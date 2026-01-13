@@ -149,55 +149,68 @@ namespace HotelManagementSystem.Controllers
 
             long guestId = guest.Id;
 
-            var room = await _roomService.GetByIdAsync(roomId);
-            if (room == null)
+        // Load room with RoomType to get BasePrice
+        var room = await _context.Rooms
+            .Include(r => r.RoomType)
+            .FirstOrDefaultAsync(r => r.Id == roomId);
+            
+        if (room == null)
+        {
+            return NotFound();
+        }
+
+        long bookingId;
+
+        // If ratePlanId is 0 (from Search view), auto-select default RatePlan
+        if (ratePlanId == 0)
+        {
+            var validRatePlan = await _context.RatePlans
+                .FirstOrDefaultAsync(rp => rp.RoomTypeId == room.RoomTypeId 
+                                        && checkInDate >= rp.StartDate 
+                                        && checkOutDate <= rp.EndDate);
+            
+            if (validRatePlan != null)
             {
-                return NotFound();
+                ratePlanId = validRatePlan.Id;
             }
-
-            long bookingId;
-
-            // If ratePlanId is 0 (from Search view), auto-select default RatePlan
-            if (ratePlanId == 0)
+            else
             {
-                var validRatePlan = await _context.RatePlans
-                    .FirstOrDefaultAsync(rp => rp.RoomTypeId == room.RoomTypeId 
-                                            && checkInDate >= rp.StartDate 
-                                            && checkOutDate <= rp.EndDate);
-                
-                if (validRatePlan != null)
+                // Fallback: Pick any rate plan for that RoomType
+                var anyRatePlan = await _context.RatePlans
+                    .FirstOrDefaultAsync(rp => rp.RoomTypeId == room.RoomTypeId);
+                    
+                if (anyRatePlan != null) 
                 {
-                    ratePlanId = validRatePlan.Id;
-                }
-                else
-                {
-                    // Fallback: Pick any rate plan for that RoomType
-                    var anyRatePlan = await _context.RatePlans
-                        .FirstOrDefaultAsync(rp => rp.RoomTypeId == room.RoomTypeId);
-                        
-                    if (anyRatePlan != null) 
+                    // If it's an auto-generated RatePlan, update price to match current BasePrice
+                    if (anyRatePlan.Name == "Standard Rate (Auto)" && 
+                        room.RoomType?.BasePrice != null && 
+                        anyRatePlan.Price != room.RoomType.BasePrice)
                     {
-                        ratePlanId = anyRatePlan.Id;
-                    }
-                    else 
-                    {
-                        // Auto-create a default RatePlan if none exists
-                        var defaultRatePlan = new HotelManagementSystem.Models.Entities.RatePlan
-                        {
-                            RoomTypeId = room.RoomTypeId,
-                            Name = "Standard Rate (Auto)",
-                            Price = 1000000, 
-                            StartDate = DateTime.Today.AddYears(-1),
-                            EndDate = DateTime.Today.AddYears(1),
-                            Type = "Flexible",
-                            CreatedAt = DateTime.Now
-                        };
-                        _context.RatePlans.Add(defaultRatePlan);
+                        anyRatePlan.Price = room.RoomType.BasePrice;
                         await _context.SaveChangesAsync();
-                        ratePlanId = defaultRatePlan.Id;
                     }
+                    ratePlanId = anyRatePlan.Id;
+                }
+                else 
+                {
+                    // Auto-create a default RatePlan if none exists
+                    // Use RoomType.BasePrice instead of hardcoded value
+                    var defaultRatePlan = new HotelManagementSystem.Models.Entities.RatePlan
+                    {
+                        RoomTypeId = room.RoomTypeId,
+                        Name = "Standard Rate (Auto)",
+                        Price = room.RoomType?.BasePrice ?? 500000, // Use actual BasePrice or fallback
+                        StartDate = DateTime.Today.AddYears(-1),
+                        EndDate = DateTime.Today.AddYears(1),
+                        Type = "Flexible",
+                        CreatedAt = DateTime.Now
+                    };
+                    _context.RatePlans.Add(defaultRatePlan);
+                    await _context.SaveChangesAsync();
+                    ratePlanId = defaultRatePlan.Id;
                 }
             }
+        }
 
             try
             {
