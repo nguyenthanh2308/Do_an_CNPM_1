@@ -11,15 +11,15 @@ namespace HotelManagementSystem.Services.Interfaces
         /// <summary>
         /// Tạo booking mới:
         /// - Kiểm tra phòng còn trống (Confirmed/CheckedIn overlap).
-        /// - Áp dụng giá từ RatePlan.
+        /// - Áp dụng giá từ RatePlan (nếu có), nếu không thì dùng RoomType.BasePrice.
         /// - Lưu Booking + BookingRoom trong transaction.
-        /// - Trả về BookingId.
+        /// - Trả về Booking Id.
         /// </summary>
         Task<long> CreateBookingAsync(
             long hotelId,
             long guestId,
             long roomId,
-            long ratePlanId,
+            long? ratePlanId,  // Made nullable - fallback to BasePrice if null
             DateTime checkInDate,
             DateTime checkOutDate,
             int numberOfGuests);

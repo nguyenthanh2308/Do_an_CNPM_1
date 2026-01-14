@@ -26,7 +26,7 @@ namespace HotelManagementSystem.Services.Implementations
             long hotelId,
             long guestId,
             long roomId,
-            long ratePlanId,
+            long? ratePlanId,  // ← Made nullable
             DateTime checkInDate,
             DateTime checkOutDate,
             int numberOfGuests)
@@ -37,12 +37,12 @@ namespace HotelManagementSystem.Services.Implementations
             if (numberOfGuests <= 0)
                 throw new ArgumentException("Number of guests must be greater than zero.");
 
-            // Transaction d?m b?o c�c bu?c l� atomic
+            // Transaction đảm bảo các bước là atomic
             await using var tx = await _dbContext.Database.BeginTransactionAsync();
 
             try
             {
-                // 1. Load Room + RoomType (d? ki?m tra capacity)
+                // 1. Load Room + RoomType (để kiểm tra capacity)
                 var room = await _dbContext.Rooms
                     .Include(r => r.RoomType)
                     .FirstOrDefaultAsync(r => r.Id == roomId && r.HotelId == hotelId);
@@ -53,18 +53,19 @@ namespace HotelManagementSystem.Services.Implementations
                 if (room.RoomType == null || room.RoomType.Capacity < numberOfGuests)
                     throw new InvalidOperationException("Room capacity is not enough for the number of guests.");
 
-                // 2. Load RatePlan (d?m b?o c�ng RoomType v� c�n hi?u l?c theo ng�y)
-                var ratePlan = await _dbContext.RatePlans
-                    .FirstOrDefaultAsync(rp =>
-                        rp.Id == ratePlanId &&
-                        rp.RoomTypeId == room.RoomTypeId &&
-                        checkInDate.Date >= rp.StartDate &&
-                        checkOutDate.Date <= rp.EndDate);
+                // 2. Load RatePlan (nếu có) - OPTIONAL
+                RatePlan? ratePlan = null;
+                if (ratePlanId.HasValue)
+                {
+                    ratePlan = await _dbContext.RatePlans
+                        .FirstOrDefaultAsync(rp =>
+                            rp.Id == ratePlanId.Value &&
+                            rp.RoomTypeId == room.RoomTypeId &&
+                            checkInDate.Date >= rp.StartDate &&
+                            checkOutDate.Date <= rp.EndDate);
+                }
 
-                if (ratePlan == null)
-                    throw new InvalidOperationException("Rate plan not valid for given room type or dates.");
-
-                // 3. Ki?m tra l?i xem ph�ng c�n tr?ng kh�ng (recheck availability)
+                // 3. Kiểm tra lại xem phòng còn trống không (recheck availability)
                 var hasConflict = await _dbContext.BookingRooms
                     .AnyAsync(br =>
                         br.RoomId == roomId &&
@@ -77,25 +78,38 @@ namespace HotelManagementSystem.Services.Implementations
                 if (hasConflict)
                     throw new InvalidOperationException("Room is no longer available for the selected dates.");
 
-                // 4. T�nh to�n t?ng ti?n d?a tr�n RatePlan.Price
+                // 4. Tính toán tổng tiền
                 var nights = (checkOutDate.Date - checkInDate.Date).Days;
                 if (nights <= 0)
                     throw new InvalidOperationException("Invalid nights calculation.");
 
-                var pricePerNight = ratePlan.Price; // c� th? �p d?ng weekend_rule_json sau
+                // Fallback to BasePrice if no RatePlan
+                var pricePerNight = ratePlan?.Price ?? room.RoomType.BasePrice;
                 var totalAmount = pricePerNight * nights;
 
-                // 5. T?o Booking
-                var ratePlanSnapshot = new
-                {
-                    ratePlan.Id,
-                    ratePlan.Name,
-                    ratePlan.Type,
-                    ratePlan.Price,
-                    ratePlan.StartDate,
-                    ratePlan.EndDate,
-                    ratePlan.FreeCancelUntilHours
-                };
+                // 5. Tạo Booking
+                // Create snapshot object (avoid anonymous type mismatch)
+                object ratePlanSnapshot = ratePlan != null
+                    ? new
+                    {
+                        Id = (long?)ratePlan.Id,
+                        Name = ratePlan.Name,
+                        Type = ratePlan.Type,
+                        Price = ratePlan.Price,
+                        StartDate = (DateTime?)ratePlan.StartDate,
+                        EndDate = (DateTime?)ratePlan.EndDate,
+                        FreeCancelUntilHours = ratePlan.FreeCancelUntilHours
+                    }
+                    : (object)new
+                    {
+                        Id = (long?)null,
+                        Name = "Base Price",
+                        Type = "Standard",
+                        Price = room.RoomType.BasePrice,
+                        StartDate = (DateTime?)null,
+                        EndDate = (DateTime?)null,
+                        FreeCancelUntilHours = 24
+                    };
 
                 var booking = new Booking
                 {
@@ -103,14 +117,14 @@ namespace HotelManagementSystem.Services.Implementations
                     GuestId = guestId,
                     CheckInDate = checkInDate.Date,
                     CheckOutDate = checkOutDate.Date,
-                    Status = "Pending",     // ch? thanh to�n
+                    Status = "Pending",     // chờ thanh toán
                     TotalAmount = totalAmount,
-                    PaymentStatus = "Unpaid", // thanh to�n m� ph?ng sau
+                    PaymentStatus = "Unpaid", // thanh toán mô phỏng sau
                     RatePlanSnapshotJson = JsonSerializer.Serialize(ratePlanSnapshot),
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // G?n BookingRoom (1 booking � 1 room)
+                // G?n BookingRoom (1 booking  1 room)
                 var bookingRoom = new BookingRoom
                 {
                     Booking = booking,
