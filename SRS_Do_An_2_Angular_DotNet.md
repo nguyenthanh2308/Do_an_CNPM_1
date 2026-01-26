@@ -347,6 +347,13 @@ GET    /api/reports/popular-rooms  # Phòng được đặt nhiều
 
 ### 5.2 Database Tables
 
+#### **Hotels**
+- HotelId (PK)
+- Name, Address, PhoneNumber, Email
+- Description, Rating, Stars
+- CheckInTime, CheckOutTime
+- CreatedAt, UpdatedAt
+
 #### **Users**
 - UserId (PK)
 - Username, Email (Unique)
@@ -359,30 +366,47 @@ GET    /api/reports/popular-rooms  # Phòng được đặt nhiều
 - TokenId (PK)
 - UserId (FK → Users)
 - Token (hashed)
-- ExpiresAt
-- CreatedAt
+- ExpiresAt, CreatedAt
 
-#### **Bookings**
-- BookingId (PK)
-- GuestId (FK → Guests)
-- UserId (FK → Users - người tạo booking)
-- CheckInDate, CheckOutDate
-- TotalAmount, DiscountAmount
-- Status: Pending, Confirmed, CheckedIn, CheckedOut, Cancelled
-- CreatedAt, UpdatedAt
+#### **RoomTypes**
+- RoomTypeId (PK)
+- HotelId (FK → Hotels)
+- Name, Description
+- BasePrice, Capacity
+- ImageUrl
+- Active
+
+#### **Amenities**
+- AmenityId (PK)
+- Name, IconClass
+- Description
+
+#### **RoomTypeAmenities**
+- RoomTypeId (PK, FK → RoomTypes)
+- AmenityId (PK, FK → Amenities)
 
 #### **Rooms**
 - RoomId (PK)
-- RoomNumber (Unique)
+- HotelId (FK → Hotels)
+- RoomNumber (Unique per Hotel)
 - RoomTypeId (FK → RoomTypes)
 - Floor
 - Status: Available, Occupied, Cleaning, Maintenance
 
-#### **RoomTypes**
-- RoomTypeId (PK)
+#### **Promotions**
+- PromotionId (PK)
+- Code (Unique), Description
+- DiscountPercentage
+- ValidFrom, ValidTo
+- IsActive
+
+#### **RatePlans**
+- RatePlanId (PK)
+- RoomTypeId (FK → RoomTypes)
 - Name, Description
-- BasePrice, Capacity
-- ImageUrl
+- PricePerNight (Override BasePrice)
+- StartDate, EndDate
+- IsActive
 
 #### **Guests**
 - GuestId (PK)
@@ -391,24 +415,51 @@ GET    /api/reports/popular-rooms  # Phòng được đặt nhiều
 - Address, IdentityNumber
 - CreatedAt
 
+#### **Bookings**
+- BookingId (PK)
+- HotelId (FK → Hotels)
+- GuestId (FK → Guests)
+- UserId (FK → Users - người tạo booking)
+- CheckInDate, CheckOutDate
+- TotalAmount, DiscountAmount
+- Status: Pending, Confirmed, CheckedIn, CheckedOut, Cancelled
+- Notes
+- CreatedAt, UpdatedAt
+
+#### **BookingRooms**
+- BookingRoomId (PK)
+- BookingId (FK → Bookings)
+- RoomId (FK → Rooms, nullable - assigned at checkin)
+- RoomTypeId (FK → RoomTypes)
+- PricePerNight
+
 #### **Payments**
 - PaymentId (PK)
 - BookingId (FK → Bookings)
 - Amount
 - PaymentMethod: Cash, CreditCard, DebitCard, Transfer
 - Status: Pending, Completed, Failed, Refunded
+- TransactionId
 - PaymentDate
+
+#### **Invoices**
+- InvoiceId (PK)
+- BookingId (FK → Bookings, Unique)
+- InvoiceNumber (Unique)
+- TotalAmount, TaxAmount
+- IssueDate
+- DueDate, Status
 
 #### **HousekeepingTasks**
 - TaskId (PK)
 - RoomId (FK → Rooms)
-- AssignedTo (FK → Users)
+- BookingId (FK → Bookings, nullable)
+- AssignedToUserId (FK → Users)
 - TaskType: Cleaning, Maintenance, Inspection
 - Status: Pending, InProgress, Completed
 - Priority: Low, Medium, High
-- DueDate, CompletedAt
-
-*(Các bảng khác giữ nguyên: Amenities, RoomTypeAmenities, Promotions, RatePlans, Invoices)*
+- Notes
+- DueDate, CompletedAt, CreatedAt
 
 ---
 
