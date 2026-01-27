@@ -182,4 +182,42 @@ namespace HotelManagement.API.Repositories.Implementations
                 .ToListAsync();
         }
     }
+
+    public class BookingRoomRepository : GenericRepository<BookingRoom>, IBookingRoomRepository
+    {
+        public BookingRoomRepository(HotelDbContext context) : base(context) { }
+
+        public async Task<IEnumerable<BookingRoom>> GetByBookingIdAsync(long bookingId)
+        {
+            return await _dbSet
+                .Where(br => br.BookingId == bookingId)
+                .Include(br => br.Room)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<BookingRoom>> GetByRoomIdAsync(long roomId)
+        {
+            return await _dbSet
+                .Where(br => br.RoomId == roomId)
+                .Include(br => br.Booking)
+                .ToListAsync();
+        }
+    }
+
+    public class RefreshTokenRepository : GenericRepository<RefreshToken>, IRefreshTokenRepository
+    {
+        public RefreshTokenRepository(HotelDbContext context) : base(context) { }
+
+        public async Task<RefreshToken?> GetByTokenAsync(string token)
+        {
+            return await _dbSet.FirstOrDefaultAsync(rt => rt.Token == token);
+        }
+
+        public async Task<IEnumerable<RefreshToken>> GetByUserIdAsync(long userId)
+        {
+            return await _dbSet
+                .Where(rt => rt.UserId == userId)
+                .ToListAsync();
+        }
+    }
 }

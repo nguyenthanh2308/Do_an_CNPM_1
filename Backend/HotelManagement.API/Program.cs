@@ -34,7 +34,19 @@ builder.Services.AddScoped<IHousekeepingRepository, HousekeepingRepository>();
 builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<IRatePlanRepository, RatePlanRepository>();
 builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
+
+// Business Services
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IAuthService, HotelManagement.API.Services.Implementations.AuthService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IBookingService, HotelManagement.API.Services.Implementations.BookingService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IRoomService, HotelManagement.API.Services.Implementations.RoomService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IGuestService, HotelManagement.API.Services.Implementations.GuestService>();
+
 
 // JWT Authentication Configuration
 builder.Services.AddAuthentication(options =>

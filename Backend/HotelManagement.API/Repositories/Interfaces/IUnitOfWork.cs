@@ -18,6 +18,8 @@ namespace HotelManagement.API.Repositories.Interfaces
         IPromotionRepository Promotions { get; }
         IRatePlanRepository RatePlans { get; }
         IAmenityRepository Amenities { get; }
+        IBookingRoomRepository BookingRooms { get; }
+        IRefreshTokenRepository RefreshTokens { get; }
 
         // Transaction management
         Task<int> SaveChangesAsync();

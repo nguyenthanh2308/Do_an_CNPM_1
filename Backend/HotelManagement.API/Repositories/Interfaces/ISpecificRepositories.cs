@@ -54,4 +54,16 @@ namespace HotelManagement.API.Repositories.Interfaces
     {
         Task<IEnumerable<Amenity>> GetAmenitiesByRoomTypeAsync(long roomTypeId);
     }
+
+    public interface IBookingRoomRepository : IRepository<BookingRoom>
+    {
+        Task<IEnumerable<BookingRoom>> GetByBookingIdAsync(long bookingId);
+        Task<IEnumerable<BookingRoom>> GetByRoomIdAsync(long roomId);
+    }
+
+    public interface IRefreshTokenRepository : IRepository<RefreshToken>
+    {
+        Task<RefreshToken?> GetByTokenAsync(string token);
+        Task<IEnumerable<RefreshToken>> GetByUserIdAsync(long userId);
+    }
 }
