@@ -43,6 +43,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(Program));
 
 // Business Services
+// Core Priority 1 Services
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IAuthService, HotelManagement.API.Services.Implementations.AuthService>();
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IBookingService, HotelManagement.API.Services.Implementations.BookingService>();
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IRoomService, HotelManagement.API.Services.Implementations.RoomService>();
@@ -52,6 +53,14 @@ builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IAmenityServi
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IRoomTypeService, HotelManagement.API.Services.Implementations.RoomTypeService>();
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IPaymentService, HotelManagement.API.Services.Implementations.PaymentService>();
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IInvoiceService, HotelManagement.API.Services.Implementations.InvoiceService>();
+
+// Priority 2+ Services
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IHousekeepingService, HotelManagement.API.Services.Implementations.HousekeepingService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.INotificationService, HotelManagement.API.Services.Implementations.NotificationService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IPaymentTransactionService, HotelManagement.API.Services.Implementations.PaymentTransactionService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IPromotionService, HotelManagement.API.Services.Implementations.PromotionService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IRatePlanService, HotelManagement.API.Services.Implementations.RatePlanService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IReportService, HotelManagement.API.Services.Implementations.ReportService>();
 
 
 // JWT Authentication Configuration
