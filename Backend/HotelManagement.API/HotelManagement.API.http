@@ -4,3 +4,15 @@ GET {{HotelManagement.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# Test Database Connection
+GET {{HotelManagement.API_HostAddress}}/api/test/db-check
+Accept: application/json
+
+###
+
+# Test Repository Pattern & Unit of Work
+GET {{HotelManagement.API_HostAddress}}/api/test/repository-check
+Accept: application/json
+
+###

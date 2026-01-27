@@ -1,4 +1,6 @@
 using HotelManagement.API.Data;
+using HotelManagement.API.Repositories.Interfaces;
+using HotelManagement.API.Repositories.Implementations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +17,24 @@ builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<HotelDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+// Repository Pattern - Generic Repository
+builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+
+// Repository Pattern - Specific Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IGuestRepository, GuestRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IHousekeepingRepository, HousekeepingRepository>();
+builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
+builder.Services.AddScoped<IRatePlanRepository, RatePlanRepository>();
+builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // JWT Authentication Configuration
 builder.Services.AddAuthentication(options =>
