@@ -40,7 +40,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (UnauthorizedException ex)
             {
-                return Unauthorized(new ApiResponse
+                return Unauthorized(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -49,7 +49,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Login failed for username: {Username}", request.Username);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred during login"
@@ -76,7 +76,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message,
@@ -86,7 +86,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Registration failed for username: {Username}", request.Username);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred during registration"
@@ -113,7 +113,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (UnauthorizedException ex)
             {
-                return Unauthorized(new ApiResponse
+                return Unauthorized(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -122,7 +122,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Token refresh failed");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred during token refresh"
@@ -142,17 +142,17 @@ namespace HotelManagement.API.Controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
                 {
-                    return Unauthorized(new ApiResponse
+                    return Unauthorized(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "Invalid user token"
                     });
                 }
 
-                var user = await _authService.GetUserByIdAsync(userId);
+                var user = await _authService.GetCurrentUserAsync(userId);
                 if (user == null)
                 {
-                    return NotFound(new ApiResponse
+                    return NotFound(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "User not found"
@@ -168,7 +168,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get current user");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving user information"
@@ -181,32 +181,31 @@ namespace HotelManagement.API.Controllers
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
-        public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
+        public async Task<IActionResult> Logout()
         {
             try
             {
-                var success = await _authService.RevokeTokenAsync(request.RefreshToken);
-                if (success)
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
                 {
-                    return Ok(new ApiResponse
-                    {
-                        Success = true,
-                        Message = "Logout successful"
-                    });
-                }
-                else
-                {
-                    return BadRequest(new ApiResponse
+                    return Unauthorized(new ApiResponse<object>
                     {
                         Success = false,
-                        Message = "Invalid refresh token"
+                        Message = "Invalid user token"
                     });
                 }
+
+                await _authService.LogoutAsync(userId);
+                return Ok(new ApiResponse<object>
+                {
+                    Success = true,
+                    Message = "Logout successful"
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Logout failed");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred during logout"

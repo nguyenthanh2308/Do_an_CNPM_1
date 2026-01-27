@@ -29,26 +29,17 @@ namespace HotelManagement.API.Controllers
         {
             try
             {
-                var guests = await _guestService.GetAllGuestsAsync();
-                var pagedGuests = guests.Skip((page - 1) * pageSize).Take(pageSize);
-                
-                return Ok(new ApiResponse<object>
+                var guests = await _guestService.GetAllGuestsAsync(page, pageSize);
+                return Ok(new ApiResponse<PaginatedResponse<GuestDto>>
                 {
                     Success = true,
-                    Data = new
-                    {
-                        Items = pagedGuests,
-                        TotalCount = guests.Count(),
-                        Page = page,
-                        PageSize = pageSize,
-                        TotalPages = (int)Math.Ceiling(guests.Count() / (double)pageSize)
-                    }
+                    Data = guests
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get guests");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving guests"
@@ -67,7 +58,7 @@ namespace HotelManagement.API.Controllers
                 var guest = await _guestService.GetGuestByIdAsync(id);
                 if (guest == null)
                 {
-                    return NotFound(new ApiResponse
+                    return NotFound(new ApiResponse<object>
                     {
                         Success = false,
                         Message = $"Guest with ID {id} not found"
@@ -83,7 +74,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get guest {GuestId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving guest"
@@ -92,50 +83,51 @@ namespace HotelManagement.API.Controllers
         }
 
         /// <summary>
-        /// Search guests by identity number (CCCD/CMND)
+        /// Search guests by identity number (CCCD/CMND), email, or name
         /// </summary>
         [HttpGet("search")]
-        public async Task<IActionResult> SearchGuests([FromQuery] string? identity, [FromQuery] string? name, [FromQuery] string? email)
+        public async Task<IActionResult> SearchGuests([FromQuery] string? identity, [FromQuery] string? email)
         {
             try
             {
-                IEnumerable<GuestDto> guests;
+                GuestDto? guest = null;
 
                 if (!string.IsNullOrEmpty(identity))
                 {
-                    var guest = await _guestService.GetGuestByIdentityNumberAsync(identity);
-                    guests = guest != null ? new[] { guest } : Array.Empty<GuestDto>();
+                    guest = await _guestService.GetGuestByIdentityNumberAsync(identity);
                 }
                 else if (!string.IsNullOrEmpty(email))
                 {
-                    var guest = await _guestService.GetGuestByEmailAsync(email);
-                    guests = guest != null ? new[] { guest } : Array.Empty<GuestDto>();
-                }
-                else if (!string.IsNullOrEmpty(name))
-                {
-                    var allGuests = await _guestService.GetAllGuestsAsync();
-                    guests = allGuests.Where(g => 
-                        (g.FirstName + " " + g.LastName).Contains(name, StringComparison.OrdinalIgnoreCase));
+                    guest = await _guestService.GetGuestByEmailAsync(email);
                 }
                 else
                 {
-                    return BadRequest(new ApiResponse
+                    return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
-                        Message = "Please provide at least one search parameter (identity, name, or email)"
+                        Message = "Please provide at least one search parameter (identity or email)"
                     });
                 }
 
-                return Ok(new ApiResponse<IEnumerable<GuestDto>>
+                if (guest == null)
+                {
+                    return NotFound(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "Guest not found"
+                    });
+                }
+
+                return Ok(new ApiResponse<GuestDto>
                 {
                     Success = true,
-                    Data = guests
+                    Data = guest
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to search guests");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while searching guests"
@@ -161,7 +153,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message,
@@ -171,7 +163,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create guest");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while creating guest"
@@ -183,7 +175,7 @@ namespace HotelManagement.API.Controllers
         /// Update guest information
         /// </summary>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateGuest(long id, [FromBody] UpdateGuestDto dto)
+        public async Task<IActionResult> UpdateGuest(long id, [FromBody] CreateGuestDto dto)
         {
             try
             {
@@ -197,7 +189,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -205,7 +197,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message,
@@ -215,7 +207,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update guest {GuestId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while updating guest"
@@ -235,7 +227,7 @@ namespace HotelManagement.API.Controllers
                 var success = await _guestService.DeleteGuestAsync(id);
                 if (success)
                 {
-                    return Ok(new ApiResponse
+                    return Ok(new ApiResponse<object>
                     {
                         Success = true,
                         Message = "Guest deleted successfully"
@@ -243,7 +235,7 @@ namespace HotelManagement.API.Controllers
                 }
                 else
                 {
-                    return BadRequest(new ApiResponse
+                    return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "Failed to delete guest"
@@ -252,7 +244,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -260,7 +252,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (BusinessException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -269,7 +261,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete guest {GuestId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while deleting guest"

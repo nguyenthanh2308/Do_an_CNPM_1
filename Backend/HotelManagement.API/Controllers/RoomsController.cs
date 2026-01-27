@@ -21,16 +21,16 @@ namespace HotelManagement.API.Controllers
         }
 
         /// <summary>
-        /// Get all rooms
+        /// Get rooms by hotel with pagination
         /// </summary>
-        [HttpGet]
+        [HttpGet("hotel/{hotelId}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAllRooms()
+        public async Task<IActionResult> GetRoomsByHotel(long hotelId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
-                var rooms = await _roomService.GetAllRoomsAsync();
-                return Ok(new ApiResponse<IEnumerable<RoomDto>>
+                var rooms = await _roomService.GetRoomsByHotelAsync(hotelId, page, pageSize);
+                return Ok(new ApiResponse<PaginatedResponse<RoomDto>>
                 {
                     Success = true,
                     Data = rooms
@@ -38,8 +38,8 @@ namespace HotelManagement.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get rooms");
-                return StatusCode(500, new ApiResponse
+                _logger.LogError(ex, "Failed to get rooms for hotel {HotelId}", hotelId);
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving rooms"
@@ -58,7 +58,7 @@ namespace HotelManagement.API.Controllers
             {
                 if (checkIn < DateTime.Today)
                 {
-                    return BadRequest(new ApiResponse
+                    return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "Check-in date cannot be in the past"
@@ -67,14 +67,21 @@ namespace HotelManagement.API.Controllers
 
                 if (checkOut <= checkIn)
                 {
-                    return BadRequest(new ApiResponse
+                    return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "Check-out date must be after check-in date"
                     });
                 }
 
-                var rooms = await _roomService.GetAvailableRoomsAsync(hotelId, checkIn, checkOut);
+                var dto = new RoomAvailabilityDto
+                {
+                    HotelId = hotelId,
+                    CheckInDate = checkIn,
+                    CheckOutDate = checkOut
+                };
+
+                var rooms = await _roomService.GetAvailableRoomsAsync(dto);
                 return Ok(new ApiResponse<IEnumerable<RoomDto>>
                 {
                     Success = true,
@@ -84,7 +91,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get available rooms");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving available rooms"
@@ -104,7 +111,7 @@ namespace HotelManagement.API.Controllers
                 var room = await _roomService.GetRoomByIdAsync(id);
                 if (room == null)
                 {
-                    return NotFound(new ApiResponse
+                    return NotFound(new ApiResponse<object>
                     {
                         Success = false,
                         Message = $"Room with ID {id} not found"
@@ -120,7 +127,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get room {RoomId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving room"
@@ -140,24 +147,34 @@ namespace HotelManagement.API.Controllers
                 var validStatuses = new[] { "Available", "Occupied", "Maintenance", "OutOfService" };
                 if (!validStatuses.Contains(dto.Status))
                 {
-                    return BadRequest(new ApiResponse
+                    return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
                         Message = $"Invalid status. Must be one of: {string.Join(", ", validStatuses)}"
                     });
                 }
 
-                var room = await _roomService.UpdateRoomStatusAsync(id, dto.Status);
-                return Ok(new ApiResponse<RoomDto>
+                var success = await _roomService.UpdateRoomStatusAsync(id, dto.Status);
+                if (success)
                 {
-                    Success = true,
-                    Message = "Room status updated successfully",
-                    Data = room
-                });
+                    return Ok(new ApiResponse<object>
+                    {
+                        Success = true,
+                        Message = "Room status updated successfully"
+                    });
+                }
+                else
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "Failed to update room status"
+                    });
+                }
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -166,7 +183,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update room status {RoomId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while updating room status"
@@ -193,7 +210,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message,
@@ -202,7 +219,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -211,7 +228,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create room");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while creating room"
@@ -224,7 +241,7 @@ namespace HotelManagement.API.Controllers
         /// </summary>
         [HttpPut("{id}")]
         [Authorize(Roles = "Manager,Admin")]
-        public async Task<IActionResult> UpdateRoom(long id, [FromBody] UpdateRoomDto dto)
+        public async Task<IActionResult> UpdateRoom(long id, [FromBody] CreateRoomDto dto)
         {
             try
             {
@@ -238,7 +255,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -246,7 +263,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message,
@@ -256,7 +273,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update room {RoomId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while updating room"
@@ -276,7 +293,7 @@ namespace HotelManagement.API.Controllers
                 var success = await _roomService.DeleteRoomAsync(id);
                 if (success)
                 {
-                    return Ok(new ApiResponse
+                    return Ok(new ApiResponse<object>
                     {
                         Success = true,
                         Message = "Room deleted successfully"
@@ -284,7 +301,7 @@ namespace HotelManagement.API.Controllers
                 }
                 else
                 {
-                    return BadRequest(new ApiResponse
+                    return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "Failed to delete room"
@@ -293,7 +310,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -301,7 +318,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (BusinessException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -310,38 +327,10 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete room {RoomId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while deleting room"
-                });
-            }
-        }
-
-        /// <summary>
-        /// Get room statistics (Manager only)
-        /// </summary>
-        [HttpGet("statistics")]
-        [Authorize(Roles = "Manager,Admin")]
-        public async Task<IActionResult> GetRoomStatistics()
-        {
-            try
-            {
-                // This would need to be implemented in the service
-                // For now, return a placeholder
-                return Ok(new ApiResponse
-                {
-                    Success = true,
-                    Message = "Room statistics endpoint - to be implemented"
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get room statistics");
-                return StatusCode(500, new ApiResponse
-                {
-                    Success = false,
-                    Message = "An error occurred while retrieving room statistics"
                 });
             }
         }

@@ -1,6 +1,6 @@
 using HotelManagement.API.Exceptions;
 using HotelManagement.API.Models.DTOs.Common;
-using HotelManagement.API.Models.Entities;
+using HotelManagement.API.Models.DTOs.RoomType;
 using HotelManagement.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +30,7 @@ namespace HotelManagement.API.Controllers
             try
             {
                 var roomTypes = await _roomTypeService.GetAllRoomTypesAsync();
-                return Ok(new ApiResponse<IEnumerable<RoomType>>
+                return Ok(new ApiResponse<IEnumerable<RoomTypeDto>>
                 {
                     Success = true,
                     Data = roomTypes
@@ -39,7 +39,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get room types");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving room types"
@@ -59,14 +59,14 @@ namespace HotelManagement.API.Controllers
                 var roomType = await _roomTypeService.GetRoomTypeByIdAsync(id);
                 if (roomType == null)
                 {
-                    return NotFound(new ApiResponse
+                    return NotFound(new ApiResponse<object>
                     {
                         Success = false,
                         Message = $"Room type with ID {id} not found"
                     });
                 }
 
-                return Ok(new ApiResponse<RoomType>
+                return Ok(new ApiResponse<RoomTypeDto>
                 {
                     Success = true,
                     Data = roomType
@@ -75,7 +75,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get room type {RoomTypeId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving room type"
@@ -95,14 +95,14 @@ namespace HotelManagement.API.Controllers
                 var roomType = await _roomTypeService.GetRoomTypeWithAmenitiesAsync(id);
                 if (roomType == null)
                 {
-                    return NotFound(new ApiResponse
+                    return NotFound(new ApiResponse<object>
                     {
                         Success = false,
                         Message = $"Room type with ID {id} not found"
                     });
                 }
 
-                return Ok(new ApiResponse<RoomType>
+                return Ok(new ApiResponse<RoomTypeDto>
                 {
                     Success = true,
                     Data = roomType
@@ -111,7 +111,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get room type with amenities {RoomTypeId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving room type"
@@ -129,7 +129,7 @@ namespace HotelManagement.API.Controllers
             try
             {
                 var roomTypes = await _roomTypeService.GetRoomTypesByHotelAsync(hotelId);
-                return Ok(new ApiResponse<IEnumerable<RoomType>>
+                return Ok(new ApiResponse<IEnumerable<RoomTypeDto>>
                 {
                     Success = true,
                     Data = roomTypes
@@ -138,7 +138,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get room types for hotel {HotelId}", hotelId);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving room types"
@@ -151,12 +151,12 @@ namespace HotelManagement.API.Controllers
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Manager,Admin")]
-        public async Task<IActionResult> CreateRoomType([FromBody] RoomType roomType)
+        public async Task<IActionResult> CreateRoomType([FromBody] CreateRoomTypeDto dto)
         {
             try
             {
-                var createdRoomType = await _roomTypeService.CreateRoomTypeAsync(roomType);
-                return CreatedAtAction(nameof(GetRoomTypeById), new { id = createdRoomType.Id }, new ApiResponse<RoomType>
+                var createdRoomType = await _roomTypeService.CreateRoomTypeAsync(dto);
+                return CreatedAtAction(nameof(GetRoomTypeById), new { id = createdRoomType.Id }, new ApiResponse<RoomTypeDto>
                 {
                     Success = true,
                     Message = "Room type created successfully",
@@ -165,7 +165,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message,
@@ -174,7 +174,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -183,7 +183,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create room type");
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while creating room type"
@@ -196,12 +196,12 @@ namespace HotelManagement.API.Controllers
         /// </summary>
         [HttpPut("{id}")]
         [Authorize(Roles = "Manager,Admin")]
-        public async Task<IActionResult> UpdateRoomType(long id, [FromBody] RoomType roomType)
+        public async Task<IActionResult> UpdateRoomType(long id, [FromBody] UpdateRoomTypeDto dto)
         {
             try
             {
-                var updatedRoomType = await _roomTypeService.UpdateRoomTypeAsync(id, roomType);
-                return Ok(new ApiResponse<RoomType>
+                var updatedRoomType = await _roomTypeService.UpdateRoomTypeAsync(id, dto);
+                return Ok(new ApiResponse<RoomTypeDto>
                 {
                     Success = true,
                     Message = "Room type updated successfully",
@@ -210,7 +210,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -218,7 +218,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message,
@@ -228,7 +228,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update room type {RoomTypeId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while updating room type"
@@ -248,7 +248,7 @@ namespace HotelManagement.API.Controllers
                 var success = await _roomTypeService.DeleteRoomTypeAsync(id);
                 if (success)
                 {
-                    return Ok(new ApiResponse
+                    return Ok(new ApiResponse<object>
                     {
                         Success = true,
                         Message = "Room type deleted successfully"
@@ -256,7 +256,7 @@ namespace HotelManagement.API.Controllers
                 }
                 else
                 {
-                    return BadRequest(new ApiResponse
+                    return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "Failed to delete room type"
@@ -265,7 +265,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (NotFoundException ex)
             {
-                return NotFound(new ApiResponse
+                return NotFound(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -273,7 +273,7 @@ namespace HotelManagement.API.Controllers
             }
             catch (BusinessException ex)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     Success = false,
                     Message = ex.Message
@@ -282,7 +282,7 @@ namespace HotelManagement.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete room type {RoomTypeId}", id);
-                return StatusCode(500, new ApiResponse
+                return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while deleting room type"
