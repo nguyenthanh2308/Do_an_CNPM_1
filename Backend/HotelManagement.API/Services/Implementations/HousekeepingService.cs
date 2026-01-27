@@ -100,7 +100,17 @@ namespace HotelManagement.API.Services.Implementations
             task.Status = status;
 
             if (status == "Completed")
+            {
                 task.CompletedAt = DateTime.Now;
+                
+                // Update room status to Available when task is completed
+                var room = await _unitOfWork.Rooms.GetByIdAsync(task.RoomId);
+                if (room != null)
+                {
+                    room.Status = "Available";
+                    await _unitOfWork.Rooms.UpdateAsync(room);
+                }
+            }
 
             await _unitOfWork.HousekeepingTasks.UpdateAsync(task);
             await _unitOfWork.SaveChangesAsync();
@@ -137,6 +147,34 @@ namespace HotelManagement.API.Services.Implementations
             await _unitOfWork.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<HousekeepingTask> ClaimTaskAsync(long taskId, long userId)
+        {
+            var task = await _unitOfWork.HousekeepingTasks.GetByIdAsync(taskId);
+            if (task == null)
+                throw new NotFoundException("HousekeepingTask", taskId);
+
+            // Verify task is pending and unassigned
+            if (task.Status != "Pending")
+                throw new BusinessException("Only pending tasks can be claimed.");
+
+            if (task.AssignedToUserId.HasValue)
+                throw new BusinessException("Task is already assigned to another user.");
+
+            // Verify user exists
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
+                throw new NotFoundException("User", userId);
+
+            // Assign to user and update status
+            task.AssignedToUserId = userId;
+            task.Status = "InProgress";
+
+            await _unitOfWork.HousekeepingTasks.UpdateAsync(task);
+            await _unitOfWork.SaveChangesAsync();
+
+            return task;
         }
 
         public async Task<PagedResult<HousekeepingTask>> GetPagedTasksAsync(int pageNumber, int pageSize, string? status = null)

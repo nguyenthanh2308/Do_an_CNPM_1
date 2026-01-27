@@ -264,14 +264,31 @@ public class BookingService : IBookingService
 
         // Update booking status
         booking.Status = "CheckedOut";
+        booking.CheckOutDate = DateTime.Now; // Actual checkout time
         await _unitOfWork.Bookings.UpdateAsync(booking);
 
-        // Update room status to Cleaning
+        // Update room status to Maintenance and auto-create housekeeping tasks
         var bookingRooms = await _unitOfWork.BookingRooms.FindAsync(br => br.BookingId == id);
         foreach (var bookingRoom in bookingRooms)
         {
             if (bookingRoom.RoomId.HasValue)
-                await _unitOfWork.Rooms.UpdateRoomStatusAsync(bookingRoom.RoomId.Value, "Cleaning");
+            {
+                // Update room status to Maintenance
+                await _unitOfWork.Rooms.UpdateRoomStatusAsync(bookingRoom.RoomId.Value, "Maintenance");
+
+                // Auto-create housekeeping task
+                var housekeepingTask = new HousekeepingTask
+                {
+                    RoomId = bookingRoom.RoomId.Value,
+                    TaskType = "RoomCleaning",
+                    Status = "Pending",
+                    Priority = "Normal",
+                    AssignedToUserId = null, // Unassigned - staff will claim it
+                    CreatedAt = DateTime.Now,
+                    Notes = $"Auto-created after checkout of Booking #{id}"
+                };
+                await _unitOfWork.HousekeepingTasks.AddAsync(housekeepingTask);
+            }
         }
 
         // Generate invoice if not exists

@@ -16,6 +16,7 @@ namespace HotelManagement.API.Services.Interfaces
         Task<HousekeepingTask> UpdateTaskStatusAsync(long id, string status);
         Task<bool> DeleteTaskAsync(long id);
         Task<bool> AssignTaskAsync(long taskId, long userId);
+        Task<HousekeepingTask> ClaimTaskAsync(long taskId, long userId); // Self-assign task
         Task<PagedResult<HousekeepingTask>> GetPagedTasksAsync(int pageNumber, int pageSize, string? status = null);
     }
 }
