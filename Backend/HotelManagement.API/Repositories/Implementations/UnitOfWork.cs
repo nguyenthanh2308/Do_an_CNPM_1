@@ -24,6 +24,7 @@ namespace HotelManagement.API.Repositories.Implementations
         private IAmenityRepository? _amenities;
         private IBookingRoomRepository? _bookingRooms;
         private IRefreshTokenRepository? _refreshTokens;
+        private IRoomTypeAmenityRepository? _roomTypeAmenities;
 
         public UnitOfWork(HotelDbContext context)
         {
@@ -71,6 +72,9 @@ namespace HotelManagement.API.Repositories.Implementations
 
         public IRefreshTokenRepository RefreshTokens =>
             _refreshTokens ??= new RefreshTokenRepository(_context);
+
+        public IRoomTypeAmenityRepository RoomTypeAmenities =>
+            _roomTypeAmenities ??= new RoomTypeAmenityRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

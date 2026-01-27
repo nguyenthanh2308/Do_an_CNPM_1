@@ -20,6 +20,7 @@ namespace HotelManagement.API.Repositories.Interfaces
         IAmenityRepository Amenities { get; }
         IBookingRoomRepository BookingRooms { get; }
         IRefreshTokenRepository RefreshTokens { get; }
+        IRoomTypeAmenityRepository RoomTypeAmenities { get; }
 
         // Transaction management
         Task<int> SaveChangesAsync();

@@ -6,6 +6,8 @@ using HotelManagement.API.Models.DTOs.Room;
 using HotelManagement.API.Models.DTOs.Guest;
 using HotelManagement.API.Models.DTOs.Payment;
 using HotelManagement.API.Models.DTOs.Hotel;
+using HotelManagement.API.Models.DTOs.Amenity;
+using HotelManagement.API.Models.DTOs.RoomType;
 
 namespace HotelManagement.API.Mappings;
 
@@ -65,5 +67,28 @@ public class AutoMapperProfile : Profile
 
         // ========== Hotel Mappings ==========
         CreateMap<Hotel, HotelDto>();
+        CreateMap<CreateHotelDto, Hotel>()
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now));
+        CreateMap<UpdateHotelDto, Hotel>();
+
+        // ========== Amenity Mappings ==========
+        CreateMap<Amenity, AmenityDto>();
+        CreateMap<CreateAmenityDto, Amenity>();
+
+        // ========== RoomType Mappings ==========
+        CreateMap<RoomType, RoomTypeDto>()
+            .ForMember(dest => dest.HotelName, opt => opt.MapFrom(src => src.Hotel != null ? src.Hotel.Name : string.Empty))
+            .ForMember(dest => dest.Amenities, opt => opt.MapFrom(src => 
+                src.RoomTypeAmenities != null ? src.RoomTypeAmenities.Select(rta => rta.Amenity.Name).ToList() : new List<string>()));
+        CreateMap<CreateRoomTypeDto, RoomType>()
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now))
+            .ForMember(dest => dest.RoomTypeAmenities, opt => opt.Ignore());
+        CreateMap<UpdateRoomTypeDto, RoomType>()
+            .ForMember(dest => dest.RoomTypeAmenities, opt => opt.Ignore());
+
+        // ========== Payment/CreateDto Mapping ==========
+        CreateMap<CreatePaymentDto, Payment>()
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "Pending"));
     }
 }

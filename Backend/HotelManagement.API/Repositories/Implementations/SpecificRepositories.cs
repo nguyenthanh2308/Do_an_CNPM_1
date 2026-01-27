@@ -225,4 +225,17 @@ namespace HotelManagement.API.Repositories.Implementations
                 .ToListAsync();
         }
     }
+
+    public class RoomTypeAmenityRepository : GenericRepository<RoomTypeAmenity>, IRoomTypeAmenityRepository
+    {
+        public RoomTypeAmenityRepository(HotelDbContext context) : base(context) { }
+
+        public async Task<IEnumerable<RoomTypeAmenity>> GetByRoomTypeIdAsync(long roomTypeId)
+        {
+            return await _dbSet
+                .Where(rta => rta.RoomTypeId == roomTypeId)
+                .Include(rta => rta.Amenity)
+                .ToListAsync();
+        }
+    }
 }

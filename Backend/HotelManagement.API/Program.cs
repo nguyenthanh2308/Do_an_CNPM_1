@@ -36,6 +36,7 @@ builder.Services.AddScoped<IRatePlanRepository, RatePlanRepository>();
 builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
 builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IRoomTypeAmenityRepository, RoomTypeAmenityRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // AutoMapper
@@ -46,6 +47,11 @@ builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IAuthService,
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IBookingService, HotelManagement.API.Services.Implementations.BookingService>();
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IRoomService, HotelManagement.API.Services.Implementations.RoomService>();
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IGuestService, HotelManagement.API.Services.Implementations.GuestService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IHotelService, HotelManagement.API.Services.Implementations.HotelService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IAmenityService, HotelManagement.API.Services.Implementations.AmenityService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IRoomTypeService, HotelManagement.API.Services.Implementations.RoomTypeService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IPaymentService, HotelManagement.API.Services.Implementations.PaymentService>();
+builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IInvoiceService, HotelManagement.API.Services.Implementations.InvoiceService>();
 
 
 // JWT Authentication Configuration
