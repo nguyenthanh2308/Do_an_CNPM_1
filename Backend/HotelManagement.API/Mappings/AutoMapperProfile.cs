@@ -27,7 +27,7 @@ public class AutoMapperProfile : Profile
 
         CreateMap<Booking, BookingDetailDto>()
             .ForMember(dest => dest.Rooms, opt => opt.MapFrom(src => 
-                src.BookingRooms != null ? src.BookingRooms.Select(br => br.Room).ToList() : new List<Entities.Room>()))
+                src.BookingRooms != null ? src.BookingRooms.Select(br => br.Room).ToList() : new List<Room>()))
             .ForMember(dest => dest.Payments, opt => opt.MapFrom(src => 
                 src.Payments != null ? src.Payments : new List<Payment>()));
 
@@ -39,11 +39,17 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.TotalAmount, opt => opt.Ignore()); // Will be calculated in service
 
         // ========== Room Mappings ==========
-        CreateMap<Entities.Room, RoomDto>()
+        CreateMap<Room, RoomDto>()
+            .ForMember(dest => dest.RoomNumber, opt => opt.MapFrom(src => src.Number))
             .ForMember(dest => dest.RoomTypeName, opt => opt.MapFrom(src => src.RoomType != null ? src.RoomType.Name : string.Empty))
-            .ForMember(dest => dest.HotelName, opt => opt.MapFrom(src => src.Hotel != null ? src.Hotel.Name : string.Empty));
+            .ForMember(dest => dest.HotelName, opt => opt.MapFrom(src => src.Hotel != null ? src.Hotel.Name : string.Empty))
+            .ForMember(dest => dest.BasePrice, opt => opt.MapFrom(src => src.RoomType != null ? src.RoomType.BasePrice : 0))
+            .ForMember(dest => dest.Floor, opt => opt.MapFrom(src => src.Floor ?? 0))
+            .ForMember(dest => dest.ViewType, opt => opt.Ignore());
 
-        CreateMap<CreateRoomDto, Entities.Room>()
+        CreateMap<CreateRoomDto, Room>()
+            .ForMember(dest => dest.Number, opt => opt.MapFrom(src => src.RoomNumber))
+            .ForMember(dest => dest.Floor, opt => opt.MapFrom(src => (short?)src.Floor))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now));
 
         // ========== Guest Mappings ==========
@@ -58,6 +64,6 @@ public class AutoMapperProfile : Profile
         CreateMap<Invoice, InvoiceDto>();
 
         // ========== Hotel Mappings ==========
-        CreateMap<Entities.Hotel, HotelDto>();
+        CreateMap<Hotel, HotelDto>();
     }
 }

@@ -5,6 +5,7 @@ namespace HotelManagement.API.Repositories.Interfaces
     public interface IGuestRepository : IRepository<Guest>
     {
         Task<Guest?> GetGuestByIdentityNumberAsync(string identityNumber);
+        Task<Guest?> GetGuestByEmailAsync(string email);
         Task<IEnumerable<Guest>> SearchGuestsByNameAsync(string name);
     }
 

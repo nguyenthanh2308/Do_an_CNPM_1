@@ -14,6 +14,11 @@ namespace HotelManagement.API.Repositories.Implementations
             return await _dbSet.FirstOrDefaultAsync(g => g.IdNumber == identityNumber);
         }
 
+        public async Task<Guest?> GetGuestByEmailAsync(string email)
+        {
+            return await _dbSet.FirstOrDefaultAsync(g => g.Email == email);
+        }
+
         public async Task<IEnumerable<Guest>> SearchGuestsByNameAsync(string name)
         {
             return await _dbSet

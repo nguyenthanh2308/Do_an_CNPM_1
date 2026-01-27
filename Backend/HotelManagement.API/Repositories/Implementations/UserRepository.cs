@@ -17,10 +17,20 @@ namespace HotelManagement.API.Repositories.Implementations
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
+        public async Task<User?> GetUserByUsernameAsync(string username)
+        {
+            return await GetByUsernameAsync(username);
+        }
+
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _dbSet
                 .FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await GetByEmailAsync(email);
         }
 
         public async Task<IEnumerable<User>> GetUsersByRoleAsync(string role)

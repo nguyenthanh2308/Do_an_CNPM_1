@@ -87,5 +87,15 @@ namespace HotelManagement.API.Repositories.Implementations
             return await _dbSet
                 .FirstOrDefaultAsync(r => r.HotelId == hotelId && r.Number == roomNumber);
         }
+
+        public async Task UpdateRoomStatusAsync(long roomId, string status)
+        {
+            var room = await GetByIdAsync(roomId);
+            if (room != null)
+            {
+                room.Status = status;
+                Update(room);
+            }
+        }
     }
 }

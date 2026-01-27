@@ -52,13 +52,13 @@ public class BookingService : IBookingService
                 throw new NotFoundException("Room", roomId);
 
             if (room.Status != "Available")
-                throw new BusinessException($"Room {room.RoomNumber} is not available.");
+                throw new BusinessException($"Room {room.Number} is not available.");
 
             var availableRooms = await _unitOfWork.Rooms.GetAvailableRoomsAsync(
                 dto.HotelId, dto.CheckInDate, dto.CheckOutDate);
 
             if (!availableRooms.Any(r => r.Id == roomId))
-                throw new BusinessException($"Room {room.RoomNumber} is not available for the selected dates.");
+                throw new BusinessException($"Room {room.Number} is not available for the selected dates.");
         }
 
         // Calculate total amount
@@ -67,8 +67,8 @@ public class BookingService : IBookingService
 
         foreach (var roomId in dto.RoomIds)
         {
-            var room = await _unitOfWork.Rooms.GetByIdAsync(roomId);
-            totalAmount += room!.BasePrice * nights;
+            var room = await _unitOfWork.Rooms.GetRoomWithDetailsAsync(roomId);
+            totalAmount += (room?.RoomType?.BasePrice ?? 0) * nights;
         }
 
         // Apply promotion if provided
@@ -101,13 +101,16 @@ public class BookingService : IBookingService
         // Create BookingRooms
         foreach (var roomId in dto.RoomIds)
         {
+            var room = await _unitOfWork.Rooms.GetByIdAsync(roomId);
+            if (room == null)
+                throw new NotFoundException("Room", roomId);
+
             var bookingRoom = new BookingRoom
             {
                 BookingId = booking.Id,
                 RoomId = roomId,
-                CheckInDate = dto.CheckInDate,
-                CheckOutDate = dto.CheckOutDate,
-                CreatedAt = DateTime.Now
+                PricePerNight = room.RoomType?.BasePrice ?? 0,
+                Nights = (dto.CheckOutDate - dto.CheckInDate).Days
             };
             await _unitOfWork.BookingRooms.AddAsync(bookingRoom);
 
@@ -173,8 +176,6 @@ public class BookingService : IBookingService
             booking.CheckOutDate = dto.CheckOutDate.Value;
         if (!string.IsNullOrWhiteSpace(dto.Status))
             booking.Status = dto.Status;
-        if (!string.IsNullOrWhiteSpace(dto.SpecialRequests))
-            booking.SpecialRequests = dto.SpecialRequests;
 
         await _unitOfWork.Bookings.UpdateAsync(booking);
         await _unitOfWork.SaveChangesAsync();
@@ -215,7 +216,8 @@ public class BookingService : IBookingService
         var bookingRooms = await _unitOfWork.BookingRooms.FindAsync(br => br.BookingId == id);
         foreach (var bookingRoom in bookingRooms)
         {
-            await _unitOfWork.Rooms.UpdateRoomStatusAsync(bookingRoom.RoomId, "Available");
+            if (bookingRoom.RoomId.HasValue)
+                await _unitOfWork.Rooms.UpdateRoomStatusAsync(bookingRoom.RoomId.Value, "Available");
         }
 
         await _unitOfWork.SaveChangesAsync();
@@ -240,7 +242,8 @@ public class BookingService : IBookingService
         var bookingRooms = await _unitOfWork.BookingRooms.FindAsync(br => br.BookingId == id);
         foreach (var bookingRoom in bookingRooms)
         {
-            await _unitOfWork.Rooms.UpdateRoomStatusAsync(bookingRoom.RoomId, "Occupied");
+            if (bookingRoom.RoomId.HasValue)
+                await _unitOfWork.Rooms.UpdateRoomStatusAsync(bookingRoom.RoomId.Value, "Occupied");
         }
 
         await _unitOfWork.SaveChangesAsync();
@@ -267,7 +270,8 @@ public class BookingService : IBookingService
         var bookingRooms = await _unitOfWork.BookingRooms.FindAsync(br => br.BookingId == id);
         foreach (var bookingRoom in bookingRooms)
         {
-            await _unitOfWork.Rooms.UpdateRoomStatusAsync(bookingRoom.RoomId, "Cleaning");
+            if (bookingRoom.RoomId.HasValue)
+                await _unitOfWork.Rooms.UpdateRoomStatusAsync(bookingRoom.RoomId.Value, "Cleaning");
         }
 
         // Generate invoice if not exists
@@ -277,12 +281,11 @@ public class BookingService : IBookingService
             var invoice = new Invoice
             {
                 BookingId = id,
-                InvoiceNumber = $"INV-{id}-{DateTime.Now:yyyyMMddHHmmss}",
-                Subtotal = booking.TotalAmount,
-                TaxAmount = booking.TotalAmount * 0.1m, // 10% tax
-                DiscountAmount = 0,
-                TotalAmount = booking.TotalAmount + (booking.TotalAmount * 0.1m),
-                IssuedAt = DateTime.Now
+                Number = $"INV-{id}-{DateTime.Now:yyyyMMddHHmmss}",
+                Amount = booking.TotalAmount + (booking.TotalAmount * 0.1m),
+                IssuedAt = DateTime.Now,
+                Status = "Issued",
+                CreatedAt = DateTime.Now
             };
             await _unitOfWork.Invoices.AddAsync(invoice);
         }

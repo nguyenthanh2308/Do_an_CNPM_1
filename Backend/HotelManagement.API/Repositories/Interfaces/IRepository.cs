@@ -19,8 +19,10 @@ namespace HotelManagement.API.Repositories.Interfaces
         // Write operations
         Task<T> AddAsync(T entity);
         Task AddRangeAsync(IEnumerable<T> entities);
+        Task UpdateAsync(T entity);
         void Update(T entity);
         void UpdateRange(IEnumerable<T> entities);
+        Task DeleteAsync<TKey>(TKey id);
         void Delete(T entity);
         void DeleteRange(IEnumerable<T> entities);
 

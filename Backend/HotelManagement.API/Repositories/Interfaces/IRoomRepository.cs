@@ -10,5 +10,6 @@ namespace HotelManagement.API.Repositories.Interfaces
         Task<IEnumerable<Room>> GetAvailableRoomsAsync(long hotelId, DateTime checkIn, DateTime checkOut, long? roomTypeId = null);
         Task<IEnumerable<Room>> GetRoomsByStatusAsync(string status);
         Task<Room?> GetRoomByNumberAsync(long hotelId, string roomNumber);
+        Task UpdateRoomStatusAsync(long roomId, string status);
     }
 }

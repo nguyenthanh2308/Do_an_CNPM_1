@@ -65,6 +65,12 @@ namespace HotelManagement.API.Repositories.Implementations
             _dbSet.Update(entity);
         }
 
+        public virtual async Task UpdateAsync(T entity)
+        {
+            _dbSet.Update(entity);
+            await Task.CompletedTask;
+        }
+
         public virtual void UpdateRange(IEnumerable<T> entities)
         {
             _dbSet.UpdateRange(entities);
@@ -73,6 +79,15 @@ namespace HotelManagement.API.Repositories.Implementations
         public virtual void Delete(T entity)
         {
             _dbSet.Remove(entity);
+        }
+
+        public virtual async Task DeleteAsync<TKey>(TKey id)
+        {
+            var entity = await GetByIdAsync(id);
+            if (entity != null)
+            {
+                _dbSet.Remove(entity);
+            }
         }
 
         public virtual void DeleteRange(IEnumerable<T> entities)

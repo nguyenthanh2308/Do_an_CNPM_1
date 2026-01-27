@@ -194,7 +194,7 @@ public class AuthService : IAuthService
         var tokens = await _unitOfWork.RefreshTokens.FindAsync(t => t.UserId == userId);
         foreach (var token in tokens)
         {
-            await _unitOfWork.RefreshTokens.DeleteAsync(token.Id);
+            await _unitOfWork.RefreshTokens.DeleteAsync(token.TokenId);
         }
         await _unitOfWork.SaveChangesAsync();
     }

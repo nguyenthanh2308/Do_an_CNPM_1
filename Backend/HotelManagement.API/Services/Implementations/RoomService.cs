@@ -92,7 +92,7 @@ public class RoomService : IRoomService
 
         // Check if room number already exists in this hotel
         var existingRooms = await _unitOfWork.Rooms.GetRoomsByHotelAsync(dto.HotelId);
-        if (existingRooms.Any(r => r.RoomNumber == dto.RoomNumber))
+        if (existingRooms.Any(r => r.Number == dto.RoomNumber))
             throw new ValidationException($"Room number {dto.RoomNumber} already exists in this hotel.");
 
         // Create room
@@ -114,11 +114,9 @@ public class RoomService : IRoomService
             throw new NotFoundException("Room", id);
 
         // Update fields
-        room.RoomNumber = dto.RoomNumber;
+        room.Number = dto.RoomNumber;
         room.RoomTypeId = dto.RoomTypeId;
-        room.BasePrice = dto.BasePrice;
-        room.Floor = dto.Floor;
-        room.ViewType = dto.ViewType;
+        room.Floor = (short?)dto.Floor;
         room.Status = dto.Status;
 
         await _unitOfWork.Rooms.UpdateAsync(room);
@@ -151,10 +149,11 @@ public class RoomService : IRoomService
         if (!validStatuses.Contains(status))
             throw new ValidationException($"Invalid status. Must be one of: {string.Join(", ", validStatuses)}");
 
-        var result = await _unitOfWork.Rooms.UpdateRoomStatusAsync(id, status);
-        if (!result)
+        var room = await _unitOfWork.Rooms.GetByIdAsync(id);
+        if (room == null)
             throw new NotFoundException("Room", id);
 
+        await _unitOfWork.Rooms.UpdateRoomStatusAsync(id, status);
         await _unitOfWork.SaveChangesAsync();
         return true;
     }
