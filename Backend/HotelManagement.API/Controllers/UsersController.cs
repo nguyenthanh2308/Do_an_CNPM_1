@@ -154,8 +154,8 @@ namespace HotelManagement.API.Controllers
             {
                 var user = new User
                 {
-                    Email = dto.Email,
-                    Role = dto.Role
+                    Email = dto.Email ?? string.Empty,
+                    Role = dto.Role ?? "Customer"
                 };
 
                 var updatedUser = await _userService.UpdateUserAsync(id, user);

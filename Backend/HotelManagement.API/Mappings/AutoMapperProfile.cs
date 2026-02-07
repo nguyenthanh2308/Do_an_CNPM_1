@@ -29,7 +29,7 @@ public class AutoMapperProfile : Profile
 
         CreateMap<Booking, BookingDetailDto>()
             .ForMember(dest => dest.Rooms, opt => opt.MapFrom(src => 
-                src.BookingRooms != null ? src.BookingRooms.Select(br => br.Room).ToList() : new List<Room>()))
+                src.BookingRooms != null ? src.BookingRooms.Select(br => br.Room!).ToList() : new List<Room>()))
             .ForMember(dest => dest.Payments, opt => opt.MapFrom(src => 
                 src.Payments != null ? src.Payments : new List<Payment>()));
 

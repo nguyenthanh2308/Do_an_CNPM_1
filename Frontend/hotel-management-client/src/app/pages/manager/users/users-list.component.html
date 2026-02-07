@@ -1,0 +1,88 @@
+<app-loading-spinner [isLoading]="loading()" message="Loading users..."></app-loading-spinner>
+
+<div class="users-page" *ngIf="!loading()">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2>User Management</h2>
+        <button class="btn-primary" disabled title="Coming soon">
+            + Create User
+        </button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+        <div class="search-box">
+            <input type="text" placeholder="Search by username or email..." [(ngModel)]="searchQuery"
+                (keyup.enter)="onSearch()" class="search-input" />
+            <button (click)="onSearch()" class="search-btn">Search</button>
+        </div>
+
+        <select [(ngModel)]="roleFilter" (ngModelChange)="onFilterChange()" class="filter-select">
+            <option value="">All Roles</option>
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
+            <option value="Receptionist">Receptionist</option>
+            <option value="Housekeeping">Housekeeping</option>
+            <option value="Customer">Customer</option>
+        </select>
+    </div>
+
+    <!-- Users Table -->
+    @if (users().length > 0) {
+    <div class="table-container">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Full Name</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (user of users(); track user.id) {
+                <tr>
+                    <td class="user-id">{{ user.id }}</td>
+                    <td class="username">{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.fullName }}</td>
+                    <td>{{ user.phone || '-' }}</td>
+                    <td>
+                        <span class="role-badge" [ngClass]="getRoleBadgeClass(user.role)">
+                            {{ user.role }}
+                        </span>
+                    </td>
+                    <td>{{ user.createdAt | date:'short' }}</td>
+                    <td class="actions">
+                        <button class="btn-edit" disabled title="Coming soon">
+                            Edit
+                        </button>
+                        <button class="btn-delete" (click)="deleteUser(user)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" [totalItems]="totalItems()"
+        (pageChange)="loadUsers($event)">
+    </app-pagination>
+    } @else {
+    <div class="empty-state">
+        <p>No users found</p>
+        @if (searchQuery || roleFilter) {
+        <button (click)="searchQuery = ''; roleFilter = ''; onSearch()" class="btn-secondary">
+            Clear Filters
+        </button>
+        }
+    </div>
+    }
+</div>

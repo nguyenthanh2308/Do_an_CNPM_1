@@ -388,26 +388,26 @@ namespace HotelManagement.API.Controllers
         /// </summary>
         [HttpGet("statistics")]
         [Authorize(Roles = "Manager,Admin")]
-        public async Task<IActionResult> GetBookingStatistics()
+        public Task<IActionResult> GetBookingStatistics()
         {
             try
             {
                 // Placeholder for statistics - to be implemented
-                return Ok(new ApiResponse<object>
+                return Task.FromResult<IActionResult>(Ok(new ApiResponse<object>
                 {
                     Success = true,
                     Message = "Statistics endpoint - to be implemented",
                     Data = new { Message = "Feature coming soon" }
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get booking statistics");
-                return StatusCode(500, new ApiResponse<object>
+                return Task.FromResult<IActionResult>(StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving statistics"
-                });
+                }));
             }
         }
     }

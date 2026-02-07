@@ -216,27 +216,27 @@ namespace HotelManagement.API.Controllers
         /// </summary>
         [HttpGet("my-invoices")]
         [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> GetMyInvoices()
+        public Task<IActionResult> GetMyInvoices()
         {
             try
             {
                 // This would need to be implemented in the service
                 // For now, return placeholder
-                return Ok(new ApiResponse<object>
+                return Task.FromResult<IActionResult>(Ok(new ApiResponse<object>
                 {
                     Success = true,
                     Message = "My invoices endpoint - to be implemented",
                     Data = new List<object>()
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get user invoices");
-                return StatusCode(500, new ApiResponse<object>
+                return Task.FromResult<IActionResult>(StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
                     Message = "An error occurred while retrieving invoices"
-                });
+                }));
             }
         }
     }

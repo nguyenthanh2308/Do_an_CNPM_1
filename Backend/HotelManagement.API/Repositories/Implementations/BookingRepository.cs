@@ -15,9 +15,9 @@ namespace HotelManagement.API.Repositories.Implementations
         {
             return await _dbSet
                 .Include(b => b.Guest)
-                .Include(b => b.BookingRooms)
-                    .ThenInclude(br => br.Room)
-                        .ThenInclude(r => r.RoomType)
+                .Include(b => b.BookingRooms!)
+                    .ThenInclude(br => br.Room!)
+                        .ThenInclude(r => r.RoomType!)
                 .Include(b => b.Payments)
                 .Include(b => b.Invoice)
                 .FirstOrDefaultAsync(b => b.Id == bookingId);

@@ -1,0 +1,92 @@
+<app-loading-spinner [isLoading]="loading()" message="Loading reports..."></app-loading-spinner>
+
+<div class="reports-page" *ngIf="!loading()">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2>Reports & Analytics</h2>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="date-range-selector">
+        <div class="date-inputs">
+            <div class="input-group">
+                <label>Start Date</label>
+                <input type="date" [(ngModel)]="dateRange().startDate" (change)="onDateRangeChange()"
+                    class="date-input" />
+            </div>
+            <div class="input-group">
+                <label>End Date</label>
+                <input type="date" [(ngModel)]="dateRange().endDate" (change)="onDateRangeChange()"
+                    class="date-input" />
+            </div>
+        </div>
+        <button (click)="exportRevenueCsv()" class="btn-export">
+            📥 Export CSV
+        </button>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="reports-grid">
+        <!-- Revenue Report Card -->
+        <div class="report-card">
+            <h3>💰 Revenue Report</h3>
+            @if (revenueData()) {
+            <div class="report-content">
+                <div class="metric">
+                    <span class="metric-label">Total Revenue</span>
+                    <span class="metric-value price">${{ revenueData().totalRevenue || 0 | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Bookings</span>
+                    <span class="metric-value">{{ revenueData().totalBookings || 0 }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Average Booking</span>
+                    <span class="metric-value">${{ (revenueData().totalRevenue / revenueData().totalBookings || 0) |
+                        number:'1.2-2' }}</span>
+                </div>
+            </div>
+            } @else {
+            <div class="report-placeholder">
+                <p>No revenue data for selected period</p>
+            </div>
+            }
+        </div>
+
+        <!-- Occupancy Report Card -->
+        <div class="report-card">
+            <h3>📊 Occupancy Report</h3>
+            @if (occupancyData()) {
+            <div class="report-content">
+                <div class="metric">
+                    <span class="metric-label">Occupancy Rate</span>
+                    <span class="metric-value rate">{{ occupancyData().occupancyRate || 0 | number:'1.1-1' }}%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Occupied Rooms</span>
+                    <span class="metric-value">{{ occupancyData().occupiedRooms || 0 }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Rooms</span>
+                    <span class="metric-value">{{ occupancyData().totalRooms || 0 }}</span>
+                </div>
+            </div>
+            } @else {
+            <div class="report-placeholder">
+                <p>No occupancy data for selected period</p>
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Info Message -->
+    <div class="info-message">
+        <p>📈 Advanced analytics and charts coming soon!</p>
+        <ul>
+            <li>Daily revenue trends</li>
+            <li>Booking status distribution</li>
+            <li>Peak booking periods</li>
+            <li>Payment method breakdown</li>
+        </ul>
+    </div>
+</div>

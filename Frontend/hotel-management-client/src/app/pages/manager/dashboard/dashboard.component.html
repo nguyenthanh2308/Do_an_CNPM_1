@@ -1,0 +1,95 @@
+<app-loading-spinner [isLoading]="loading()" message="Loading dashboard..."></app-loading-spinner>
+
+<div class="dashboard" *ngIf="!loading()">
+    <!-- Header with Refresh Button -->
+    <div class="dashboard-header">
+        <h2>Dashboard Overview</h2>
+        <button (click)="refresh()" class="btn-refresh">
+            <span>🔄</span>
+            Refresh
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card revenue">
+            <div class="stat-icon">💰</div>
+            <div class="stat-content">
+                <h3>Total Revenue</h3>
+                <p class="stat-value">${{ stats().totalRevenue | number:'1.2-2' }}</p>
+                <span class="stat-label">All time</span>
+            </div>
+        </div>
+
+        <div class="stat-card bookings">
+            <div class="stat-icon">📅</div>
+            <div class="stat-content">
+                <h3>Total Bookings</h3>
+                <p class="stat-value">{{ stats().totalBookings }}</p>
+                <span class="stat-label">All time</span>
+            </div>
+        </div>
+
+        <div class="stat-card checkins">
+            <div class="stat-icon">✓</div>
+            <div class="stat-content">
+                <h3>Today's Check-Ins</h3>
+                <p class="stat-value">{{ stats().todayCheckIns }}</p>
+                <span class="stat-label">{{ currentDate | date:'shortDate' }}</span>
+            </div>
+        </div>
+
+        <div class="stat-card rooms">
+            <div class="stat-icon">🏠</div>
+            <div class="stat-content">
+                <h3>Available Rooms</h3>
+                <p class="stat-value">{{ stats().availableRooms }}</p>
+                <span class="stat-label">Ready to book</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Bookings -->
+    <div class="recent-bookings-section">
+        <h3>Recent Bookings</h3>
+
+        @if (recentBookings().length > 0) {
+        <div class="table-container">
+            <table class="bookings-table">
+                <thead>
+                    <tr>
+                        <th>#ID</th>
+                        <th>Guest</th>
+                        <th>Hotel</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (booking of recentBookings(); track booking.id) {
+                    <tr>
+                        <td class="booking-id">{{ booking.id }}</td>
+                        <td class="guest-name">{{ booking.guestName }}</td>
+                        <td>{{ booking.hotelName }}</td>
+                        <td>{{ booking.checkInDate | date:'shortDate' }}</td>
+                        <td>{{ booking.checkOutDate | date:'shortDate' }}</td>
+                        <td>
+                            <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
+                                {{ booking.status }}
+                            </span>
+                        </td>
+                        <td class="amount">${{ booking.totalAmount | number:'1.2-2' }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        } @else {
+        <div class="empty-state">
+            <p>No recent bookings found</p>
+        </div>
+        }
+    </div>
+</div>

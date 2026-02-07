@@ -118,8 +118,8 @@ public class AuthService : IAuthService
         // Auto-login after registration
         var loginRequest = new LoginRequestDto
         {
-            Username = request.Username,
-            Password = request.Password
+            Username = request.Username ?? string.Empty,
+            Password = request.Password ?? string.Empty
         };
 
         return await LoginAsync(loginRequest);
@@ -199,7 +199,7 @@ public class AuthService : IAuthService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<bool> ValidateTokenAsync(string token)
+    public Task<bool> ValidateTokenAsync(string token)
     {
         try
         {
@@ -218,11 +218,11 @@ public class AuthService : IAuthService
                 ClockSkew = TimeSpan.Zero
             }, out SecurityToken validatedToken);
 
-            return true;
+            return Task.FromResult(true);
         }
         catch
         {
-            return false;
+            return Task.FromResult(false);
         }
     }
 
@@ -237,7 +237,7 @@ public class AuthService : IAuthService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
             new Claim(ClaimTypes.Role, user.Role)
         };
 

@@ -44,7 +44,7 @@ namespace HotelManagement.API.Services.Implementations
                 throw new ValidationException("Username already exists.");
 
             // Validate email doesn't exist
-            var existingEmail = await _unitOfWork.Users.GetUserByEmailAsync(user.Email);
+            var existingEmail = await _unitOfWork.Users.GetUserByEmailAsync(user.Email ?? string.Empty);
             if (existingEmail != null)
                 throw new ValidationException("Email already exists.");
 

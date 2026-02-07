@@ -1,0 +1,117 @@
+<app-loading-spinner [isLoading]="loading()" message="Loading rooms..."></app-loading-spinner>
+
+<div class="rooms-page" *ngIf="!loading()">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2>Room Management</h2>
+        <button class="btn-primary" disabled title="Coming soon">
+            + Add Room
+        </button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+        <div class="filter-group">
+            <label>Filter by Status:</label>
+            <select [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()" class="filter-select">
+                <option value="">All Statuses</option>
+                <option value="Available">Available</option>
+                <option value="Occupied">Occupied</option>
+                <option value="Reserved">Reserved</option>
+                <option value="Maintenance">Maintenance</option>
+            </select>
+        </div>
+
+        <div class="stats-summary">
+            <span class="stat-item">
+                <span class="stat-dot available"></span>
+                Available
+            </span>
+            <span class="stat-item">
+                <span class="stat-dot occupied"></span>
+                Occupied
+            </span>
+            <span class="stat-item">
+                <span class="stat-dot reserved"></span>
+                Reserved
+            </span>
+            <span class="stat-item">
+                <span class="stat-dot maintenance"></span>
+                Maintenance
+            </span>
+        </div>
+    </div>
+
+    <!-- Rooms Table -->
+    @if (rooms().length > 0) {
+    <div class="table-container">
+        <table class="rooms-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Room #</th>
+                    <th>Floor</th>
+                    <th>Hotel</th>
+                    <th>Room Type</th>
+                    <th>Base Price</th>
+                    <th>Quick Actions</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (room of rooms(); track room.id) {
+                <tr>
+                    <td>
+                        <span class="status-badge" [ngClass]="getStatusClass(room.status)">
+                            <span class="status-icon">{{ getStatusIcon(room.status) }}</span>
+                            {{ room.status }}
+                        </span>
+                    </td>
+                    <td class="room-number">{{ room.number }}</td>
+                    <td>{{ room.floor }}</td>
+                    <td>{{ room.hotelName }}</td>
+                    <td>{{ room.roomTypeName }}</td>
+                    <td class="price">${{ room.basePrice | number:'1.2-2' }}</td>
+                    <td class="quick-actions">
+                        @if (room.status !== 'Available') {
+                        <button (click)="changeRoomStatus(room, 'Available')" class="status-btn available"
+                            title="Set to Available">
+                            ✓
+                        </button>
+                        }
+                        @if (room.status !== 'Maintenance') {
+                        <button (click)="changeRoomStatus(room, 'Maintenance')" class="status-btn maintenance"
+                            title="Set to Maintenance">
+                            ⚠
+                        </button>
+                        }
+                    </td>
+                    <td class="actions">
+                        <button class="btn-edit" disabled title="Coming soon">
+                            Edit
+                        </button>
+                        <button class="btn-delete" (click)="deleteRoom(room)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" [totalItems]="totalItems()"
+        (pageChange)="loadRooms($event)">
+    </app-pagination>
+    } @else {
+    <div class="empty-state">
+        <p>No rooms found</p>
+        @if (statusFilter) {
+        <button (click)="statusFilter = ''; onFilterChange()" class="btn-secondary">
+            Clear Filter
+        </button>
+        }
+    </div>
+    }
+</div>

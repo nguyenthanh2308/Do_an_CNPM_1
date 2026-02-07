@@ -45,13 +45,13 @@ public class BookingService : IBookingService
             throw new NotFoundException("Guest", dto.GuestId);
 
         // Check room availability
-        foreach (var roomId in dto.RoomIds)
+        foreach (var roomId in dto.RoomIds!)
         {
             var room = await _unitOfWork.Rooms.GetByIdAsync(roomId);
             if (room == null)
                 throw new NotFoundException("Room", roomId);
 
-            if (room.Status != "Available")
+            if (room!.Status != "Available")
                 throw new BusinessException($"Room {room.Number} is not available.");
 
             var availableRooms = await _unitOfWork.Rooms.GetAvailableRoomsAsync(
