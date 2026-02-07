@@ -1,4 +1,5 @@
 using HotelManagement.API.Exceptions;
+using HotelManagement.API.Models.Entities;
 using HotelManagement.API.Repositories.Interfaces;
 using HotelManagement.API.Services.Interfaces;
 
@@ -15,6 +16,7 @@ namespace HotelManagement.API.Services.Implementations
             _logger = logger;
         }
 
+        #region Booking Notifications
         public async Task SendBookingConfirmationAsync(long bookingId)
         {
             var booking = await _unitOfWork.Bookings.GetBookingWithDetailsAsync(bookingId);
@@ -96,7 +98,9 @@ namespace HotelManagement.API.Services.Implementations
             await SendEmailAsync(booking.Guest.Email ?? "", subject, body);
             _logger.LogInformation($"Check-out reminder sent for booking {bookingId}");
         }
+        #endregion
 
+        #region Payment Notifications
         public async Task SendPaymentConfirmationAsync(long paymentId)
         {
             var payment = await _unitOfWork.Payments.GetByIdAsync(paymentId);
@@ -144,7 +148,9 @@ namespace HotelManagement.API.Services.Implementations
             await SendEmailAsync(invoice.Booking.Guest.Email ?? "", subject, body);
             _logger.LogInformation($"Invoice sent for invoice {invoiceId}");
         }
+        #endregion
 
+        #region User Notifications
         public async Task SendPasswordResetEmailAsync(string email, string resetToken)
         {
             var subject = "Password Reset Request";
@@ -184,7 +190,9 @@ namespace HotelManagement.API.Services.Implementations
             await SendEmailAsync(user.Email ?? "", subject, body);
             _logger.LogInformation($"Welcome email sent to user {userId}");
         }
+        #endregion
 
+        #region Housekeeping Notifications
         public async Task NotifyHousekeepingTaskAsync(long taskId)
         {
             var task = await _unitOfWork.HousekeepingTasks.GetByIdAsync(taskId);
@@ -212,7 +220,9 @@ namespace HotelManagement.API.Services.Implementations
                 }
             }
         }
+        #endregion
 
+        #region Communication Channels
         public async Task<bool> SendEmailAsync(string to, string subject, string body)
         {
             try
@@ -252,5 +262,53 @@ namespace HotelManagement.API.Services.Implementations
                 return false;
             }
         }
+        #endregion
+
+        #region In-App Notification Management
+        public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(long userId)
+        {
+            // Simple implementation - returns empty list for now
+            // TODO: Implement actual notification storage and retrieval
+            _logger.LogInformation($"Getting notifications for user {userId}");
+            await Task.CompletedTask;
+            return new List<Notification>();
+        }
+
+        public async Task<Notification?> GetNotificationByIdAsync(long id)
+        {
+            // TODO: Implement actual notification retrieval
+            _logger.LogInformation($"Getting notification {id}");
+            await Task.CompletedTask;
+            return null;
+        }
+
+        public async Task MarkAsReadAsync(long notificationId)
+        {
+            // TODO: Implement mark as read
+            _logger.LogInformation($"Marking notification {notificationId} as read");
+            await Task.CompletedTask;
+        }
+
+        public async Task MarkAllAsReadAsync(long userId)
+        {
+            // TODO: Implement mark all as read
+            _logger.LogInformation($"Marking all notifications for user {userId} as read");
+            await Task.CompletedTask;
+        }
+
+        public async Task DeleteNotificationAsync(long notificationId)
+        {
+            // TODO: Implement notification deletion
+            _logger.LogInformation($"Deleting notification {notificationId}");
+            await Task.CompletedTask;
+        }
+
+        public async Task SendBroadcastNotificationAsync(string message, string targetRole)
+        {
+            // TODO: Implement broadcast notifications
+            _logger.LogInformation($"Broadcasting message to {targetRole}: {message}");
+            await Task.CompletedTask;
+        }
+        #endregion
     }
 }

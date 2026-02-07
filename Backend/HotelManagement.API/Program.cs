@@ -63,6 +63,18 @@ builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IRatePlanServ
 builder.Services.AddScoped<HotelManagement.API.Services.Interfaces.IReportService, HotelManagement.API.Services.Implementations.ReportService>();
 
 
+// CORS Configuration for Angular Frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Angular default port
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // JWT Authentication Configuration
 builder.Services.AddAuthentication(options =>
 {
@@ -86,6 +98,13 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+// Middleware: Request Logging (log all requests)
+app.UseMiddleware<HotelManagement.API.Middleware.RequestLoggingMiddleware>();
+
+// Middleware: Exception Handling (catch and format errors)
+app.UseMiddleware<HotelManagement.API.Middleware.ExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -93,6 +112,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
