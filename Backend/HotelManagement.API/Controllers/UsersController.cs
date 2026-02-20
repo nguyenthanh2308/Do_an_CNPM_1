@@ -23,15 +23,19 @@ namespace HotelManagement.API.Controllers
         }
 
         /// <summary>
-        /// Get all users
+        /// Get all users with optional pagination, role filter, and search
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllUsers([FromQuery] string? role = null)
+        public async Task<IActionResult> GetAllUsers(
+            [FromQuery] string? role = null,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
             try
             {
                 IEnumerable<User> users;
-                
+
                 if (!string.IsNullOrEmpty(role))
                 {
                     users = await _userService.GetUsersByRoleAsync(role);
@@ -41,10 +45,25 @@ namespace HotelManagement.API.Controllers
                     users = await _userService.GetAllUsersAsync();
                 }
 
-                return Ok(new ApiResponse<IEnumerable<User>>
+                // Apply search filter if provided
+                if (!string.IsNullOrEmpty(search))
                 {
-                    Success = true,
-                    Data = users
+                    var s = search.ToLower();
+                    users = users.Where(u =>
+                        (u.Username?.ToLower().Contains(s) ?? false) ||
+                        (u.Email?.ToLower().Contains(s) ?? false));
+                }
+
+                // Apply pagination
+                var totalCount = users.Count();
+                var pagedUsers = users.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+                return Ok(new PaginatedResponse<User>
+                {
+                    Items = pagedUsers,
+                    TotalCount = totalCount,
+                    PageNumber = page,
+                    PageSize = pageSize
                 });
             }
             catch (Exception ex)

@@ -69,7 +69,7 @@ export class RoomApiService {
      * Update room status
      */
     updateRoomStatus(id: number, status: string): Observable<ApiResponse<Room>> {
-        return this.http.patch<ApiResponse<Room>>(`${this.apiUrl}/${id}/status`, { status });
+        return this.http.put<ApiResponse<Room>>(`${this.apiUrl}/${id}/status`, { status });
     }
 
     /**

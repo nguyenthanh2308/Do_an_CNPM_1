@@ -144,7 +144,7 @@ namespace HotelManagement.API.Controllers
         {
             try
             {
-                var validStatuses = new[] { "Available", "Occupied", "Maintenance", "OutOfService" };
+                var validStatuses = new[] { "Available", "Occupied", "Maintenance", "Cleaning", "Reserved", "OutOfService" };
                 if (!validStatuses.Contains(dto.Status))
                 {
                     return BadRequest(new ApiResponse<object>

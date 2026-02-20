@@ -40,10 +40,51 @@ public class AuthService : IAuthService
             throw new UnauthorizedException("Invalid username or password.");
         }
 
-        // Verify password
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        // Verify password - support both BCrypt (new) and SHA256 (legacy) hashes
+        bool passwordValid = false;
+        bool isLegacyHash = false;
+
+        // Try BCrypt first (new format)
+        try
+        {
+            passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+        }
+        catch
+        {
+            // Hash may be in old SHA256 format - BCrypt.Verify throws on invalid hash format
+            passwordValid = false;
+        }
+
+        // Fallback to legacy SHA256 hash (accounts created by admin before BCrypt migration)
+        if (!passwordValid)
+        {
+            var sha256Hash = Convert.ToBase64String(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(request.Password)));
+            if (user.PasswordHash == sha256Hash)
+            {
+                passwordValid = true;
+                isLegacyHash = true;
+            }
+        }
+
+        if (!passwordValid)
         {
             throw new UnauthorizedException("Invalid username or password.");
+        }
+
+        // Auto-migrate legacy SHA256 hash to BCrypt
+        if (isLegacyHash)
+        {
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        // Check if account is active
+        if (!user.IsActive)
+        {
+            throw new UnauthorizedException("Your account has been deactivated. Please contact an administrator.");
         }
 
         // Generate tokens

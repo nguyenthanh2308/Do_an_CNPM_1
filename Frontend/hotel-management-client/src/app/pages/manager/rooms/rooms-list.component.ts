@@ -94,7 +94,9 @@ export class RoomsListComponent implements OnInit {
       'Available': 'status-available',
       'Occupied': 'status-occupied',
       'Reserved': 'status-reserved',
-      'Maintenance': 'status-maintenance'
+      'Maintenance': 'status-maintenance',
+      'Cleaning': 'status-cleaning',
+      'OutOfService': 'status-out-of-service'
     };
     return statusMap[status] || 'status-default';
   }
@@ -104,7 +106,9 @@ export class RoomsListComponent implements OnInit {
       'Available': '✓',
       'Occupied': '●',
       'Reserved': '◐',
-      'Maintenance': '⚠'
+      'Maintenance': '⚠',
+      'Cleaning': '🧹',
+      'OutOfService': '✗'
     };
     return iconMap[status] || '○';
   }

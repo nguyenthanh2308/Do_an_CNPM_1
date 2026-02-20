@@ -36,6 +36,9 @@ namespace HotelManagement.API.Models.Entities
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
+        [Column("is_active")]
+        public bool IsActive { get; set; } = true;
+
         // Navigation: một User có thể được assign nhiều housekeeping_tasks
         public virtual ICollection<HousekeepingTask> HousekeepingTasks { get; set; }
             = new List<HousekeepingTask>();

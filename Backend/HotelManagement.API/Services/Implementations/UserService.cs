@@ -2,8 +2,6 @@ using HotelManagement.API.Exceptions;
 using HotelManagement.API.Models.Entities;
 using HotelManagement.API.Repositories.Interfaces;
 using HotelManagement.API.Services.Interfaces;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace HotelManagement.API.Services.Implementations
 {
@@ -80,10 +78,9 @@ namespace HotelManagement.API.Services.Implementations
             if (user == null)
                 throw new NotFoundException("User", id);
 
-            // Since User doesn't have IsActive, we can't deactivate
-            // This would need to be implemented differently or User entity needs IsActive property
-            // For now, just return true
-            await Task.CompletedTask;
+            user.IsActive = false;
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
             return true;
         }
 
@@ -101,9 +98,7 @@ namespace HotelManagement.API.Services.Implementations
 
         private string HashPassword(string password)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
     }
 }

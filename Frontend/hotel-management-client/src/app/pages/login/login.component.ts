@@ -61,13 +61,15 @@ export class LoginComponent {
                     } else if (user?.role === 'Manager' || user?.role === 'Admin') {
                         this.router.navigate(['/manager/dashboard']);
                     } else if (user?.role === 'Receptionist') {
-                        this.router.navigate(['/receptionist/dashboard']);
+                        // TODO: receptionist module not yet implemented
+                        this.router.navigate(['/manager/dashboard']);
                     } else if (user?.role === 'Housekeeping') {
-                        this.router.navigate(['/housekeeping/tasks']);
-                    } else if (user?.role === 'Customer') {
-                        this.router.navigate(['/customer/home']);
+                        // TODO: housekeeping module not yet implemented
+                        this.router.navigate(['/manager/dashboard']);
                     } else {
-                        this.router.navigate(['/']);
+                        // Customer or unknown role
+                        this.toastService.error(`The "${user?.role}" portal is not available yet. Please contact an administrator.`);
+                        this.authService.logout();
                     }
                 },
                 error: (err) => {
